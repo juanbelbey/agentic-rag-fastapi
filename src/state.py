@@ -6,8 +6,10 @@ TypedDict le dice a LangGraph qué campos hay y qué tipo tienen.
 Eso permite serialización automática (guardar/cargar en checkpointer).
 """
 
-from typing import TypedDict, Annotated
-from langchain_core.messages import BaseMessage
+from typing import Annotated, NotRequired, TypedDict
+
+from langchain_core.messages import AnyMessage
+from langgraph.graph.message import add_messages
 
 
 class AgentState(TypedDict):
@@ -16,7 +18,7 @@ class AgentState(TypedDict):
     
     Campos:
     - messages: historial de mensajes (input del user, output de LLM, observaciones de tools)
-    - next_action: (opcional) próxima acción que el agente quiere tomar
+    - next_action: (opcional) proxima accion que el agente quiere tomar
     """
-    messages: Annotated[list[BaseMessage], "Lista de mensajes"]
-    next_action: str | None
+    messages: Annotated[list[AnyMessage], add_messages]
+    next_action: NotRequired[str | None]
