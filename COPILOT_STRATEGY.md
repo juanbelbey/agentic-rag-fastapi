@@ -135,11 +135,35 @@ Cuando termino un bloque de trabajo, quiero que me digas:
 
 ---
 
+## Forma de explicar
+
+Cuando me expliques algo, siempre seguí este orden:
+
+- PARA QUÉ EXISTE este archivo/función/patrón en una sola oración. Sin código todavía.
+
+- LA ANALOGÍA en JavaScript o en la vida real. Qué sería esto que conocés.
+
+- CÓMO FUNCIONA en Python, recién ahí el código, línea por línea pero solo las que son realmente nuevas.
+
+- UNA PREGUNTA para mí, para verificar que entendí antes de seguir.
+
+---
+
 ## Estado actual del repo (actualizar acá)
 
+### Capa 1 — AI Agents in LangGraph ✅
 - [x] Curso terminado: AI Agents in LangGraph
-- [ ] `graph.py` con StateGraph básico funcionando
-- [ ] `state.py` con AgentState definido
-- [ ] `tools.py` con rag_search() y create_ticket() como stubs
-- [ ] `main.py` con FastAPI básico
-- [ ] Primer commit al repo flagship
+- [x] `src/state.py` con AgentState (TypedDict + add_messages)
+- [x] `src/tools.py` con rag_search() y create_ticket() como stubs (@tool)
+- [x] `src/graph.py` con StateGraph, routing condicional y MemorySaver
+- [x] `src/config.py` con validación de OPENAI_API_KEY al startup
+- [x] `src/main.py` con FastAPI y POST /chat con persistencia por thread_id
+- [x] API probada localmente: responde en /chat con thread_id persistente
+
+### Capa 2 — Automated Testing for LLMOps (en curso)
+- [x] `tests/conftest.py` con fixtures: agent_graph, sample_responses, invoke_agent
+- [ ] `tests/test_rules.py` — tests deterministas
+- [ ] `tests/test_evals.py` — LLM-as-judge
+- [ ] `.github/workflows/ci.yml` — GitHub Actions
+- [ ] `evals/golden_set.json` — dataset de evaluación
+- [ ] `reports/` — pytest-html
