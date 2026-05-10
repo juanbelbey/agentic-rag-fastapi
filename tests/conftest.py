@@ -5,10 +5,15 @@ from __future__ import annotations
 import os
 import uuid
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
+
+# Carga el .env desde la raiz del proyecto antes de que cualquier test corra.
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 from src.graph import graph
 
