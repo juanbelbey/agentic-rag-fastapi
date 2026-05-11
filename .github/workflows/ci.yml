@@ -1,0 +1,81 @@
+# CI pipeline para agentic-rag-fastapi
+#
+# Dos jobs separados con propósitos distintos:
+#
+#   rules   → corre en TODO push a cualquier rama
+#             sin API key, sin costo, en ~10 segundos
+#             verifica que el código no esté roto
+#
+#   evals   → corre SOLO en push a main
+#             requiere OPENAI_API_KEY como secret de GitHub
+#             verifica calidad de respuestas con LLM-as-judge
+#             se ejecuta poco para mantener el costo bajo
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]   # cualquier rama dispara el pipeline completo
+
+jobs:
+
+  # ─── Job 1: tests deterministas ────────────────────────────────────────────
+  # Corre siempre. Sin LLM, sin costo, verifica que el código funciona.
+
+  rules:
+    name: Rules-based tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr tests de reglas deterministas
+        run: python -m pytest tests/test_rules.py -v
+
+  # ─── Job 2: evaluaciones con LLM-as-judge ──────────────────────────────────
+  # Corre SOLO en push a main. Requiere API key. Tiene costo por token.
+
+  evals:
+    name: LLM-as-judge evals
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'   # condición: solo en rama main
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # GitHub lee este secret desde:
+      # Settings → Secrets and variables → Actions → OPENAI_API_KEY
+      # Nunca aparece en logs ni en el código — GitHub lo enmascara automáticamente
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr evaluaciones LLM-as-judge
+        run: python -m pytest tests/test_evals.py -v
+
+      - name: Guardar reporte como artefacto
+        if: always()   # guarda el reporte incluso si los tests fallan
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+          # Los artefactos se guardan 30 días en GitHub
+          # Se descargan desde la pestaña "Actions" del repo
