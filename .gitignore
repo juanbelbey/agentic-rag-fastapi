@@ -2,5 +2,6 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+reports/
 POST_COURSE_TESTING.md/
 POST_COURSE_LANGGRAPH.md/

@@ -39,7 +39,15 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Correr tests de reglas deterministas
-        run: python -m pytest tests/test_rules.py -v
+        run: python -m pytest tests/test_rules.py -v --html=reports/report.html --self-contained-html
+
+      - name: Guardar reporte como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rules-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
 
   # ─── Job 2: evaluaciones con LLM-as-judge ──────────────────────────────────
   # Corre SOLO en push a main. Requiere API key. Tiene costo por token.
