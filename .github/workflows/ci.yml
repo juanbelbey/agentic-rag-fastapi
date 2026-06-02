@@ -59,9 +59,11 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      MAX_EVAL_CASES: "1"
       # GitHub lee este secret desde:
       # Settings → Secrets and variables → Actions → OPENAI_API_KEY
       # Nunca aparece en logs ni en el código — GitHub lo enmascara automáticamente
+      # MAX_EVAL_CASES limita el golden set en CI para evitar gastar tokens de más.
 
     steps:
       - name: Checkout del repositorio
@@ -76,14 +78,19 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Correr evaluaciones LLM-as-judge
-        run: python -m pytest tests/test_evals.py -v
+        run: python -m pytest tests/test_evals.py::TestRelevanceEval::test_rag_response_is_relevant -v --html=reports/evals-report.html --self-contained-html
 
-      - name: Guardar reporte como artefacto
+      - name: Correr evaluación sistemática del golden set
+        run: python evals/run_evals.py
+
+      - name: Guardar artefactos de evaluacion
         if: always()   # guarda el reporte incluso si los tests fallan
         uses: actions/upload-artifact@v4
         with:
-          name: eval-results-${{ github.run_number }}
-          path: reports/
+          name: eval-artifacts-${{ github.run_number }}
+          path: |
+            reports/
+            evals/results/
           retention-days: 30
           # Los artefactos se guardan 30 días en GitHub
           # Se descargan desde la pestaña "Actions" del repo

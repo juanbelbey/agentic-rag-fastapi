@@ -4,11 +4,12 @@
 
 ## Para qué existe este archivo
 
-Este archivo le da a Copilot el mapa completo del proyecto:
+Este archivo es la fuente de verdad del proyecto:
 qué cursos hice, qué construí con cada uno, qué viene después,
 y qué capa del repo flagship corresponde a cada etapa.
 
 Copilot nunca debe improvisar qué viene después. Todo está acá.
+Para reglas de comportamiento y estilo de trabajo, ver COPILOT_STRATEGY.md.
 
 ---
 
@@ -24,226 +25,196 @@ técnica (LangGraph docs), agente con LangGraph, y tickets en Postgres.
 - Python + FastAPI
 - LangGraph (orquestación del agente)
 - OpenAI API (gpt-4o-mini por defecto)
-- Supabase (Postgres + pgvector) — se incorpora en la fase RAG real
+- LangSmith (observabilidad y evals) — se integra en Capa 3B
+- Supabase (Postgres + pgvector) — se incorpora en Capa 5
 - GitHub Actions (CI)
 - Deploy: Render/Fly.io (H1) → AWS (H2)
 
 ---
 
-## Mapa de capas: qué construye cada curso
+## Mapa de capas
 
 ```
-CAPA 1 — Esqueleto del agente         ← COMPLETADA (LangGraph)
-CAPA 2 — Tests y CI                   ← EN PROGRESO (Automated Testing)
-CAPA 3 — Observabilidad y evals       ← PRÓXIMA (Evaluating AI Agents)
-CAPA 4 — Outputs tipados              ← PENDIENTE (Pydantic for LLM Workflows)
-CAPA 5 — RAG real con PDFs            ← PENDIENTE (LLM Zoomcamp o Coursera)
+CAPA 1 — Esqueleto del agente         ← COMPLETADA
+CAPA 2 — Tests y CI                   ← COMPLETADA
+CAPA 3 — Observabilidad y evals       ← EN PROGRESO
+  3A — Evaluadores a mano             ← COMPLETADA
+  3B — Integración LangSmith          ← PENDIENTE
+CAPA 4 — Outputs tipados con Pydantic ← PENDIENTE
+CAPA 5 — RAG real con PDFs            ← PENDIENTE (H2, LLM Zoomcamp)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
-Cada capa se construye sobre la anterior. Nunca se salta una capa.
-Nunca se espera terminar todos los cursos para empezar a construir.
+Nunca se salta una capa. Nunca se espera terminar todos los cursos
+para empezar a construir.
 
 ---
 
-## Estado actual del repo por archivo
+## Estado actual del repo
 
 ```
 src/
 ├── config.py      ✅ validación temprana de OPENAI_API_KEY
-├── state.py       ✅ AgentState con TypedDict
-├── tools.py       ✅ rag_search() y create_ticket() como stubs
+├── state.py       ✅ AgentState con TypedDict + add_messages
+├── tools.py       ✅ rag_search() y create_ticket() como stubs (@tool)
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
 └── main.py        ✅ FastAPI con POST /chat y persistencia por thread_id
 
 tests/
-├── conftest.py    ✅ fixtures compartidos (agent_graph, invoke_agent)
-├── test_rules.py  🔄 en construcción (Capa 2)
-├── test_evals.py  🔄 en construcción (Capa 2)
-└── reports/       ⬜ pendiente (pytest-html)
+├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent
+├── test_rules.py  ✅ 7 tests deterministas, sin API, 0.05s
+├── test_evals.py  ✅ LLM-as-judge usando evaluators.py compartido
+└── reports/       ✅ pytest-html local + artefacto en CI
 
 evals/
-└── golden_set.json ⬜ pendiente (Capa 3)
+├── golden_set.json  ✅ 20 preguntas sobre LangGraph docs
+├── evaluators.py    ✅ relevance, citation, convergence evaluators
+├── run_evals.py     ✅ corre evals y guarda en results/ por fecha/hora
+└── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
 
 .github/
 └── workflows/
-    └── ci.yml     ⬜ pendiente (Capa 2)
+    └── ci.yml     ✅ rules en cada push, evals solo en main (MAX_EVAL_CASES=1)
+
+── PENDIENTE ──
+Capa 3B: integración LangSmith (ver sección más abajo)
+Capa 4: src/schemas.py + outputs tipados
 ```
 
 ---
 
-## Curso 1 — AI Agents in LangGraph ✅ COMPLETADO
+## Capa 1 — AI Agents in LangGraph ✅
 
-**Plataforma:** DeepLearning.AI
-**Duración:** ~4 horas
-**Instructor:** Harrison Chase (LangChain)
-
-**Qué enseña:**
-- Loop ReAct: razonar → actuar → observar
-- StateGraph, nodes, edges, TypedDict de estado
-- Routing condicional con add_conditional_edges
-- Persistencia con MemorySaver y thread_id
-- Human in the loop con interrupt_before
-- Grafos multi-nodo con roles especializados
-
-**Qué se construyó en el repo (Capa 1):**
-- `src/state.py` — AgentState
+**Curso:** DeepLearning.AI — Harrison Chase
+**Construido:**
+- `src/state.py` — AgentState con TypedDict
 - `src/tools.py` — stubs de rag_search() y create_ticket()
 - `src/graph.py` — StateGraph con routing y MemorySaver
-- `src/config.py` — validación de API key
+- `src/config.py` — validación de API key al startup
 - `src/main.py` — FastAPI con /chat
 
-**Decisiones tomadas:**
-- Usar MemorySaver ahora, migrar a Postgres checkpointer cuando llegue Supabase
-- Tools como stubs hasta que llegue la capa de RAG real
-- gpt-4o-mini como modelo por defecto para reducir costos mientras se aprende
+**Decisiones activas:**
+- MemorySaver hasta Capa 5, luego migrar a Postgres checkpointer
+- Tools como stubs hasta Capa 5
+- gpt-4o-mini por defecto para reducir costos
 
 ---
 
-## Curso 2 — Automated Testing for LLMOps 🔄 EN PROGRESO
+## Capa 2 — Automated Testing for LLMOps ✅
 
-**Plataforma:** DeepLearning.AI
-**Duración:** ~52 minutos
-**Instructor:** Rob Zuber (CircleCI)
+**Curso:** DeepLearning.AI — Rob Zuber (CircleCI)
+**Traducción de stack:** CircleCI → GitHub Actions
 
-**Qué enseña:**
-- Tests deterministas (rules-based): rápidos, sin LLM, baratos
-- Model-graded evals: LLM-as-judge para calidad de respuestas
-- CI pipeline: automatizar tests en cada push
-- El curso usa CircleCI — nosotros usamos GitHub Actions
+**Construido:**
+- `tests/conftest.py` — fixtures compartidos
+- `tests/test_rules.py` — tests deterministas
+- `tests/test_evals.py` — LLM-as-judge con gpt-4o-mini
+- `tests/reports/` — pytest-html
+- `.github/workflows/ci.yml` — rules en cada push, evals solo en main
 
-**Qué se construye en el repo (Capa 2):**
-- `tests/conftest.py` — fixtures compartidos ✅ hecho
-- `tests/test_rules.py` — tests deterministas del agente
-- `tests/test_evals.py` — evaluaciones con LLM-as-judge (gpt-4o-mini)
-- `tests/reports/report.html` — reporte visual con pytest-html
-- `.github/workflows/ci.yml` — GitHub Actions
-  - test_rules.py corre en cada push a cualquier rama
-  - test_evals.py corre solo en push a main (ahorra tokens)
-
-**Dataset para tests:**
-- Fuente: documentación oficial de LangGraph
-  https://langchain-ai.github.io/langgraph/
-- Guardar en: `data/docs/langgraph_docs.pdf`
-- Golden set: `evals/golden_set.json` con 20 preguntas
-  sobre conceptos de LangGraph con respuestas esperadas
-
-**Nota importante:**
-- rag_search() sigue siendo stub hasta la Capa 5
-- test_evals.py usa known_context hardcodeado ahora
-- Cuando llegue el RAG real, known_context pasa a ser el chunk recuperado
+**Decisiones activas:**
+- rag_search() sigue siendo stub, test_evals.py usa known_context del golden_set
+- Cuando llegue RAG real (Capa 5), known_context pasa a ser el chunk recuperado
 
 ---
 
-## Curso 3 — Evaluating AI Agents ⬜ PRÓXIMO
+## Capa 3A — Evaluating AI Agents (evaluadores a mano) ✅
 
-**Plataforma:** DeepLearning.AI
-**Instructor:** John Gilhuly + Aman Khan (Arize AI)
+**Curso:** DeepLearning.AI — John Gilhuly + Aman Khan (Arize AI)
+**Traducción de stack:** Arize Phoenix → LangSmith (ver Capa 3B)
 
-**Qué enseña:**
-- Observabilidad real: trazas de cada paso del agente
-- Debug visual: ver exactamente qué nodo falló y por qué
-- Evaluación componente por componente:
-  - El router: ¿eligió la tool correcta?
-  - Las tools: ¿devolvieron lo esperado?
-  - La memoria: ¿el contexto se mantuvo entre turnos?
-- Tipos de evaluadores: code-based, LLM-as-judge, anotación humana
-- Convergence score: ¿el agente resuelve en pocos pasos o da vueltas?
-- Crear ejemplos de test a partir de trazas reales
+**Construido:**
+- `evals/golden_set.json` — 20 preguntas con expected_answer y category
+- `evals/evaluators.py` — relevance (LLM-judge), citation (code), convergence (code)
+- `evals/run_evals.py` — corre evals, guarda resultados por fecha/hora
+- `tests/test_evals.py` — actualizado para usar evaluators.py compartido
+- `.github/workflows/ci.yml` — agrega evals en main con MAX_EVAL_CASES=1
 
-**Qué se construye en el repo (Capa 3):**
-- `evals/golden_set.json` — 20-40 preguntas sobre LangGraph docs
-  con respuesta esperada y fuente
-- `evals/run_evals.py` — script para correr evaluaciones
-- `evals/results/` — resultados por fecha para comparar versiones
-- Métricas a implementar:
-  - Answer relevance (LLM-as-judge 1-5)
-  - Citation coverage (¿la respuesta cita la fuente?)
-  - Convergence score (pasos hasta respuesta final)
+---
 
-**Formato del golden_set.json:**
-```json
-[
-  {
-    "id": "q001",
-    "question": "¿Cuál es la diferencia entre add_edge y add_conditional_edges?",
-    "expected_answer": "add_edge conecta dos nodos de forma fija. add_conditional_edges usa una función de routing para decidir el próximo nodo según el estado.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
-  }
-]
+## Capa 3B — LangSmith ⬜ PENDIENTE
+
+**Por qué LangSmith y no Phoenix:**
+- Integración nativa con LangGraph (una variable de entorno, sin cambiar graph.py)
+- Es lo que piden en entrevistas para roles con LangGraph
+- Tier gratuito: 5.000 trazas/mes
+
+**Setup:**
+```bash
+pip install langsmith
+```
+```
+# Agregar al .env:
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=ls__...   ← obtener en smith.langchain.com
+LANGCHAIN_PROJECT=agentic-rag-fastapi
 ```
 
+**Archivos a modificar:**
+- `evals/run_evals.py` — enviar scores con `client.create_feedback()`
+- `evals/evaluators.py` — decorar `relevance_evaluator` con `@traceable`
+- `.github/workflows/ci.yml` — agregar LANGCHAIN_API_KEY como secret
+- `.env.example` — agregar las tres variables con placeholders
+
+**Regla crítica:** si LANGCHAIN_API_KEY no está en el .env, LangSmith
+se desactiva silenciosamente. El código nunca debe romper sin esa key.
+
 ---
 
-## Curso 4 — Pydantic for LLM Workflows ⬜ PENDIENTE
+## Capa 4 — Pydantic for LLM Workflows ⬜ PENDIENTE
 
-**Plataforma:** DeepLearning.AI
-**Instructor:** Ryan Keenan (DeepLearning.AI)
+**Curso:** DeepLearning.AI
 
-**Qué enseña:**
-- Qué es structured output y por qué importa en sistemas LLM
-- Pydantic BaseModel para definir esquemas de salida
-- Validación de inputs del usuario antes de llamar al LLM
-- Outputs tipados en API calls a OpenAI
-- Tool calling con tipos garantizados
-- Cómo LangGraph y otros frameworks usan Pydantic internamente
-
-**Qué se construye en el repo (Capa 4):**
-- `src/schemas.py` — modelos Pydantic para el proyecto:
-  - `ChatRequest` — validación del input del endpoint /chat
+**Qué se construye:**
+- `src/schemas.py` con modelos Pydantic:
+  - `ChatRequest` — validación del input de /chat
   - `ChatResponse` — respuesta tipada del agente
-  - `Ticket` — estructura de ticket para create_ticket()
-  - `RAGResult` — estructura de resultado de rag_search()
-- Reemplazar los stubs sin tipos por versiones tipadas
-- El endpoint /chat pasa de recibir dict a recibir ChatRequest validado
-- create_ticket() pasa de devolver string a devolver Ticket validado
+  - `Ticket` — estructura para create_ticket()
+  - `RAGResult` — estructura para rag_search()
+- El endpoint /chat pasa de dict a ChatRequest validado
+- create_ticket() pasa de string a objeto Ticket validado
 
-**Por qué importa:**
-- Antes de Pydantic: create_ticket() devuelve un string hardcodeado
-- Después de Pydantic: devuelve un objeto Ticket con campos validados,
-  listo para insertarse en Postgres cuando llegue Supabase
+**Por qué importa:** Ticket validado con Pydantic está listo para
+insertarse en Postgres cuando llegue Supabase en Capa 5.
 
 ---
 
-## Curso 5 — RAG real con PDFs ⬜ PENDIENTE (H2)
+## Capa 5 — RAG real con PDFs ⬜ PENDIENTE (H2)
 
-**Opciones (elegir una):**
-- LLM Zoomcamp (DataTalks.Club) — 10 semanas, más profundo
-- Optimizing & Deploying LLMs (Coursera) — 4-6 semanas, más rápido
+**Curso:** LLM Zoomcamp — DataTalks.Club
+**Decisión:** Zoomcamp sobre Coursera (proyecto real + comunidad + profundidad)
+**Timing:** arranca junio 2026, para entonces Capas 1-4 están completas
 
-**Qué se construye en el repo (Capa 5):**
+**Qué se construye:**
 - Reemplazar rag_search() stub por retrieval real
 - Ingesta de PDFs: chunking + embeddings + insert en pgvector
 - Supabase como base de datos (Postgres + pgvector)
 - rag_search() conecta a Supabase y devuelve chunks relevantes
-- Los tests de test_evals.py pasan de known_context hardcodeado
-  a contexto real recuperado del vector store
+- MemorySaver se migra a Postgres checkpointer
+- test_evals.py pasa de known_context fijo a chunk real recuperado
 
 ---
 
-## Reglas para Copilot
+## Reglas técnicas del stack
 
-1. Nunca sugerir librerías o herramientas que no estén en este roadmap
-   sin consultarme primero y explicar por qué.
+1. Nunca sugerir librerías fuera del stack sin consultarme y explicar por qué.
 
-2. Nunca saltar una capa. Si estamos en Capa 2, no construir
-   cosas de Capa 3 aunque parezca obvio.
+2. Nunca saltar una capa. El estado actual está arriba — respetarlo.
 
-3. Cuando algo del curso usa una herramienta diferente a la del stack
-   (ej: CircleCI en vez de GitHub Actions, Pinecone en vez de Supabase),
-   siempre traducir al stack definido aquí.
+3. Traducir siempre las herramientas del curso al stack del proyecto:
+   - CircleCI → GitHub Actions
+   - Arize Phoenix → LangSmith
+   - Pinecone → Supabase/pgvector
+   - Cualquier otra → preguntar antes
 
-4. Antes de cada sesión de construcción, recordarme en qué capa estamos
-   y qué falta completar de esa capa.
+4. El modelo siempre es gpt-4o-mini salvo indicación explícita.
 
-5. Clasificar cada cambio propuesto como:
-   - [aprendizaje] — para entender el patrón
-   - [ingeniería] — buena práctica de código
-   - [producción] — necesario para deploy real
-
-6. El modelo siempre es gpt-4o-mini salvo que yo indique lo contrario.
-
-7. Supabase y pgvector no se tocan hasta la Capa 5.
+5. Supabase y pgvector no se tocan hasta Capa 5.
    MemorySaver es suficiente hasta entonces.
+
+6. LangSmith (Capa 3B) debe degradarse silenciosamente si
+   LANGCHAIN_API_KEY no está en el .env. Nunca romper sin esa key.
+
+7. Antes de cada sesión, recordarme en qué capa estamos
+   y qué falta completar según el estado de arriba.

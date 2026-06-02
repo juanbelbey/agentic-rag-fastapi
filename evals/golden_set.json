@@ -1,0 +1,142 @@
+[
+  {
+    "id": "q001",
+    "question": "Que es un StateGraph en LangGraph y cuando conviene usarlo?",
+    "expected_answer": "StateGraph es una abstraccion para modelar un flujo de trabajo como un grafo donde cada nodo recibe y actualiza un estado compartido. Conviene usarlo cuando un agente necesita varios pasos, routing condicional o persistencia entre nodos.",
+    "source": "langgraph_docs",
+    "category": "graph_structure"
+  },
+  {
+    "id": "q002",
+    "question": "Cual es la diferencia entre add_edge y add_conditional_edges en LangGraph?",
+    "expected_answer": "add_edge conecta dos nodos de forma fija. add_conditional_edges usa una funcion de routing para decidir el siguiente nodo segun el estado actual.",
+    "source": "langgraph_docs",
+    "category": "routing"
+  },
+  {
+    "id": "q003",
+    "question": "Para que sirve el nodo START en un StateGraph?",
+    "expected_answer": "START es el punto de entrada del grafo. Se usa para indicar desde que nodo comienza la ejecucion del flujo.",
+    "source": "langgraph_docs",
+    "category": "graph_structure"
+  },
+  {
+    "id": "q004",
+    "question": "Para que sirve el nodo END en LangGraph?",
+    "expected_answer": "END representa el final del flujo del grafo. Cuando el routing devuelve END, la ejecucion termina y se devuelve el estado final.",
+    "source": "langgraph_docs",
+    "category": "graph_structure"
+  },
+  {
+    "id": "q005",
+    "question": "Como se define el estado compartido de un agente en LangGraph?",
+    "expected_answer": "El estado compartido se define normalmente con TypedDict o con un esquema compatible. Ese estado describe las claves que cada nodo puede leer y actualizar durante la ejecucion.",
+    "source": "langgraph_docs",
+    "category": "graph_structure"
+  },
+  {
+    "id": "q006",
+    "question": "Que hace add_messages cuando se usa en el estado del agente?",
+    "expected_answer": "add_messages es un reducer para la clave messages. En vez de reemplazar la lista completa, acumula los mensajes nuevos sobre el historial existente.",
+    "source": "langgraph_docs",
+    "category": "persistence"
+  },
+  {
+    "id": "q007",
+    "question": "Para que sirve MemorySaver en LangGraph?",
+    "expected_answer": "MemorySaver es un checkpointer en memoria que guarda el estado del grafo entre invocaciones. Permite retener historial por thread_id sin usar una base de datos externa.",
+    "source": "langgraph_docs",
+    "category": "persistence"
+  },
+  {
+    "id": "q008",
+    "question": "Que rol cumple thread_id cuando se usa persistencia con MemorySaver?",
+    "expected_answer": "thread_id identifica una conversacion o hilo de ejecucion. El checkpointer lo usa para separar y recuperar el estado correcto de cada sesion.",
+    "source": "langgraph_docs",
+    "category": "persistence"
+  },
+  {
+    "id": "q009",
+    "question": "Por que LangGraph separa nodos y estado en vez de pasar variables sueltas entre funciones?",
+    "expected_answer": "Porque el estado compartido hace explicito que datos circulan por el grafo y permite persistencia, depuracion y routing sobre una estructura comun en lugar de variables dispersas.",
+    "source": "langgraph_docs",
+    "category": "graph_structure"
+  },
+  {
+    "id": "q010",
+    "question": "Que es una tool en el contexto de LangGraph y LangChain?",
+    "expected_answer": "Una tool es una funcion expuesta al modelo para ejecutar acciones o recuperar informacion externa. El agente puede decidir llamarla y luego usar su resultado en un paso posterior.",
+    "source": "langgraph_docs",
+    "category": "tools"
+  },
+  {
+    "id": "q011",
+    "question": "Para que sirve bind_tools cuando se configura un chat model?",
+    "expected_answer": "bind_tools registra las tools en el modelo para que pueda emitir tool calls estructuradas. Asi el LLM puede decidir que herramienta usar y con que argumentos.",
+    "source": "langgraph_docs",
+    "category": "tools"
+  },
+  {
+    "id": "q012",
+    "question": "Que hace ToolNode dentro de un grafo de LangGraph?",
+    "expected_answer": "ToolNode ejecuta las tool calls que vienen en el ultimo mensaje del modelo. Toma esos llamados estructurados, corre las funciones correspondientes y agrega ToolMessages al estado.",
+    "source": "langgraph_docs",
+    "category": "tools"
+  },
+  {
+    "id": "q013",
+    "question": "Como se detecta normalmente en un router que el agente necesita llamar una tool?",
+    "expected_answer": "Se inspecciona el ultimo mensaje del modelo y se revisa si contiene tool_calls. Si existen llamadas de herramienta, el router envia la ejecucion al ToolNode; si no, termina o sigue otro camino.",
+    "source": "langgraph_docs",
+    "category": "routing"
+  },
+  {
+    "id": "q014",
+    "question": "Que problema resuelve el routing condicional en un agente?",
+    "expected_answer": "El routing condicional evita flujos rigidos. Permite que el siguiente paso dependa del estado actual, por ejemplo si hay que llamar una tool, pedir aprobacion humana o terminar la conversacion.",
+    "source": "langgraph_docs",
+    "category": "routing"
+  },
+  {
+    "id": "q015",
+    "question": "Que significa human in the loop en LangGraph?",
+    "expected_answer": "Human in the loop significa insertar un punto donde una persona puede revisar, aprobar o modificar el estado antes de continuar la ejecucion del grafo.",
+    "source": "langgraph_docs",
+    "category": "human_in_loop"
+  },
+  {
+    "id": "q016",
+    "question": "Para que sirve interrupt_before en un flujo con aprobacion humana?",
+    "expected_answer": "interrupt_before pausa la ejecucion antes de un nodo especifico. Eso permite inspeccionar el estado y decidir manualmente si continuar, editar datos o cancelar el flujo.",
+    "source": "langgraph_docs",
+    "category": "human_in_loop"
+  },
+  {
+    "id": "q017",
+    "question": "Que ventaja tiene pausar el grafo antes de una accion sensible como crear un ticket?",
+    "expected_answer": "Permite validar que el agente no vaya a ejecutar una accion incorrecta o costosa. Un humano puede revisar el contexto y autorizar la operacion antes de que ocurra.",
+    "source": "langgraph_docs",
+    "category": "human_in_loop"
+  },
+  {
+    "id": "q018",
+    "question": "Por que conviene evaluar router y tools por separado en un agente?",
+    "expected_answer": "Porque una respuesta final mala puede venir de varias causas distintas. Separar router y tools permite saber si el problema fue elegir mal el camino o ejecutar mal la accion.",
+    "source": "langgraph_docs",
+    "category": "routing"
+  },
+  {
+    "id": "q019",
+    "question": "Que informacion util aportan las trazas en la evaluacion de un agente?",
+    "expected_answer": "Las trazas muestran cada paso del agente, que nodo se ejecuto, que tool se llamo y como cambio el estado. Eso ayuda a diagnosticar fallos y medir convergencia.",
+    "source": "langgraph_docs",
+    "category": "routing"
+  },
+  {
+    "id": "q020",
+    "question": "Por que un golden set construido desde trazas reales suele ser mejor que uno inventado?",
+    "expected_answer": "Porque refleja preguntas, errores y recorridos que el agente realmente enfrento. Asi la evaluacion mide comportamientos reales del sistema y no solo casos ideales inventados manualmente.",
+    "source": "langgraph_docs",
+    "category": "human_in_loop"
+  }
+]
