@@ -25,7 +25,7 @@ técnica (LangGraph docs), agente con LangGraph, y tickets en Postgres.
 - Python + FastAPI
 - LangGraph (orquestación del agente)
 - OpenAI API (gpt-4o-mini por defecto)
-- LangSmith (observabilidad y evals) — se integra en Capa 3B
+- LangSmith (observabilidad y evals) — integrado en Capa 3B ✅
 - Supabase (Postgres + pgvector) — se incorpora en Capa 5
 - GitHub Actions (CI)
 - Deploy: Render/Fly.io (H1) → AWS (H2)
@@ -35,12 +35,12 @@ técnica (LangGraph docs), agente con LangGraph, y tickets en Postgres.
 ## Mapa de capas
 
 ```
-CAPA 1 — Esqueleto del agente         ← COMPLETADA
-CAPA 2 — Tests y CI                   ← COMPLETADA
-CAPA 3 — Observabilidad y evals       ← EN PROGRESO
-  3A — Evaluadores a mano             ← COMPLETADA
-  3B — Integración LangSmith          ← PENDIENTE
-CAPA 4 — Outputs tipados con Pydantic ← PENDIENTE
+CAPA 1 — Esqueleto del agente         ✅ COMPLETADA
+CAPA 2 — Tests y CI                   ✅ COMPLETADA
+CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
+  3A — Evaluadores a mano             ✅ COMPLETADA
+  3B — Integración LangSmith          ✅ COMPLETADA
+CAPA 4 — Outputs tipados con Pydantic ← EN PROGRESO (videos ✅, schemas pendiente)
 CAPA 5 — RAG real con PDFs            ← PENDIENTE (H2, LLM Zoomcamp)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -59,7 +59,8 @@ src/
 ├── tools.py       ✅ rag_search() y create_ticket() como stubs (@tool)
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
-└── main.py        ✅ FastAPI con POST /chat y persistencia por thread_id
+├── main.py        ✅ FastAPI con POST /chat y persistencia por thread_id
+└── schemas.py     ⬜ PENDIENTE — Capa 4 (próximo paso)
 
 tests/
 ├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent
@@ -69,17 +70,20 @@ tests/
 
 evals/
 ├── golden_set.json  ✅ 20 preguntas sobre LangGraph docs
-├── evaluators.py    ✅ relevance, citation, convergence evaluators
-├── run_evals.py     ✅ corre evals y guarda en results/ por fecha/hora
+├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
+│                       + @traceable para LangSmith (Capa 3B)
+├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
+│                       + client.create_feedback() para LangSmith (Capa 3B)
 └── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
+                        (corridas: 2026-05-29, 05-30, 06-01, 06-03)
 
 .github/
 └── workflows/
     └── ci.yml     ✅ rules en cada push, evals solo en main (MAX_EVAL_CASES=1)
+                      + LANGCHAIN_API_KEY como secret (Capa 3B)
 
-── PENDIENTE ──
-Capa 3B: integración LangSmith (ver sección más abajo)
-Capa 4: src/schemas.py + outputs tipados
+── PRÓXIMO PASO ──
+Capa 4: crear src/schemas.py + tipar /chat endpoint + tipar create_ticket()
 ```
 
 ---
@@ -133,50 +137,51 @@ Capa 4: src/schemas.py + outputs tipados
 
 ---
 
-## Capa 3B — LangSmith ⬜ PENDIENTE
+## Capa 3B — LangSmith ✅
 
 **Por qué LangSmith y no Phoenix:**
 - Integración nativa con LangGraph (una variable de entorno, sin cambiar graph.py)
 - Es lo que piden en entrevistas para roles con LangGraph
 - Tier gratuito: 5.000 trazas/mes
 
-**Setup:**
-```bash
-pip install langsmith
-```
-```
-# Agregar al .env:
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=ls__...   ← obtener en smith.langchain.com
-LANGCHAIN_PROJECT=agentic-rag-fastapi
-```
+**Integrado:**
+- `evals/evaluators.py` — `relevance_evaluator` decorado con `@traceable`
+- `evals/run_evals.py` — scores enviados con `client.create_feedback()`
+- `.github/workflows/ci.yml` — `LANGCHAIN_API_KEY` como secret
+- `.env.example` — variables con placeholders
 
-**Archivos a modificar:**
-- `evals/run_evals.py` — enviar scores con `client.create_feedback()`
-- `evals/evaluators.py` — decorar `relevance_evaluator` con `@traceable`
-- `.github/workflows/ci.yml` — agregar LANGCHAIN_API_KEY como secret
-- `.env.example` — agregar las tres variables con placeholders
-
-**Regla crítica:** si LANGCHAIN_API_KEY no está en el .env, LangSmith
-se desactiva silenciosamente. El código nunca debe romper sin esa key.
+**Regla activa:** si LANGCHAIN_API_KEY no está en el .env, LangSmith
+se desactiva silenciosamente. El código nunca rompe sin esa key.
 
 ---
 
-## Capa 4 — Pydantic for LLM Workflows ⬜ PENDIENTE
+## Capa 4 — Pydantic for LLM Workflows ← EN PROGRESO
 
 **Curso:** DeepLearning.AI
+**Estado:** videos vistos ✅ — construcción en el repo pendiente ⬜
 
-**Qué se construye:**
+**Conceptos aprendidos en el curso:**
+- `BaseModel` con typed fields, `Field()` constraints (ge/le/min_length/max_length)
+- `Literal[]` para campos con valores permitidos fijos
+- `Optional[]` para campos no obligatorios
+- `client.beta.chat.completions.parse()` con `response_format=MyModel`
+- Manejo de `ValidationError` con try/except
+
+**Qué se construye en el repo:**
 - `src/schemas.py` con modelos Pydantic:
-  - `ChatRequest` — validación del input de /chat
-  - `ChatResponse` — respuesta tipada del agente
-  - `Ticket` — estructura para create_ticket()
-  - `RAGResult` — estructura para rag_search()
-- El endpoint /chat pasa de dict a ChatRequest validado
-- create_ticket() pasa de string a objeto Ticket validado
+  - `ChatRequest` — validación del input de /chat (message + thread_id)
+  - `ChatResponse` — respuesta tipada del agente (answer + tool_calls usadas)
+  - `Ticket` — estructura para create_ticket() (summary + category + priority)
+  - `RAGResult` — estructura para rag_search() (content + source + score)
+- `src/main.py` — endpoint /chat pasa de dict a `ChatRequest` validado
+- `src/tools.py` — create_ticket() pasa de strings sueltos a objeto `Ticket`
 
-**Por qué importa:** Ticket validado con Pydantic está listo para
-insertarse en Postgres cuando llegue Supabase en Capa 5.
+**Por qué importa para Capa 5:** `Ticket` validado con Pydantic está listo
+para insertarse en Postgres cuando llegue Supabase. `RAGResult` tipado
+simplifica el parsing de los chunks de pgvector.
+
+**Próximo paso concreto:** crear `src/schemas.py` con los 4 modelos,
+luego tipar el endpoint /chat, luego tipar create_ticket().
 
 ---
 
@@ -193,6 +198,13 @@ insertarse en Postgres cuando llegue Supabase en Capa 5.
 - rag_search() conecta a Supabase y devuelve chunks relevantes
 - MemorySaver se migra a Postgres checkpointer
 - test_evals.py pasa de known_context fijo a chunk real recuperado
+
+---
+
+## Capa 6 — Deploy en AWS ⬜ PENDIENTE (H2)
+
+**Timing:** después de Capa 5
+**Opciones:** App Runner o ECS Fargate (decidir al llegar)
 
 ---
 

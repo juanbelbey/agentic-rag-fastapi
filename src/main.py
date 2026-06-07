@@ -1,24 +1,11 @@
+# src/main.py
 """Entrada FastAPI minima para conversar con el grafo del agente."""
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
 
 from src.config import Settings, load_settings
 from src.graph import graph
-
-
-class ChatRequest(BaseModel):
-    """Payload de entrada del endpoint /chat."""
-
-    message: str = Field(..., min_length=1, description="Mensaje del usuario")
-    thread_id: str = Field(..., min_length=1, description="ID de conversacion")
-
-
-class ChatResponse(BaseModel):
-    """Payload de salida del endpoint /chat."""
-
-    thread_id: str
-    response: str
+from src.schemas import ChatRequest, ChatResponse  # ← único cambio real
 
 
 app = FastAPI(title="Agentic RAG FastAPI", version="0.1.0")

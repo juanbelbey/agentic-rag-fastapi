@@ -66,7 +66,7 @@ class TestToolBehavior:
     def test_create_ticket_contains_summary(self):
         # El resumen enviado debe aparecer en la confirmacion devuelta.
         summary = "El cliente no puede iniciar sesion"
-        result = create_ticket.invoke({"summary": summary, "category": "soporte"})
+        result = create_ticket.invoke({"summary": summary, "category": "question"})
 
         assert summary in result, (
             f"El summary no aparece en la respuesta de create_ticket: {result}"
@@ -74,5 +74,5 @@ class TestToolBehavior:
 
     def test_create_ticket_returns_string(self):
         # La confirmacion siempre debe ser un string.
-        result = create_ticket.invoke({"summary": "test", "category": "general"})
+        result = create_ticket.invoke({"summary": "Test ticket", "category": "bug"})
         assert isinstance(result, str)

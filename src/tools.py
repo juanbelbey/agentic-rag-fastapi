@@ -1,29 +1,35 @@
-"""Tools iniciales del agente.
+# src/tools.py
+"""Tools del agente con schemas Pydantic.
 
-Cada tool empieza como una funcion normal de Python.
-El decorador @tool la convierte en una tool estructurada que el agente puede invocar.
+args_schema conecta cada tool con su modelo de validación:
+- LangChain usa el schema para informar al LLM qué campos enviar
+- Pydantic valida los argumentos antes de ejecutar el cuerpo
 """
 
 from langchain_core.tools import tool
 
+from src.schemas import RAGResult, TicketInput
+
+
+@tool(args_schema=TicketInput)
+def create_ticket(summary: str, category: str, priority: str = "medium") -> str:
+    """Crea un ticket y devuelve una confirmacion."""
+    print(f"[create_ticket] category={category} priority={priority} summary={summary}")
+    return (
+        f"Ticket creado — categoria: '{category}', "
+        f"prioridad: '{priority}', resumen: '{summary}'."
+    )
+
 
 @tool
 def rag_search(query: str) -> str:
-    """Busca informacion en una base de conocimiento simulada."""
-    return (
-        "Resultado simulado de RAG para la consulta: "
-        f"'{query}'. Documento encontrado: guia-interna-agentic-rag-fastapi.md"
+    """Busca informacion en la base de conocimiento."""
+    result = RAGResult(
+        content=f"Resultado simulado para: '{query}'",
+        source="guia-interna-agentic-rag-fastapi.md",
+        score=None,
     )
-
-
-@tool
-def create_ticket(summary: str, category: str) -> str:
-    """Crea un ticket simulado y devuelve una confirmacion."""
-    print(f"[create_ticket] category={category} summary={summary}")
-    return (
-        "Ticket simulado creado correctamente con categoria "
-        f"'{category}' y resumen '{summary}'."
-    )
+    return result.model_dump_json()
 
 
 TOOLS = [rag_search, create_ticket]
