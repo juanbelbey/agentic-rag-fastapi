@@ -41,7 +41,9 @@ CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
   3A — Evaluadores a mano             ✅ COMPLETADA
   3B — Integración LangSmith          ✅ COMPLETADA
 CAPA 4 — Outputs tipados con Pydantic ✅ COMPLETADA
-CAPA 5 — RAG real con PDFs            ← EN PROGRESO (LLM Zoomcamp M1 completo)
+CAPA 5 — RAG real con PDFs            ← EN PROGRESO
+  5A — Índice en memoria (numpy)      ✅ COMPLETADA (2026-06-20)
+  5B — pgvector/Supabase              ← PENDIENTE (después de LLM Zoomcamp M2)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -56,11 +58,15 @@ para empezar a construir.
 src/
 ├── config.py      ✅ validación temprana de OPENAI_API_KEY
 ├── state.py       ✅ AgentState con TypedDict + add_messages
-├── tools.py       ✅ rag_search() con RAGResult + create_ticket() con TicketInput
+├── tools.py       ✅ rag_search() con cosine similarity real + create_ticket() con TicketInput
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
-├── main.py        ✅ FastAPI con POST /chat tipado (ChatRequest / ChatResponse)
-└── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
+├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
+├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
+└── ingestion.py   ✅ chunking + embeddings OpenAI + InMemoryIndex numpy (Capa 5A)
+
+docs/
+└── langgraph-intro.txt  ✅ base de conocimiento inicial (extraída del golden_set)
 
 tests/
 ├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent

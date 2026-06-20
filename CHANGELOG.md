@@ -6,6 +6,24 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-06-20 — Capa 5A completa: RAG en memoria con embeddings y cosine similarity
+**Commit:** `feat: Capa 5A`
+
+- `src/ingestion.py` (nuevo): pipeline completo — chunking con ventana deslizante, embeddings con `text-embedding-3-small`, `InMemoryIndex` con numpy
+- `src/tools.py`: `rag_search()` reemplaza stub por cosine similarity real sobre el índice; devuelve lista de `RAGResult` con scores reales
+- `src/main.py`: `lifespan` construye el índice al arrancar leyendo `docs/*.txt`; reemplaza `@app.on_event` deprecado
+- `docs/langgraph-intro.txt` (nuevo): base de conocimiento inicial sobre LangGraph, alineada con el golden_set
+- `requirements.txt`: agrega `numpy==2.4.6` y `langsmith==0.7.37`
+- `ROADMAP.md`, `CHANGELOG.md`, `STACK.md`: documentación actualizada
+
+**Verificado:** endpoint `/chat` llama `rag_search()` de forma real (confirmado con print temporal en uvicorn)
+
+**Deuda técnica pendiente:**
+- `test_rag_search_contains_query_word` pasa por razones equivocadas (índice vacío en tests)
+- `ChatResponse.tool_calls_used` siempre devuelve `[]` — no se popula todavía
+
+---
+
 ## 2026-06-07 — Capa 4 completa: schemas Pydantic
 **Commit:** `f552cfd`
 
