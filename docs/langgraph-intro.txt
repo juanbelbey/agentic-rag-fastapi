@@ -1,0 +1,23 @@
+LangGraph es una libreria para construir agentes y flujos de trabajo con grafos. Permite modelar la logica de un agente como nodos y aristas con estado compartido y persistencia entre pasos.
+
+StateGraph es una abstraccion para modelar un flujo de trabajo como un grafo donde cada nodo recibe y actualiza un estado compartido. Conviene usarlo cuando un agente necesita varios pasos, routing condicional o persistencia entre nodos.
+
+add_edge conecta dos nodos de forma fija. add_conditional_edges usa una funcion de routing para decidir el siguiente nodo segun el estado actual. El routing condicional evita flujos rigidos y permite que el siguiente paso dependa del estado actual, por ejemplo si hay que llamar una tool, pedir aprobacion humana o terminar la conversacion.
+
+START es el punto de entrada del grafo. Se usa para indicar desde que nodo comienza la ejecucion del flujo. END representa el final del flujo del grafo. Cuando el routing devuelve END, la ejecucion termina y se devuelve el estado final.
+
+El estado compartido se define normalmente con TypedDict o con un esquema compatible. Ese estado describe las claves que cada nodo puede leer y actualizar durante la ejecucion. LangGraph separa nodos y estado porque el estado compartido hace explicito que datos circulan por el grafo y permite persistencia, depuracion y routing sobre una estructura comun en lugar de variables dispersas.
+
+add_messages es un reducer para la clave messages. En vez de reemplazar la lista completa, acumula los mensajes nuevos sobre el historial existente. Esto permite mantener el historial de la conversacion a traves de multiples invocaciones del grafo.
+
+MemorySaver es un checkpointer en memoria que guarda el estado del grafo entre invocaciones. Permite retener historial por thread_id sin usar una base de datos externa. thread_id identifica una conversacion o hilo de ejecucion. El checkpointer lo usa para separar y recuperar el estado correcto de cada sesion.
+
+Una tool es una funcion expuesta al modelo para ejecutar acciones o recuperar informacion externa. El agente puede decidir llamarla y luego usar su resultado en un paso posterior. bind_tools registra las tools en el modelo para que pueda emitir tool calls estructuradas. Asi el LLM puede decidir que herramienta usar y con que argumentos.
+
+ToolNode ejecuta las tool calls que vienen en el ultimo mensaje del modelo. Toma esos llamados estructurados, corre las funciones correspondientes y agrega ToolMessages al estado. Para detectar si el agente necesita llamar una tool, se inspecciona el ultimo mensaje del modelo y se revisa si contiene tool_calls. Si existen llamadas de herramienta, el router envia la ejecucion al ToolNode; si no, termina o sigue otro camino.
+
+Human in the loop significa insertar un punto donde una persona puede revisar, aprobar o modificar el estado antes de continuar la ejecucion del grafo. interrupt_before pausa la ejecucion antes de un nodo especifico. Eso permite inspeccionar el estado y decidir manualmente si continuar, editar datos o cancelar el flujo. Pausar el grafo antes de una accion sensible como crear un ticket permite validar que el agente no vaya a ejecutar una accion incorrecta o costosa.
+
+Conviene evaluar router y tools por separado en un agente porque una respuesta final mala puede venir de varias causas distintas. Separar router y tools permite saber si el problema fue elegir mal el camino o ejecutar mal la accion. Las trazas muestran cada paso del agente, que nodo se ejecuto, que tool se llamo y como cambio el estado. Eso ayuda a diagnosticar fallos y medir convergencia.
+
+Un golden set construido desde trazas reales suele ser mejor que uno inventado porque refleja preguntas, errores y recorridos que el agente realmente enfrento. Asi la evaluacion mide comportamientos reales del sistema y no solo casos ideales inventados manualmente.

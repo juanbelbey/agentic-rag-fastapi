@@ -40,8 +40,8 @@ CAPA 2 — Tests y CI                   ✅ COMPLETADA
 CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
   3A — Evaluadores a mano             ✅ COMPLETADA
   3B — Integración LangSmith          ✅ COMPLETADA
-CAPA 4 — Outputs tipados con Pydantic ← EN PROGRESO (videos ✅, schemas pendiente)
-CAPA 5 — RAG real con PDFs            ← PENDIENTE (H2, LLM Zoomcamp)
+CAPA 4 — Outputs tipados con Pydantic ✅ COMPLETADA
+CAPA 5 — RAG real con PDFs            ← EN PROGRESO (LLM Zoomcamp M1 completo)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -56,11 +56,11 @@ para empezar a construir.
 src/
 ├── config.py      ✅ validación temprana de OPENAI_API_KEY
 ├── state.py       ✅ AgentState con TypedDict + add_messages
-├── tools.py       ✅ rag_search() y create_ticket() como stubs (@tool)
+├── tools.py       ✅ rag_search() con RAGResult + create_ticket() con TicketInput
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
-├── main.py        ✅ FastAPI con POST /chat y persistencia por thread_id
-└── schemas.py     ⬜ PENDIENTE — Capa 4 (próximo paso)
+├── main.py        ✅ FastAPI con POST /chat tipado (ChatRequest / ChatResponse)
+└── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 
 tests/
 ├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent
@@ -83,7 +83,7 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 4: crear src/schemas.py + tipar /chat endpoint + tipar create_ticket()
+Capa 5: crear src/ingestion.py (chunking + embeddings en memoria) → luego reemplazar rag_search() stub
 ```
 
 ---
@@ -155,10 +155,10 @@ se desactiva silenciosamente. El código nunca rompe sin esa key.
 
 ---
 
-## Capa 4 — Pydantic for LLM Workflows ← EN PROGRESO
+## Capa 4 — Pydantic for LLM Workflows ✅
 
 **Curso:** DeepLearning.AI
-**Estado:** videos vistos ✅ — construcción en el repo pendiente ⬜
+**Estado:** completa — videos ✅ — código ✅ (commit f552cfd, 2026-06-07)
 
 **Conceptos aprendidos en el curso:**
 - `BaseModel` con typed fields, `Field()` constraints (ge/le/min_length/max_length)
@@ -167,36 +167,48 @@ se desactiva silenciosamente. El código nunca rompe sin esa key.
 - `client.beta.chat.completions.parse()` con `response_format=MyModel`
 - Manejo de `ValidationError` con try/except
 
-**Qué se construye en el repo:**
+**Construido en el repo:**
 - `src/schemas.py` con modelos Pydantic:
   - `ChatRequest` — validación del input de /chat (message + thread_id)
-  - `ChatResponse` — respuesta tipada del agente (answer + tool_calls usadas)
-  - `Ticket` — estructura para create_ticket() (summary + category + priority)
-  - `RAGResult` — estructura para rag_search() (content + source + score)
-- `src/main.py` — endpoint /chat pasa de dict a `ChatRequest` validado
-- `src/tools.py` — create_ticket() pasa de strings sueltos a objeto `Ticket`
+  - `ChatResponse` — respuesta tipada del agente (response + tool_calls_used)
+  - `TicketInput` — args_schema para create_ticket() (summary + category + priority)
+  - `RAGResult` — contrato de rag_search() (content + source + score)
+- `src/main.py` — endpoint /chat usa `ChatRequest` + `response_model=ChatResponse`
+- `src/tools.py` — `create_ticket` tiene `args_schema=TicketInput`; `rag_search` serializa `RAGResult`
 
-**Por qué importa para Capa 5:** `Ticket` validado con Pydantic está listo
-para insertarse en Postgres cuando llegue Supabase. `RAGResult` tipado
-simplifica el parsing de los chunks de pgvector.
-
-**Próximo paso concreto:** crear `src/schemas.py` con los 4 modelos,
-luego tipar el endpoint /chat, luego tipar create_ticket().
+**Por qué importa para Capa 5:** `RAGResult` ya define el contrato que `ingestion.py`
+debe satisfacer. `TicketInput` está listo para conectarse a Postgres cuando llegue Supabase.
 
 ---
 
-## Capa 5 — RAG real con PDFs ⬜ PENDIENTE (H2)
+## Capa 5 — RAG real con PDFs ← EN PROGRESO
 
-**Curso:** LLM Zoomcamp — DataTalks.Club
+**Curso:** LLM Zoomcamp — DataTalks.Club (M1 completo 2026-06-20)
 **Decisión:** Zoomcamp sobre Coursera (proyecto real + comunidad + profundidad)
-**Timing:** arranca junio 2026, para entonces Capas 1-4 están completas
+
+**Plan de construcción en dos subfases:**
+
+**5A — Índice en memoria (M1 aplicado):**
+- `src/ingestion.py` nuevo: carga texto → chunking con ventana deslizante → embeddings → índice numpy/minsearch
+- `rag_search()` reemplaza stub: genera embedding de la query → busca top-N chunks por cosine similarity
+- `RAGResult` (Capa 4) es el contrato que ya existe — la interfaz no cambia
+
+**5B — pgvector/Supabase (M2 aplicado):**
+- Migrar índice en memoria → Supabase (Postgres + pgvector)
+- MemorySaver → Postgres checkpointer
+- test_evals.py: `known_context` pasa a ser el chunk real recuperado
+
+**Por qué construir 5A antes de ver M2:**
+- La interfaz (`rag_search` → `RAGResult`) no cambia al migrar — solo el backend
+- Entender el problema (similitud semántica en numpy) antes de la solución (pgvector) es mejor aprendizaje
+- Tener un pipeline funcional acelera la integración de M2
 
 **Qué se construye:**
 - Reemplazar rag_search() stub por retrieval real
-- Ingesta de PDFs: chunking + embeddings + insert en pgvector
-- Supabase como base de datos (Postgres + pgvector)
-- rag_search() conecta a Supabase y devuelve chunks relevantes
-- MemorySaver se migra a Postgres checkpointer
+- Ingesta de PDFs: chunking + embeddings + almacenamiento
+- Supabase como base de datos (Postgres + pgvector) — en 5B
+- rag_search() conecta a Supabase y devuelve chunks relevantes — en 5B
+- MemorySaver se migra a Postgres checkpointer — en 5B
 - test_evals.py pasa de known_context fijo a chunk real recuperado
 
 ---

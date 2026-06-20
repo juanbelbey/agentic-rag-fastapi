@@ -17,6 +17,12 @@ uvicorn==0.46.0
 # Validacion de datos
 pydantic==2.12.4
 
+# Observabilidad
+langsmith==0.7.37
+
+# Vectores (Capa 5A - indice en memoria)
+numpy==2.4.6
+
 # Configuracion
 python-dotenv==1.2.1
 

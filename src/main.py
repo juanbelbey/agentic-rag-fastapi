@@ -1,22 +1,39 @@
 # src/main.py
 """Entrada FastAPI minima para conversar con el grafo del agente."""
 
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 
 from src.config import Settings, load_settings
 from src.graph import graph
-from src.schemas import ChatRequest, ChatResponse  # ← único cambio real
+from src.ingestion import build_index
+from src.schemas import ChatRequest, ChatResponse
+from src.tools import set_index
 
+DOCS_DIR = Path(__file__).parent.parent / "docs"
 
-app = FastAPI(title="Agentic RAG FastAPI", version="0.1.0")
 settings: Settings | None = None
 
 
-@app.on_event("startup")
-def on_startup() -> None:
-    """Valida configuracion al iniciar la app (fail fast)."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: valida config y construye el indice RAG."""
     global settings
     settings = load_settings()
+
+    documents = [
+        (path.read_text(encoding="utf-8"), path.name)
+        for path in DOCS_DIR.glob("*.txt")
+    ]
+    if documents:
+        set_index(build_index(documents))
+
+    yield  # la app corre aqui
+
+
+app = FastAPI(title="Agentic RAG FastAPI", version="0.1.0", lifespan=lifespan)
 
 
 @app.post("/chat", response_model=ChatResponse)
