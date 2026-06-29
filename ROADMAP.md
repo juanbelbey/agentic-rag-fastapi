@@ -42,8 +42,9 @@ CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
   3B — Integración LangSmith          ✅ COMPLETADA
 CAPA 4 — Outputs tipados con Pydantic ✅ COMPLETADA
 CAPA 5 — RAG real con PDFs            ← EN PROGRESO
-  5A — Índice en memoria (numpy)      ✅ COMPLETADA (2026-06-20)
-  5B — pgvector/Supabase              ← PENDIENTE (después de LLM Zoomcamp M2)
+  5A  — Índice en memoria (numpy)     ✅ COMPLETADA (2026-06-20)
+  5A.2 — Hybrid search + RRF          ← PRÓXIMO (post LLM Zoomcamp M2)
+  5B  — pgvector/Supabase + FTS       ← PENDIENTE
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -89,7 +90,7 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 5: crear src/ingestion.py (chunking + embeddings en memoria) → luego reemplazar rag_search() stub
+Capa 5A.2: hybrid search en memoria — agregar KeywordIndex a ingestion.py + rrf() + actualizar rag_search() en tools.py
 ```
 
 ---
@@ -199,7 +200,7 @@ debe satisfacer. `TicketInput` está listo para conectarse a Postgres cuando lle
 - `rag_search()` reemplaza stub: genera embedding de la query → busca top-N chunks por cosine similarity
 - `RAGResult` (Capa 4) es el contrato que ya existe — la interfaz no cambia
 
-**5B — pgvector/Supabase (M2 aplicado):**
+**5B — pgvector/Supabase + Postgres FTS (M2 aplicado):**
 - Migrar índice en memoria → Supabase (Postgres + pgvector)
 - MemorySaver → Postgres checkpointer
 - test_evals.py: `known_context` pasa a ser el chunk real recuperado
