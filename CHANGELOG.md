@@ -6,6 +6,26 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-01 — Capa 5B.0 + 5B.1: infraestructura Supabase + script de ingesta
+**Commit:** sin commitear todavía — revisar y confirmar antes de commitear
+
+- **5B.0 (infra Supabase):** proyecto Supabase creado, extensión `vector` habilitada, tabla `chunks` (`id`, `content text`, `source text`, `chunk_index int`, `embedding vector(1536)`) + índice `hnsw` (`vector_cosine_ops`). Conexión verificada con `psycopg2` usando `DATABASE_URL` (Session pooler, usuario `postgres.<project-ref>`)
+- `.env.example`: agrega `DATABASE_URL` (además, se corrigió que el archivo estaba guardado en UTF-16 en vez de UTF-8 — se leía corrupto)
+- `requirements.txt`: agrega `psycopg2-binary==2.9.11` y `pgvector==0.4.1`
+- **5B.1 (script de ingesta):** `scripts/ingest.py` (nuevo) — lee `docs/*.txt`, reutiliza `chunk_text`/`embed_texts` de `src/ingestion.py`, hace `TRUNCATE` + insert batch (`execute_values`) en la tabla `chunks`. Se corre a mano (`python -m scripts.ingest`), no en el lifespan de `main.py` — ingesta y serving quedan separados a propósito
+- **Verificado:** 16 chunks insertados desde `langgraph-intro.txt` con `chunk_index` correcto por documento
+- `rag_search()` **no cambió** — sigue usando el `InMemoryIndex` de 5A.2. La tabla de Supabase está poblada pero todavía no la consulta nadie (eso es 5B.2)
+- `ROADMAP.md` actualizado: 5B.0 y 5B.1 marcadas completas, próximo paso es 5B.2
+
+**Nota de proceso (para retomar mañana):** esta sesión avanzó dos sub-capas seguidas (5B.0 y 5B.1) sin pausar entre piezas para preguntas de comprensión — más rápido de lo que pide el estilo de trabajo acordado (AGENTS.md / COPILOT_STRATEGY.md: ir de a poco, explicar, pregunta de active recall, esperar respuesta). Mañana conviene repasar ambas piezas con calma antes de seguir a 5B.2:
+- ¿Por qué HNSW en vez de IVFFlat, y qué hace distinto de un índice normal de Postgres (B-tree)?
+- ¿Por qué separar el script de ingesta del lifespan de `main.py` en vez de reconstruir todo en cada arranque?
+- ¿Por qué `TRUNCATE` antes de insertar, y qué pasaría si se corriera el script sin el truncate?
+
+**Pendiente futuro (no bloquea 5B):** sumar soporte de PDFs reales en la ingesta antes de publicar el repo — la tabla ya es agnóstica a la fuente, solo falta extracción de texto (pypdf/pdfplumber) en `scripts/ingest.py`.
+
+---
+
 ## 2026-06-20 — Capa 5A completa: RAG en memoria con embeddings y cosine similarity
 **Commit:** `feat: Capa 5A`
 

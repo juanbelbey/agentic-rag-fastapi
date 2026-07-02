@@ -43,8 +43,12 @@ CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
 CAPA 4 — Outputs tipados con Pydantic ✅ COMPLETADA
 CAPA 5 — RAG real con PDFs            ← EN PROGRESO
   5A  — Índice en memoria (numpy)     ✅ COMPLETADA (2026-06-20)
-  5A.2 — Hybrid search + RRF          ← PRÓXIMO (post LLM Zoomcamp M2)
-  5B  — pgvector/Supabase + FTS       ← PENDIENTE
+  5A.2 — Hybrid search + RRF          ✅ COMPLETADA (2026-07-01)
+  5B  — pgvector/Supabase + FTS       ← EN PROGRESO
+    5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
+    5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
+    5B.2 — Migrar rag_search()        ← PRÓXIMO PASO
+    5B.3 — Postgres checkpointer      ← PENDIENTE
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -64,7 +68,10 @@ src/
 ├── prompts.py     ✅ system prompts
 ├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
-└── ingestion.py   ✅ chunking + embeddings OpenAI + InMemoryIndex numpy (Capa 5A)
+└── ingestion.py   ✅ chunking + embeddings OpenAI + InMemoryIndex numpy + KeywordIndex TF-IDF + rrf() (Capa 5A/5A.2)
+
+scripts/
+└── ingest.py      ✅ ingesta manual: docs/*.txt → chunks → embeddings → tabla chunks en Supabase (Capa 5B.1)
 
 docs/
 └── langgraph-intro.txt  ✅ base de conocimiento inicial (extraída del golden_set)
@@ -90,7 +97,7 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 5A.2: hybrid search en memoria — agregar KeywordIndex a ingestion.py + rrf() + actualizar rag_search() en tools.py
+Capa 5B.2: migrar rag_search() — que consulte la tabla chunks de Supabase (pgvector <=> + Postgres FTS) en vez del InMemoryIndex
 ```
 
 ---

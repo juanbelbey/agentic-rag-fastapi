@@ -23,6 +23,10 @@ langsmith==0.7.37
 # Vectores (Capa 5A - indice en memoria)
 numpy==2.4.6
 
+# Postgres + pgvector (Capa 5B)
+psycopg2-binary==2.9.11
+pgvector==0.4.1
+
 # Configuracion
 python-dotenv==1.2.1
 
