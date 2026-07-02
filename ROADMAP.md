@@ -47,7 +47,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
   5B  — pgvector/Supabase + FTS       ← EN PROGRESO
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
-    5B.2 — Migrar rag_search()        ← PRÓXIMO PASO
+    5B.2 — Migrar rag_search()        ← EN PROGRESO (plan definido, código sin empezar)
     5B.3 — Postgres checkpointer      ← PENDIENTE
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -97,7 +97,20 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 5B.2: migrar rag_search() — que consulte la tabla chunks de Supabase (pgvector <=> + Postgres FTS) en vez del InMemoryIndex
+Capa 5B.2, pieza 1: conectar rag_search() a Postgres.
+Decisión ya tomada (2026-07-02): arrancar simple — abrir/cerrar una conexión
+psycopg2 nueva en cada llamada a rag_search() (igual que scripts/ingest.py),
+NO un connection pool todavía. El pool queda anotado como mejora de
+rendimiento para después, una vez que la versión simple funcione.
+
+Plan completo de 5B.2 (en orden):
+1. Conexión a Postgres desde rag_search()          ← EMPEZAR ACÁ
+2. Query SQL de vector search (embedding <=> query, ORDER BY distancia)
+3. Query SQL de keyword search (Postgres FTS: to_tsvector / ts_rank)
+4. Fusionar ambas listas con rrf() — la función de ingestion.py NO cambia,
+   solo mira (id, score) genéricos, no le importa si el id viene de una
+   lista en memoria o de una fila de Postgres
+5. Reemplazar _index.hybrid_search() dentro de rag_search() por lo nuevo
 ```
 
 ---

@@ -6,8 +6,20 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-02 — Repaso 5B.0/5B.1 + commit + arranque de 5B.2 (sin código todavía)
+**Commit:** `834e71a`
+
+- Repaso de active recall de las tres preguntas pendientes de la sesión anterior (HNSW vs IVFFlat/B-tree, por qué separar ingesta de serving, por qué TRUNCATE) — las tres cerradas y entendidas.
+- `scripts/ingest.py`: se agregaron comentarios en primera persona sobre cada función y paso del flujo, a pedido de Juan, para reforzar la comprensión.
+- **Hallazgo de seguridad:** `.env` estaba trackeado en git desde el commit `0e97122` (antes de existir `.gitignore`), a pesar de que `.gitignore` ya lo excluye. Con el `DATABASE_URL` nuevo a punto de commitearse, eso hubiera expuesto la password real de Supabase en el historial de GitHub. Se corrigió con `git rm --cached .env` en este mismo commit — `.env` sigue en disco, pero deja de versionarse desde ahora.
+- **Pendiente sin resolver (no bloquea 5B.2):** las credenciales reales (`OPENAI_API_KEY`, `DATABASE_URL`) siguen visibles en commits viejos del historial de git. Falta (a) rotar esas keys y (b) limpiar el historial (`git filter-repo` o similar) antes de publicar el repo.
+- **5B.2 arrancó pero sin código:** se definió el plan de 5 pasos (ver ROADMAP.md) y se tomó la primera decisión — `rag_search()` va a abrir/cerrar una conexión psycopg2 nueva en cada llamada (igual que `scripts/ingest.py`), sin connection pool todavía. El pool queda anotado como mejora de rendimiento para más adelante, una vez que la versión simple ande.
+- **Próximo paso concreto (para la próxima sesión):** implementar la pieza 1 — la conexión a Postgres dentro de `rag_search()` (o un helper nuevo), reemplazando el uso de `_index` para esa parte. Después seguir con la query de vector search (paso 2 del plan).
+
+---
+
 ## 2026-07-01 — Capa 5B.0 + 5B.1: infraestructura Supabase + script de ingesta
-**Commit:** sin commitear todavía — revisar y confirmar antes de commitear
+**Commit:** `834e71a` (commiteado el 2026-07-02, un día después de escrito)
 
 - **5B.0 (infra Supabase):** proyecto Supabase creado, extensión `vector` habilitada, tabla `chunks` (`id`, `content text`, `source text`, `chunk_index int`, `embedding vector(1536)`) + índice `hnsw` (`vector_cosine_ops`). Conexión verificada con `psycopg2` usando `DATABASE_URL` (Session pooler, usuario `postgres.<project-ref>`)
 - `.env.example`: agrega `DATABASE_URL` (además, se corrigió que el archivo estaba guardado en UTF-16 en vez de UTF-8 — se leía corrupto)
