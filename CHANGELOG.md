@@ -6,6 +6,22 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-03 — Capa 5B.2: pasos 1-3/5 (conexión Postgres + queries SQL)
+**Commit:** sin commitear todavía (cambios en working tree)
+
+- `src/tools.py`: tres funciones privadas nuevas, primer código real de 5B.2:
+  - `_get_connection()` — `psycopg2.connect(DATABASE_URL)` + `register_vector(conn)`, conexión nueva por llamada (sin pool, decisión tomada en la sesión anterior)
+  - `_vector_search(conn, query_embedding, top_k)` — `SELECT id, embedding <=> %s AS distance ... ORDER BY distance LIMIT %s`, devuelve `[(chunk_id, distance), ...]`
+  - `_keyword_search(conn, query, top_k)` — Postgres FTS (`to_tsvector('spanish', ...)` / `plainto_tsquery` / `ts_rank`), devuelve `[(chunk_id, rank), ...]`
+  - Ninguna está conectada todavía a `rag_search()`, que sigue usando `_index` (InMemoryIndex) sin cambios — por eso Pylance marca las tres como "not accessed", esperado hasta el paso 5.
+- `scripts/ingest.py`: comentario de `register_vector` ampliado para explicar que traduce el tipo `vector` en los dos sentidos (Python→Postgres al insertar, Postgres→Python al mandar el embedding de la query como parámetro en `_vector_search`).
+- Repaso de conceptos de la sesión: pool de conexiones vs. conexión por request (por qué el `InMemoryIndex` sí puede ser global/compartido y una conexión a Postgres no — dato inmutable vs. estado de conversación), TCP vs HTTP, sockets, el operador `<=>` de pgvector, parametrización con `%s` y por qué previene SQL injection, orden lógico de evaluación de SQL (`WHERE` se evalúa antes que `SELECT`, por qué `plainto_tsquery` se repite en la query de FTS).
+- **Housekeeping:** `.claude/skills/actualizar-roadmap-changelog.skill` estaba como ZIP sin extraer (Claude Code no lo reconocía como skill). Se extrajo a `.claude/skills/actualizar-roadmap-changelog/SKILL.md` y se borró el zip original.
+- **Inconsistencia encontrada y corregida en ROADMAP.md:** la línea de `tools.py` en "Estado actual del repo" todavía decía "cosine similarity real" sin mencionar el hybrid search (TF-IDF + RRF) agregado en 5A.2 — quedó desactualizada desde esa sesión (2026-07-01).
+- **Próximo paso concreto:** paso 4 de 5B.2 — fusionar `_vector_search()` + `_keyword_search()` con `rrf()`. Después, paso 5: reemplazar `_index.hybrid_search()` dentro de `rag_search()`, resolviendo cómo traer `content`/`source` para cada `id` ganador del RRF.
+
+---
+
 ## 2026-07-02 — Repaso 5B.0/5B.1 + commit + arranque de 5B.2 (sin código todavía)
 **Commit:** `834e71a`
 

@@ -47,7 +47,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
   5B  — pgvector/Supabase + FTS       ← EN PROGRESO
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
-    5B.2 — Migrar rag_search()        ← EN PROGRESO (plan definido, código sin empezar)
+    5B.2 — Migrar rag_search()        ← EN PROGRESO (pasos 1-3/5: conexión + queries SQL)
     5B.3 — Postgres checkpointer      ← PENDIENTE
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -63,7 +63,9 @@ para empezar a construir.
 src/
 ├── config.py      ✅ validación temprana de OPENAI_API_KEY
 ├── state.py       ✅ AgentState con TypedDict + add_messages
-├── tools.py       ✅ rag_search() con cosine similarity real + create_ticket() con TicketInput
+├── tools.py       ✅ rag_search() con hybrid search (vector+TF-IDF+RRF, 5A.2) sobre InMemoryIndex
+│                     + helpers Postgres en progreso (_get_connection/_vector_search/_keyword_search, 5B.2)
+│                     + create_ticket() con TicketInput
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
 ├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
@@ -97,20 +99,27 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 5B.2, pieza 1: conectar rag_search() a Postgres.
-Decisión ya tomada (2026-07-02): arrancar simple — abrir/cerrar una conexión
-psycopg2 nueva en cada llamada a rag_search() (igual que scripts/ingest.py),
-NO un connection pool todavía. El pool queda anotado como mejora de
-rendimiento para después, una vez que la versión simple funcione.
+Capa 5B.2, paso 4: fusionar _vector_search() + _keyword_search() con rrf().
 
-Plan completo de 5B.2 (en orden):
-1. Conexión a Postgres desde rag_search()          ← EMPEZAR ACÁ
-2. Query SQL de vector search (embedding <=> query, ORDER BY distancia)
-3. Query SQL de keyword search (Postgres FTS: to_tsvector / ts_rank)
-4. Fusionar ambas listas con rrf() — la función de ingestion.py NO cambia,
-   solo mira (id, score) genéricos, no le importa si el id viene de una
-   lista en memoria o de una fila de Postgres
-5. Reemplazar _index.hybrid_search() dentro de rag_search() por lo nuevo
+Pasos 1-3 del plan ya implementados en src/tools.py (2026-07-03), como funciones
+privadas todavía NO conectadas a rag_search() (que sigue usando _index/InMemoryIndex
+sin cambios):
+1. ✅ _get_connection() — psycopg2.connect(DATABASE_URL) + register_vector(conn),
+   conexión nueva por llamada, sin pool (decisión: simple primero, pool queda
+   para más adelante).
+2. ✅ _vector_search(conn, query_embedding, top_k) — SELECT id, embedding <=> %s
+   AS distance ... ORDER BY distance LIMIT %s. Devuelve [(chunk_id, distance), ...].
+3. ✅ _keyword_search(conn, query, top_k) — Postgres FTS con to_tsvector('spanish', ...)
+   / plainto_tsquery / ts_rank. Devuelve [(chunk_id, rank), ...].
+
+Quedan pendientes:
+4. Fusionar ambas listas con rrf() de ingestion.py — la función NO cambia, ya es
+   agnóstica a si el id viene de una lista en memoria o de una fila de Postgres.
+   OJO: el int de cada tupla ahora es el id real de la fila en chunks, no una
+   posición de array como con InMemoryIndex.
+5. Reemplazar _index.hybrid_search() dentro de rag_search() por lo nuevo.
+   Pendiente de resolver ahí: cómo traer content/source para cada id ganador
+   del RRF (falta una query extra, ej. WHERE id = ANY(...), no decidido todavía).
 ```
 
 ---

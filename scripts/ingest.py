@@ -70,9 +70,12 @@ def main() -> None:
     embeddings = embed_texts(contents)
     print("Embeddings generados.")
 
-    # register_vector le enseña a psycopg2 a mandar mis listas de floats como
-    # tipo vector de pgvector, si no lo hago la inserción en la columna embedding
-    # rompe.
+    # register_vector le enseña a psycopg2 a traducir el tipo vector de pgvector
+    # en los dos sentidos (Python -> Postgres y Postgres -> Python). Acá usamos
+    # el sentido Python -> Postgres para insertar listas de floats en la columna
+    # embedding; sin esto, la inserción rompe. El otro sentido (mandar un vector
+    # como parámetro de una query, ej. "embedding <=> %s") lo vamos a necesitar
+    # en rag_search() para el vector search, aunque ahí no insertemos nada.
     conn = psycopg2.connect(database_url)
     register_vector(conn)
     try:
