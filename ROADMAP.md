@@ -47,7 +47,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
   5B  — pgvector/Supabase + FTS       ← EN PROGRESO
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
-    5B.2 — Migrar rag_search()        ← EN PROGRESO (pasos 1-3/5: conexión + queries SQL)
+    5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
     5B.3 — Postgres checkpointer      ← PENDIENTE
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -63,12 +63,16 @@ para empezar a construir.
 src/
 ├── config.py      ✅ validación temprana de OPENAI_API_KEY
 ├── state.py       ✅ AgentState con TypedDict + add_messages
-├── tools.py       ✅ rag_search() con hybrid search (vector+TF-IDF+RRF, 5A.2) sobre InMemoryIndex
-│                     + helpers Postgres en progreso (_get_connection/_vector_search/_keyword_search, 5B.2)
+├── tools.py       ✅ rag_search() sobre Postgres (5B.2): _get_connection + _vector_search
+│                     + _keyword_search + _hybrid_search (RRF) + fetch de content/source por id
 │                     + create_ticket() con TicketInput
+│                     [dead code pendiente: _index/InMemoryIndex/set_index ya no los usa
+│                     rag_search(), quedan sin uso hasta el paso 6 (limpieza)]
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
 ├── prompts.py     ✅ system prompts
 ├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
+│                     [pendiente paso 6: ese build_index() ya no lo usa rag_search(),
+│                     re-embebe docs.txt con la API de OpenAI en cada arranque para nada]
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 └── ingestion.py   ✅ chunking + embeddings OpenAI + InMemoryIndex numpy + KeywordIndex TF-IDF + rrf() (Capa 5A/5A.2)
 
@@ -99,27 +103,55 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
 
 ── PRÓXIMO PASO ──
-Capa 5B.2, paso 4: fusionar _vector_search() + _keyword_search() con rrf().
+Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
+1. ✅ _get_connection()
+2. ✅ _vector_search(conn, query_embedding, top_k)
+3. ✅ _keyword_search(conn, query, top_k)
+4. ✅ _hybrid_search(conn, query, query_embedding, top_k, candidate_k=10) — pide 10
+   candidatos a cada búsqueda, fusiona con rrf(), corta a top_k (mismo patrón que
+   el InMemoryIndex.hybrid_search() de 5A.2).
+5. ✅ rag_search() reescrito: abre conexión (try/finally para garantizar close()),
+   embebe la query con embed_texts([query])[0], llama _hybrid_search(), trae
+   content/source con SELECT ... WHERE id = ANY(ids), y reordena con un diccionario
+   {id: (content, source)} recorriendo fused (que ya viene ordenado por RRF) —
+   sin eso, Postgres devuelve las filas en su propio orden, no en el de relevancia.
+   Verificado contra Supabase real (query "que es langgraph") y con los 7 tests
+   de test_rules.py pasando sin cambios.
 
-Pasos 1-3 del plan ya implementados en src/tools.py (2026-07-03), como funciones
-privadas todavía NO conectadas a rag_search() (que sigue usando _index/InMemoryIndex
-sin cambios):
-1. ✅ _get_connection() — psycopg2.connect(DATABASE_URL) + register_vector(conn),
-   conexión nueva por llamada, sin pool (decisión: simple primero, pool queda
-   para más adelante).
-2. ✅ _vector_search(conn, query_embedding, top_k) — SELECT id, embedding <=> %s
-   AS distance ... ORDER BY distance LIMIT %s. Devuelve [(chunk_id, distance), ...].
-3. ✅ _keyword_search(conn, query, top_k) — Postgres FTS con to_tsvector('spanish', ...)
-   / plainto_tsquery / ts_rank. Devuelve [(chunk_id, rank), ...].
+Siguiente capa: 5B.3 — Postgres checkpointer (MemorySaver → checkpointer de LangGraph).
+Único ítem con concepto nuevo: la conexión ya no se abre/cierra por request (patrón de
+rag_search()), vive abierta durante todo el ciclo de vida de la app — hay que engancharla
+al lifespan de main.py.
 
-Quedan pendientes:
-4. Fusionar ambas listas con rrf() de ingestion.py — la función NO cambia, ya es
-   agnóstica a si el id viene de una lista en memoria o de una fila de Postgres.
-   OJO: el int de cada tupla ahora es el id real de la fila en chunks, no una
-   posición de array como con InMemoryIndex.
-5. Reemplazar _index.hybrid_search() dentro de rag_search() por lo nuevo.
-   Pendiente de resolver ahí: cómo traer content/source para cada id ganador
-   del RRF (falta una query extra, ej. WHERE id = ANY(...), no decidido todavía).
+── PLAN PARA CERRAR CAPA 5B (definido 2026-07-06, tras repaso M3 Zoomcamp) ──
+Ver courses/POST_COURSE_ZOOMCAMP_M3.md para el detalle completo de la auditoría y el
+porqué de cada punto. Orden acordado, uno por sesión:
+
+Sesión 1 — 5B.3 (Postgres checkpointer). Cierra Capa 5B formalmente.
+
+Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
+15-45 min cada uno):
+- Paso 6: sacar build_index()/set_index()/_index/InMemoryIndex muerto de
+  src/main.py y src/tools.py (ya no alimentan a rag_search() desde 5B.2).
+- Prender tracing real del agente (LANGCHAIN_TRACING_V2 para el runtime de /chat,
+  no solo para evals/ — gap encontrado en la auditoría de M3).
+- Poblar ChatResponse.tool_calls_used en main.py (deuda técnica desde Capa 5A,
+  2026-06-20, campo siempre devuelve []).
+- max_tokens explícito en get_bound_llm() (aprendizaje empírico de M3: resúmenes
+  largos escalan ~2.3x tokens de output).
+- Actualizar el SYSTEM_PROMPT de graph.py (sigue siendo el placeholder de Capa 1,
+  no menciona rag_search/create_ticket reales).
+
+Después de la Sesión 2 → arrancar M4 (evaluación) del Zoomcamp sin nada colgando.
+
+── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
+- Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
+  anotado como mejora de performance desde 5B.2).
+- Rotar credenciales reales (OPENAI_API_KEY, DATABASE_URL) + limpiar historial de
+  git (pendiente de seguridad desde 2026-07-02, no bloquea desarrollo local).
+- Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
+  en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
+- Soporte de PDFs reales en la ingesta (scripts/ingest.py solo lee .txt hoy).
 ```
 
 ---

@@ -6,8 +6,21 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
-## 2026-07-03 — Capa 5B.2: pasos 1-3/5 (conexión Postgres + queries SQL)
+## 2026-07-04 — Capa 5B.2 completa: rag_search() migrado a Postgres
 **Commit:** sin commitear todavía (cambios en working tree)
+
+- `src/tools.py`: pasos 4 y 5 del plan, últimos de 5B.2:
+  - `_hybrid_search(conn, query, query_embedding, top_k, candidate_k=10)` — pide `candidate_k=10` candidatos a `_vector_search`/`_keyword_search`, fusiona con `rrf()` de `ingestion.py` (sin cambios, ya era agnóstica al origen del id), corta a `top_k`. Mismo patrón de "candidatos más anchos que el resultado final" que el `InMemoryIndex.hybrid_search()` de 5A.2.
+  - `rag_search()` reescrito por completo: abre conexión con `_get_connection()` dentro de un `try/finally` (garantiza `conn.close()` incluso si algo falla a mitad de camino, sin tragarse la excepción), embebe la query con `embed_texts([query])[0]`, llama `_hybrid_search()`, trae `content`/`source` con `SELECT ... WHERE id = ANY(ids)`, y reordena el resultado con un diccionario `{id: (content, source)}` recorriendo `fused` (no las filas de Postgres, que vuelven en su propio orden y no en el de relevancia de RRF).
+  - `_index`/`InMemoryIndex`/`set_index()` quedan sin uso real — `rag_search()` ya no los toca. Limpieza pospuesta a un paso 6 aparte (ver abajo).
+- **Verificado contra infraestructura real:** `rag_search.invoke({"query": "que es langgraph", "top_k": 3})` contra Supabase trajo los 3 chunks correctos de `langgraph-intro.txt` con scores de RRF coherentes (~0.033 para el resultado en ambas listas). Los 7 tests de `tests/test_rules.py` pasan sin modificar nada — el contrato de `rag_search()` (string JSON, contiene palabras de la query) se mantuvo intacto aunque cambió todo el motor de búsqueda por debajo.
+- Repaso de conceptos de la sesión: orden lógico de evaluación SQL (`WHERE`/`HAVING` se evalúan antes que `SELECT`, por eso ninguno de los dos puede usar alias del `SELECT` — corregí una premisa mía equivocada sobre `HAVING` a mitad de la explicación, confirmado con la doc de Postgres), qué hace realmente `to_tsvector`/`plainto_tsquery` (normalizar texto a raíces de palabras sin stopwords) y por qué embeber la query en cada request no se puede cachear igual que los chunks (la tabla `chunks` es el corpus fijo que se reutiliza siempre; la query es la sonda, casi nunca se repite, y guardarla en la misma tabla contaminaría las búsquedas futuras), `try/finally` vs `try/except` para garantizar cierre de conexión sin tragarse errores.
+- **Próximo paso concreto:** Capa 5B.3 — Postgres checkpointer. Aparte, pendiente el paso 6 (sesión separada): sacar `build_index()`/`set_index()` del lifespan de `main.py` (re-embebe docs en cada arranque de uvicorn para un índice que ya no se usa) y decidir si se borra `InMemoryIndex` del todo.
+
+---
+
+## 2026-07-03 — Capa 5B.2: pasos 1-3/5 (conexión Postgres + queries SQL)
+**Commit:** `2a5657f`
 
 - `src/tools.py`: tres funciones privadas nuevas, primer código real de 5B.2:
   - `_get_connection()` — `psycopg2.connect(DATABASE_URL)` + `register_vector(conn)`, conexión nueva por llamada (sin pool, decisión tomada en la sesión anterior)

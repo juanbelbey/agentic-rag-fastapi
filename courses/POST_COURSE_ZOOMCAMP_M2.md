@@ -109,3 +109,43 @@ M2 agrega algo que no estaba en el plan original de 5B: usar **Postgres full-tex
 - No tocar `src/graph.py` ni el routing del agente
 - LangSmith debe degradarse silenciosamente si no hay API key
 - El repo debe poder correrse localmente en cualquier momento con `uvicorn src.main:app --reload`
+
+
+Addendum — Capa 5B.2: RAG híbrido sobre Supabase/Postgres
+
+(Construido por fuera del Zoomcamp, como extensión directa de los conceptos de M2)
+
+Qué se implementó
+
+┌────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│       Componente       │                                                                              Descripción                                                                              │
+├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ _hybrid_search()       │ Pide 10 candidatos a pgvector (distancia coseno <=>) y 10 a full-text search de Postgres (to_tsvector / plainto_tsquery / ts_rank), los fusiona con RRF y corta al    │
+│                        │ top-k                                                                                                                                                                 │
+├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ rag_search() reescrito │ Embebe la query en tiempo real (text-embedding-3-small), corre la búsqueda híbrida contra la tabla chunks de Supabase, trae el texto de los chunks ganadores y        │
+│                        │ reordena del lado de Python                                                                                                                                           │
+├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Reordenamiento en      │ Postgres no garantiza el orden cuando traés filas por ID — se construye un dict {id: chunk} y se reordena según el ranking RRF                                        │
+│ Python                 │                                                                                                                                                                       │
+└────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Conceptos que solidificó esta capa (y que no cubrió el Zoomcamp)
+
+┌──────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                 Concepto                 │                                               Aprendizaje concreto                                               │
+├──────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Full-text search en Postgres             │ to_tsvector normaliza el corpus a raíces; plainto_tsquery hace lo mismo con la query; @@ matchea; ts_rank puntúa │
+├──────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Por qué RRF usa posiciones y no scores   │ Cosine distance y ts_rank viven en escalas incomparables; la posición ordinal es el único denominador común      │
+├──────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Document embeddings vs. query embeddings │ El corpus es fijo → se cachea en Postgres. La query es una sonda que cambia → siempre en tiempo real             │
+├──────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Orden de evaluación SQL                  │ FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY: ni WHERE ni HAVING pueden usar alias del SELECT            │
+├──────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ try/finally para recursos                │ finally garantiza el cierre de la conexión a Postgres pase lo que pase, sin atrapar ni silenciar el error        │
+└──────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Conexión con el diseño del sistema
+
+Esta capa cerró el loop entre lo que el Zoomcamp enseñó (vector search + RRF conceptual) y lo que el sistema necesita en producción: búsqueda híbrida real contra una base de datos externa, con embeddings en tiempo real y fusión de rankings.

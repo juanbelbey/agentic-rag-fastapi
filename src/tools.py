@@ -58,6 +58,14 @@ def _keyword_search(conn, query: str, top_k: int) -> list[tuple[int, float]]:
         return cur.fetchall()
 
 
+def _hybrid_search(conn, query: str, query_embedding, top_k: int, candidate_k: int = 10) -> list[tuple[int, float]]:
+    """Combina _vector_search + _keyword_search con RRF. Devuelve [(chunk_id, rrf_score), ...]."""
+    vector_results = _vector_search(conn, query_embedding, candidate_k)
+    keyword_results = _keyword_search(conn, query, candidate_k)
+    fused = rrf(vector_results, keyword_results)
+    return fused[:top_k]
+
+
 def set_index(index: InMemoryIndex) -> None:
     """Reemplaza el índice activo. Se llama desde main.py al iniciar la app."""
     global _index
@@ -76,29 +84,37 @@ def create_ticket(summary: str, category: str, priority: str = "medium") -> str:
 
 @tool
 def rag_search(query: str, top_k: int = 3) -> str:
-    """Busca chunks relevantes combinando vector search + keyword search + RRF."""
-    if not _index.is_ready():
-        result = RAGResult(
-            content="El índice aún no está cargado. Llama a build_index() primero.",
-            source="system",
-            score=None,
-        )
-        return result.model_dump_json()
+    """Busca chunks relevantes combinando vector search + keyword search + RRF (Postgres)."""
+    conn = _get_connection()
+    try:
+        query_embedding = embed_texts([query])[0]
+        fused = _hybrid_search(conn, query, query_embedding, top_k)
 
-    # 1. Candidatos de ambos índices — más amplio que top_k para que RRF tenga con qué trabajar
-    vector_results, keyword_results = _index.hybrid_search(query, vector_top_k=10, keyword_top_k=10)
+        if not fused:
+            result = RAGResult(
+                content="No se encontraron resultados para esta búsqueda.",
+                source="system",
+                score=None,
+            )
+            return result.model_dump_json()
 
-    # 2. Fusionar por posición
-    fused = rrf(vector_results, keyword_results)
+        ids = [chunk_id for chunk_id, _ in fused]
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, content, source FROM chunks WHERE id = ANY(%s);", (ids,))
+            rows = cur.fetchall()
+    finally:
+        conn.close()
 
-    # 3. Top-K del ranking fusionado
+    # Diccionario id -> (content, source) para reordenar según el ranking de fused, no el orden de Postgres
+    rows_by_id = {row_id: (content, source) for row_id, content, source in rows}
+
     results = [
         RAGResult(
-            content=_index.chunks[idx],
-            source=_index.sources[idx],
+            content=rows_by_id[chunk_id][0],
+            source=rows_by_id[chunk_id][1],
             score=round(score, 4),
         )
-        for idx, score in fused[:top_k]
+        for chunk_id, score in fused
     ]
 
     return json.dumps([r.model_dump() for r in results])
