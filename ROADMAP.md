@@ -48,7 +48,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
-    5B.3 — Postgres checkpointer      ← PENDIENTE
+    5B.3 — Postgres checkpointer      ← EN PROGRESO (diseño, sin código)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -118,16 +118,27 @@ Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
    Verificado contra Supabase real (query "que es langgraph") y con los 7 tests
    de test_rules.py pasando sin cambios.
 
-Siguiente capa: 5B.3 — Postgres checkpointer (MemorySaver → checkpointer de LangGraph).
-Único ítem con concepto nuevo: la conexión ya no se abre/cierra por request (patrón de
-rag_search()), vive abierta durante todo el ciclo de vida de la app — hay que engancharla
-al lifespan de main.py.
+Capa 5B.3 — Postgres checkpointer (MemorySaver → PostgresSaver). Diseño cerrado
+(2026-07-07), código pendiente:
+1. ⬜ Instalar langgraph-checkpoint-postgres (trae psycopg v3 + psycopg_pool, driver
+   distinto al psycopg2 que ya usa tools.py — conviven a propósito, no se migra tools.py).
+2. ⬜ graph.py: dejar de compilar el grafo a nivel de módulo (hoy corre al importar,
+   antes de que exista el lifespan). Exportar graph_builder sin compilar.
+3. ⬜ main.py: abrir un psycopg_pool.ConnectionPool en el lifespan (no una conexión
+   cruda — los endpoints sync de FastAPI corren en threadpool, pueden llegar varios
+   /chat concurrentes), llamar checkpointer.setup() (idempotente, crea las tablas de
+   PostgresSaver) y compilar graph_builder.compile(checkpointer=...) ahí adentro.
+4. ⬜ tests/conftest.py y evals/run_evals.py: hoy importan graph ya compilado
+   (from src.graph import graph) — pasan a compilar ellos mismos con MemorySaver(),
+   para no depender de que Supabase esté arriba solo para correr tests/evals.
 
 ── PLAN PARA CERRAR CAPA 5B (definido 2026-07-06, tras repaso M3 Zoomcamp) ──
 Ver courses/POST_COURSE_ZOOMCAMP_M3.md para el detalle completo de la auditoría y el
 porqué de cada punto. Orden acordado, uno por sesión:
 
 Sesión 1 — 5B.3 (Postgres checkpointer). Cierra Capa 5B formalmente.
+  Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en PRÓXIMO PASO) —
+  implementación queda para la próxima sesión, nada instalado ni codeado todavía.
 
 Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
 15-45 min cada uno):

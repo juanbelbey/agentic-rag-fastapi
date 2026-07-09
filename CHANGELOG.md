@@ -6,8 +6,23 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-07 — Capa 5B.3 arranca: diseño del Postgres checkpointer (sin código todavía)
+**Commit:** `cd2d5f9` (solo el commit pendiente de 5B.2, ver entrada de abajo — 5B.3 en sí no tiene código)
+
+- Sesión de diseño para Capa 5B.3 (`MemorySaver` → `PostgresSaver`), sin escribir código todavía. Decisiones tomadas, a implementar la próxima sesión:
+  - **Conexión persistente, no por-request:** a diferencia de `rag_search()` (que abre/cierra conexión una vez por consulta del usuario), el checkpointer se invoca en cada transición de nodo del grafo (`agent → tools → agent`), potencialmente varias veces por un solo `/chat`. Abrir/cerrar en cada paso sería mucho más caro — la conexión tiene que vivir durante todo el ciclo de vida de la app.
+  - **`graph.py` deja de compilar el grafo él mismo:** hoy `graph = graph_builder.compile(checkpointer=MemorySaver())` corre al importar el módulo, antes de que exista el `lifespan` de `main.py`. Como `PostgresSaver` necesita una conexión real, compilar a nivel de módulo dejaría de ser viable (I/O como efecto secundario de un `import`). Plan: `graph.py` exporta `graph_builder` sin compilar; quien lo importe decide con qué checkpointer compilarlo.
+  - **Tres consumidores de `graph` a día de hoy** (`src/main.py`, `tests/conftest.py`, `evals/run_evals.py`) — cada uno va a compilar distinto: `main.py` con `PostgresSaver` (conexión real), `conftest.py`/`run_evals.py` con `MemorySaver()` para no acoplar tests/evals a que Supabase esté arriba.
+  - **Patrón de producción para la conexión:** no una conexión cruda, sino un `psycopg_pool.ConnectionPool` abierto en el `lifespan` (startup) y cerrado al shutdown. Razón: los endpoints `def` (sync) de FastAPI corren en un threadpool, así que pueden llegar varios `/chat` concurrentes — una sola conexión compartida entre threads no es segura.
+  - **Dependencia nueva:** `langgraph-checkpoint-postgres` (paquete oficial de LangChain para `PostgresSaver`) — trae `psycopg` (v3), no `psycopg2` (el que ya usa `tools.py`). Se acepta la convivencia de dos drivers de Postgres en el repo a propósito — migrar `tools.py` a psycopg3 sería scope creep sin necesidad real.
+  - `PostgresSaver` necesita `.setup()` una vez para crear sus tablas propias en Postgres — idempotente, se puede llamar en cada arranque del `lifespan` sin problema.
+- **Nada instalado ni codeado todavía** — queda pendiente de confirmación con Juan antes de instalar `langgraph-checkpoint-postgres` y empezar a tocar archivos.
+- **Próximo paso concreto:** instalar `langgraph-checkpoint-postgres`, después implementar en orden: `graph.py` (exportar `graph_builder`), `main.py` (pool + `PostgresSaver` + `.setup()` en el `lifespan`), `tests/conftest.py` y `evals/run_evals.py` (compilar con `MemorySaver()`).
+
+---
+
 ## 2026-07-04 — Capa 5B.2 completa: rag_search() migrado a Postgres
-**Commit:** sin commitear todavía (cambios en working tree)
+**Commit:** `cd2d5f9` (commiteado el 2026-07-07, tres días después de escrito)
 
 - `src/tools.py`: pasos 4 y 5 del plan, últimos de 5B.2:
   - `_hybrid_search(conn, query, query_embedding, top_k, candidate_k=10)` — pide `candidate_k=10` candidatos a `_vector_search`/`_keyword_search`, fusiona con `rrf()` de `ingestion.py` (sin cambios, ya era agnóstica al origen del id), corta a `top_k`. Mismo patrón de "candidatos más anchos que el resultado final" que el `InMemoryIndex.hybrid_search()` de 5A.2.
