@@ -6,9 +6,62 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-15 — CI arreglado (job rules) + Capa 5B.4 paso 3: caso de uso real en system prompt y README
+**Commit:** `c600192` (fix CI), `7da07f2` (paso 3) — de paso, se commiteó y pusheó el trabajo de
+5B.4 pasos 1-2 y el handoff de M4 que llevaba días escrito sin subir (`8487502`, `aecfde5`;
+contenido ya documentado en las entradas de 2026-07-11/13/14 de abajo, no se duplica acá)
+
+- Al pushear hoy, corrió CI por primera vez desde la migración a Postgres de 5B.2 (el local venía
+  varios commits adelante de `origin/main` desde hacía días). Aparecieron dos fallas en GitHub
+  Actions — **ninguna causada por el push de hoy**, latentes desde antes:
+  - **Job `rules`:** `ImportError` — `src/ingestion.py` creaba `_client = OpenAI()` a nivel de
+    módulo, exigiendo `OPENAI_API_KEY` solo con importar `src.graph`/`src.tools`. Ese job corre a
+    propósito sin API key (ver comentario en `ci.yml`). Arreglado con cliente perezoso
+    (`_get_client()`, se crea recién dentro de `embed_texts()`).
+  - Efecto secundario encontrado en el camino: `tests/test_rules.py::test_rag_search_contains_query_word`
+    y `test_rag_search_returns_string` llaman `rag_search()` de verdad — dejaron de ser
+    "deterministas sin API" desde que 5B.2 migró a Postgres, sin que nadie lo notara porque CI no
+    había vuelto a correr desde entonces. Ahora usan `skip_if_no_rag_env()` (`pytest.skip` si falta
+    `OPENAI_API_KEY`/`DATABASE_URL`), mismo patrón que `invoke_agent` en `conftest.py`. Verificado en
+    los dos escenarios: sin esas env vars (5 passed, 2 skipped) y con `.env` real contra Supabase
+    (7 passed).
+  - **Job `evals`:** sigue fallando con `RuntimeError: Falta DATABASE_URL` — decidido no arreglarlo
+    todavía. `rag_search()` necesita Postgres real desde 5B.2, pero `ci.yml` nunca sumó
+    `DATABASE_URL` como secret de ese job. Conectarlo ahora no serviría: `golden_set.json` sigue
+    siendo sobre LangGraph docs, corpus que ya no existe en Supabase (se truncó y reemplazó por el
+    corpus de instrumentación en 5B.4 paso 2) — solo cambiaría el tipo de error, no daría señal
+    real. Además, sumar esa credencial de producción como secret de CI es una decisión de seguridad
+    aparte. Queda bloqueado por el paso 4 de 5B.4 (ground truth nuevo).
+- **Capa 5B.4, paso 3 completo:** `SYSTEM_PROMPT` (`src/graph.py`) reescrito — pasa de ser el
+  placeholder de Capa 1 a describir el caso de uso real (soporte técnico de instrumentación de
+  campo para agua potable/saneamiento, Emerson/Rosemount + Siemens Sitrans + Endress+Hauser) con
+  instrucción explícita de grounding (usar `rag_search` antes de responder, citar la fuente, no
+  inventar datos de calibración/rangos/procedimientos) y de cuándo escalar con `create_ticket`.
+  `README.md` reescrito de 2 líneas a: caso de uso (incluida la experiencia real de Juan como
+  consultor técnico), cómo funciona el agente, nota de sourcing/compliance de los PDFs (exigida por
+  `CORPUS_INSTRUMENTACION.MD`), y pasos para correrlo.
+- **Decisión de alcance tomada antes de escribir:** las categorías nuevas de `create_ticket` que
+  sugiere `CORPUS_INSTRUMENTACION.MD` (`falla_instrumento_campo`, etc.) quedan fuera de este paso —
+  tocarían `src/schemas.py` y romperían 2 tests que hoy hardcodean `"question"`/`"bug"`
+  (`tests/test_rules.py:69,77`). El paso 3 se cierra solo con system prompt + README.
+- **Inconsistencia de documentación encontrada y corregida:** `ROADMAP.md` listaba `src/prompts.py`
+  como archivo existente — nunca existió, el `SYSTEM_PROMPT` siempre vivió inline en `graph.py`.
+  Corregido en "Estado actual del repo"; queda anotado como mejora pendiente (Juan prefiere separar
+  los prompts a archivo(s) propio(s) a futuro).
+- **Pendientes anotados, sin tocar hoy:** `.env.example` volvió a guardarse en UTF-16 (se había
+  corregido a UTF-8 el 2026-07-01); confirmado con Juan que el repo de GitHub es privado hoy, así
+  que la rotación de credenciales reales sigue sin ser urgente pero es condición explícita antes de
+  hacerlo público.
+- **Próximo paso concreto:** paso 4 de 5B.4 — generar ground truth con LLM + structured output
+  (patrón HW4 de M4), usando los ejemplos de consulta de `CORPUS_INSTRUMENTACION.MD` como
+  referencia de estilo. Es lo que en definitiva destraba el job `evals` de CI.
+
+---
+
 ## 2026-07-14 — Capa 5B.4 (pasos 1 y 2 completos): PDFs descargados + ingesta real corrida contra Supabase
-**Commit:** pendiente (CORPUS_INSTRUMENTACION.MD, docs/pdfs/*, archive/langgraph-intro.txt, .gitignore,
-requirements.txt, scripts/ingest.py, src/ingestion.py — sin commitear todavía)
+**Commit:** `aecfde5` (código: .gitignore, requirements.txt, scripts/ingest.py, src/ingestion.py,
+rename docs/→archive/) + `8487502` (CORPUS_INSTRUMENTACION.MD) — ambos commiteados el 2026-07-15,
+un día después de escrito
 
 - **Paso 1 completo:** de los 12 PDFs planeados en `CORPUS_INSTRUMENTACION.MD`
   se llegó a **11 finales**. Los 6 links de Rosemount originales devolvían
@@ -119,7 +172,7 @@ requirements.txt, scripts/ingest.py, src/ingestion.py — sin commitear todavía
 ---
 
 ## 2026-07-13 — Capa 5B.4 (nueva): plan de corpus real + evals de M4, priorizado
-**Commit:** pendiente (CORPUS_INSTRUMENTACION.MD + ROADMAP.md + CHANGELOG.md, sin commitear todavía)
+**Commit:** `8487502`, commiteado el 2026-07-15, dos días después de escrito
 
 - `CORPUS_INSTRUMENTACION.MD` (nuevo): plan para reemplazar el corpus actual
   (`docs/langgraph-intro.txt`, 16 chunks) por uno real — instrumentación de campo
@@ -154,7 +207,7 @@ requirements.txt, scripts/ingest.py, src/ingestion.py — sin commitear todavía
 ---
 
 ## 2026-07-11 — M4 del Zoomcamp terminado (videos + homework) + handoff post-curso
-**Commit:** pendiente (ROADMAP.md + courses/POST_COURSE_ZOOMCAMP_M4.md, sin commitear todavía)
+**Commit:** `8487502`, commiteado el 2026-07-15, cuatro días después de escrito
 
 - Terminado el Módulo 4 del LLM Zoomcamp (Evaluation and Monitoring): videos vistos y
   homework (`M4-lessons/HW4 - Juan Belbey.ipynb`, Q1–Q6) resuelto — HW ya estaba

@@ -50,7 +50,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
     5B.3 — Postgres checkpointer      ← EN PAUSA (diseño cerrado 2026-07-07, sin código;
                                           pospuesta detrás del corpus nuevo, ver 5B.4 abajo)
-    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 2/6 completo, 2026-07-14;
+    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 3/6 completo, 2026-07-15;
                                           ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -71,15 +71,20 @@ src/
 │                     + create_ticket() con TicketInput
 │                     [dead code pendiente: _index/InMemoryIndex/set_index ya no los usa
 │                     rag_search(), quedan sin uso hasta el paso 6 (limpieza)]
-├── graph.py       ✅ StateGraph con routing condicional y MemorySaver
-├── prompts.py     ✅ system prompts
+├── graph.py       ✅ StateGraph con routing condicional y MemorySaver — SYSTEM_PROMPT con el caso
+│                     de uso real (instrumentación de campo, agua potable/saneamiento) desde 5B.4
+│                     paso 3 (2026-07-15); antes era el placeholder de Capa 1. Sigue inline en este
+│                     archivo, no en uno propio (ver pendiente en POSPUESTO)
 ├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
 │                     [pendiente paso 6: ese build_index() ya no lo usa rag_search(),
 │                     re-embebe docs.txt con la API de OpenAI en cada arranque para nada]
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 └── ingestion.py   ✅ chunking + embeddings OpenAI (embed_texts() batchea de a 300 textos por request,
                       límite de la API de OpenAI: 300k tokens / 2048 items por request, tocado 5B.4
-                      paso 2) + InMemoryIndex numpy + KeywordIndex TF-IDF + rrf() (Capa 5A/5A.2)
+                      paso 2) + InMemoryIndex numpy + KeywordIndex TF-IDF + rrf() (Capa 5A/5A.2).
+                      Cliente de OpenAI (_client) se crea recién en embed_texts(), no al importar el
+                      módulo (fix 2026-07-15) — antes exigía OPENAI_API_KEY solo con importar
+                      src.graph/src.tools, tumbaba el job rules de CI
 
 scripts/
 └── ingest.py      ✅ ingesta manual: docs/pdfs/*.pdf → chunks → embeddings → tabla chunks en Supabase
@@ -100,7 +105,9 @@ archive/
 
 tests/
 ├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent
-├── test_rules.py  ✅ 7 tests deterministas, sin API, 0.05s
+├── test_rules.py  ✅ 7 tests — 5 deterministas sin API; los 2 de rag_search pegan a Postgres+OpenAI
+│                     reales desde 5B.2 y se saltan con pytest.skip si falta OPENAI_API_KEY/
+│                     DATABASE_URL (fix 2026-07-15, mismo patrón que invoke_agent en conftest.py)
 ├── test_evals.py  ✅ LLM-as-judge usando evaluators.py compartido
 └── reports/       ✅ pytest-html local + artefacto en CI
 
@@ -117,6 +124,11 @@ evals/
 └── workflows/
     └── ci.yml     ✅ rules en cada push, evals solo en main (MAX_EVAL_CASES=1)
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
+                      [conocido, roto a propósito: job evals falla con RuntimeError "Falta
+                      DATABASE_URL" — rag_search() necesita Postgres real desde 5B.2, ese secret
+                      nunca se agregó a evals. No se arregla todavía: golden_set.json sigue siendo
+                      sobre LangGraph docs (corpus viejo, ya no existe en Supabase), conectar
+                      DATABASE_URL ahora solo cambiaría el error. Bloqueado por el paso 4 de 5B.4]
 
 ── PRÓXIMO PASO ──
 Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
@@ -199,11 +211,36 @@ real de Juan como consultor técnico en el rubro) es ese salto de volumen. Pasos
    LEVEL SECURITY;` sin policies (el backend conecta por rol directo de
    Postgres, no por la API REST/anon key, así que no se vio afectado),
    verificado con `SELECT relrowsecurity FROM pg_class` → true.
-3. ⬜ Actualizar system prompt (graph.py) y README con el caso de uso real.
+3. ✅ (2026-07-15) — Actualizado el SYSTEM_PROMPT (graph.py) con el caso de uso real:
+   soporte técnico de instrumentación de campo para agua potable/saneamiento,
+   con instrucción explícita de grounding (usar rag_search antes de responder,
+   citar fuente, no inventar datos de calibración/rangos/procedimientos) y de
+   cuándo usar create_ticket. README.md reescrito: caso de uso, cómo funciona,
+   de dónde sale el corpus (nota de compliance), cómo correrlo.
 4. ⬜ Generar ground truth con LLM + structured output (patrón HW4 de M4).
 5. ⬜ Portar hit_rate/mrr/evaluate() a evals/retrieval_metrics.py.
 6. ⬜ Barrido de k de RRF contra el ground truth real; decidir si el k=60 default
    de src/ingestion.py:104 se ajusta.
+
+Nota (2026-07-15): al pushear el trabajo pendiente de 5B.4 pasos 1-2 (primera vez
+que corría CI desde la migración a Postgres de 5B.2), aparecieron dos fallas en
+GitHub Actions — ninguna causada por el push en sí, latentes desde antes, recién
+visibles porque CI no corría hacía rato (local estaba varios commits adelante de
+origin/main):
+- Job rules: ImportError al importar src.graph — src/ingestion.py creaba el
+  cliente de OpenAI a nivel de módulo (_client = OpenAI()), exigiendo API key
+  solo con importar, y ese job corre a propósito sin ninguna. Arreglado con
+  cliente perezoso. Efecto secundario encontrado en el camino: 2 tests de
+  tests/test_rules.py (test_rag_search_contains_query_word,
+  test_rag_search_returns_string) llaman rag_search() de verdad — dejaron de
+  ser "deterministas sin API" desde 5B.2 sin que nadie lo notara, porque CI no
+  había vuelto a correr. Ahora se saltan con pytest.skip si falta
+  OPENAI_API_KEY/DATABASE_URL. Job rules verificado en verde con y sin esas
+  env vars (ver detalle en "Estado actual del repo" arriba).
+- Job evals: RuntimeError "Falta DATABASE_URL" — sigue roto, a propósito. Ver
+  nota en ci.yml arriba. Se destraba con el paso 4 de acá arriba (ground truth
+  nuevo + decidir si CI usa una Supabase separada de la real antes de meter esa
+  credencial como secret).
 
 ── PLAN PARA CERRAR CAPA 5B (definido 2026-07-06, tras repaso M3 Zoomcamp) ──
 Ver courses/POST_COURSE_ZOOMCAMP_M3.md para el detalle completo de la auditoría y el
@@ -248,8 +285,17 @@ pausa sin cambios hasta que 5B.4 avance.
   anotado como mejora de performance desde 5B.2).
 - Rotar credenciales reales (OPENAI_API_KEY, DATABASE_URL) + limpiar historial de
   git (pendiente de seguridad desde 2026-07-02, no bloquea desarrollo local).
+  Confirmado 2026-07-15: el repo en GitHub es privado hoy, así que no es urgente
+  por exposición pública inmediata — pero es condición explícita antes de pasarlo
+  a público.
 - Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
   en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
+- .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el
+  2026-07-01) — detectado 2026-07-15 al escribir el README, no se tocó para no
+  desviarse del paso 3.
+- Separar los prompts a archivo(s) propio(s) en vez de vivir inline en graph.py
+  (pedido de Juan, 2026-07-15, al corregir que ROADMAP.md listaba un
+  src/prompts.py que nunca existió).
 ```
 
 ---
