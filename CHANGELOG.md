@@ -6,6 +6,190 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-14 — Capa 5B.4 (pasos 1 y 2 completos): PDFs descargados + ingesta real corrida contra Supabase
+**Commit:** pendiente (CORPUS_INSTRUMENTACION.MD, docs/pdfs/*, archive/langgraph-intro.txt, .gitignore,
+requirements.txt, scripts/ingest.py, src/ingestion.py — sin commitear todavía)
+
+- **Paso 1 completo:** de los 12 PDFs planeados en `CORPUS_INSTRUMENTACION.MD`
+  se llegó a **11 finales**. Los 6 links de Rosemount originales devolvían
+  HTTP 400/404 — no era un problema del sitio de Emerson sino URLs con
+  codificación de caracteres corrupta en el checklist (`%EF%BF%BD` en vez de
+  tildes reales, `%F3` en vez de `%C3%B3`). Verificados uno por uno con
+  `curl`, reemplazados por 5 documentos en inglés confirmados HTTP 200
+  (Emerson no publica todas las versiones en español; el bonus ES del 3051 y
+  el ítem "ampliar Endress+Hauser" quedaron sin bajar por redundantes/
+  opcionales). Los 11 PDFs (5 Emerson/Rosemount, 4 Siemens/Sitrans,
+  2 Endress+Hauser) están en `docs/pdfs/`, verificados como `%PDF` válidos
+  (firma de archivo + tamaño razonable, 1-11 MB), renombrados con convención
+  `fabricante_modelo_tipo_idioma.pdf` (antes tenían nombres de descarga
+  genéricos tipo `dl-rmt-00809-0100-4107.pdf`, confirmados con `pdftotext`
+  contra el contenido real de cada uno antes de renombrar). `docs/pdfs/`
+  agregada a `.gitignore` (compliance: los tres fabricantes tienen copyright
+  sobre estos manuales, no se redistribuyen). `CORPUS_INSTRUMENTACION.MD`
+  actualizado: checklist marcado `[x]` con mapeo a cada archivo final, nota
+  explicando el fix de los links rotos.
+- **Paso 2 completo:** `scripts/ingest.py` extendido — `load_documents()`
+  ahora también lee `docs/pdfs/*.pdf` vía `_read_pdf()` nuevo (`pypdf`, sin
+  OCR: páginas escaneadas sin capa de texto quedan vacías, no rompen la
+  ingesta). `pypdf==5.1.0` agregado a `requirements.txt`.
+- **Decisión: `CHUNK_SIZE=1000` / `CHUNK_STEP=800`** para este corpus (antes
+  el default de `chunk_text()`, 500/250 — Juan lo recordaba como 1000/500,
+  corregido con el código real). Los manuales de instrumentación son mucho
+  más largos y densos que `docs/langgraph-intro.txt`, con procedimientos
+  paso a paso y tablas de datos técnicos que no conviene cortar cada 500
+  caracteres; el overlap baja de 50% a 20% porque duplicar la mitad de cada
+  chunk en un corpus de 11 PDFs largos infla mucho el volumen a embeddear
+  sin ganancia clara. El default de `src/ingestion.py:chunk_text()` no se
+  tocó — lo comparten el pipeline en memoria de Capa 5A y los tests/evals —,
+  el ajuste queda local a `scripts/ingest.py` vía dos constantes nuevas
+  pasadas explícitas en la llamada dentro de `main()`.
+- **Decisión: `pypdf` en vez de `pdfplumber`**, verificada empíricamente y no
+  por reputación de la librería. Se instalaron ambas y se comparó su salida
+  sobre páginas con tablas reales de dos PDFs del corpus (ficha técnica
+  Siemens SITRANS P320/P420, manual de referencia Rosemount 2051 — ubicadas
+  primero escaneando todo el documento con `pdfplumber.extract_tables()`
+  para encontrar páginas con tablas de verdad, no solo texto corrido). El
+  texto plano que devuelven ambas librerías resultó prácticamente idéntico.
+  La extracción *estructurada* de tablas de `pdfplumber` funciona bien en el
+  manual de Rosemount (tablas con bordes simples) pero falla en el datasheet
+  de Siemens (detecta como "tabla" texto decorativo del encabezado en vez de
+  la tabla real de parámetros) — no es confiable en todo el corpus, y como
+  la tabla `chunks` solo guarda texto plano (no una estructura de tabla
+  aparte), la ventaja no se traduce en nada usable. No justifica la
+  dependencia extra (`pdfminer.six` + `Pillow`). `pdfplumber` no se agregó a
+  `requirements.txt`.
+- Encontrada evidencia concreta (no especulativa) de headers/footers
+  repetidos en cada página de los PDFs — título del documento y número de
+  página se repiten literalmente en Siemens (`"...SITRANS P320/P420 /
+  Referencia técnica"` + `1/97`, `1/99`...) y en Rosemount (`"Configuration
+  Reference Manual"` + `"November 2024 00809-0100-4107"`).
+- **Decisión: no limpiar headers/footers por ahora.** Antes de decidir se
+  armó una previsualización sin costo — un script descartable (fuera del
+  repo, en el scratchpad de la sesión) que chunkea 3 PDFs de muestra (uno
+  por fabricante: Emerson, Endress+Hauser, Siemens) con los mismos
+  `CHUNK_SIZE`/`CHUNK_STEP` de `ingest.py`, sin llamar a `embed_texts()` ni
+  tocar Supabase, y vuelca chunks de muestra (primero/medio/último) a un
+  archivo para inspección manual. El header/footer resultó ser 2-3 líneas
+  cortas (fecha, número de doc, URL, página) contra chunks de 1000
+  caracteres — dilución baja, no bloquea correr tal cual. Siemens es un
+  caso aparte: no es header/footer por página sino la portada completa
+  duplicada como contraportada al final del documento. Se corre el corpus
+  sin limpiar y se re-evalúa con datos reales de retrieval en el paso 6 si
+  hace falta, en vez de invertir de entrada en un limpiador por fabricante
+  (5 formatos de header/footer distintos, no es gratis).
+- `docs/langgraph-intro.txt` (los 16 chunks viejos de M4/Capa 5A) movido a
+  `archive/langgraph-intro.txt` (`git mv`, registrado como rename) para que
+  la ingesta real no lo mezcle con el corpus de instrumentación —
+  `scripts/ingest.py` y el `InMemoryIndex` de `src/main.py` (ya sin uso
+  real desde 5B.2) solo leen `docs/*.txt`, que ahora queda vacío (`docs/`
+  solo tiene `pdfs/`). Sin referencias a esa ruta en `tests/`, confirmado
+  antes de mover.
+- **Bug encontrado y arreglado en el camino:** `embed_texts()`
+  (`src/ingestion.py`) mandaba todos los textos en un solo request a la API
+  de embeddings — funcionaba con los 16 chunks de Capa 5A, pero con 2451
+  chunks del corpus real (~626k tokens) supera el límite de OpenAI (300k
+  tokens y 2048 items por request), tirando `BadRequestError` recién
+  después de gastar tiempo en el chunking. Fix: `embed_texts()` ahora
+  batchea internamente de a 300 textos por request y une las respuestas —
+  transparente para los callers existentes (Capa 5A sigue mandando listas
+  chicas, un solo batch).
+- **Ingesta real corrida contra Supabase:** `python -m scripts.ingest` →
+  2451 chunks insertados desde los 11 PDFs (`TRUNCATE` de los 16 chunks
+  viejos + insert batch). Verificado con `SELECT COUNT(*), COUNT(DISTINCT
+  source) FROM chunks` → `(2451, 11)`.
+- **Hallazgo de seguridad cerrado:** alerta automática de Supabase — la
+  tabla `chunks` quedaba accesible públicamente vía la API REST
+  (PostgREST) porque Row-Level Security estaba deshabilitado. La app nunca
+  usó esa API (conecta directo por Postgres con `psycopg2.connect(DATABASE_URL)`,
+  confirmado revisando `src/tools.py` y `scripts/ingest.py` — no hay uso de
+  `supabase-py` ni de la `anon key` en el repo), pero la API REST igual
+  queda expuesta por default en todo proyecto Supabase. Se corrió `ALTER
+  TABLE chunks ENABLE ROW LEVEL SECURITY;` sin policies en el SQL Editor
+  del dashboard — el rol de `DATABASE_URL` tiene bypass de RLS por ser el
+  rol propietario, así que la app no se vio afectada; lo único que cambió
+  es que el rol `anon`/`authenticated` de la API REST pública queda sin
+  acceso. Verificado con `SELECT relrowsecurity FROM pg_class WHERE
+  relname = 'chunks'` → `true`.
+- **Próximo paso concreto:** paso 3 de 5B.4 — actualizar el system prompt
+  (`graph.py`) y el README con el caso de uso real de instrumentación de
+  campo. Después siguen los pasos 4-6 (ground truth con LLM,
+  `evals/retrieval_metrics.py`, barrido de `k` de RRF) — ninguno arrancado
+  todavía.
+
+---
+
+## 2026-07-13 — Capa 5B.4 (nueva): plan de corpus real + evals de M4, priorizado
+**Commit:** pendiente (CORPUS_INSTRUMENTACION.MD + ROADMAP.md + CHANGELOG.md, sin commitear todavía)
+
+- `CORPUS_INSTRUMENTACION.MD` (nuevo): plan para reemplazar el corpus actual
+  (`docs/langgraph-intro.txt`, 16 chunks) por uno real — instrumentación de campo
+  (transmisores de presión, caudal y temperatura) para soporte técnico de sistemas
+  municipales de agua potable y saneamiento. Incluye: justificación del dominio
+  (experiencia real de Juan como consultor técnico, 2 años, plantas potabilizadoras +
+  redes de distribución + tratamiento cloacal para la Municipalidad de Monte Vera),
+  checklist de 12 PDFs oficiales (Emerson/Rosemount, Siemens Sitrans,
+  Endress+Hauser), ejemplos de consultas para ground truth, categorías nuevas de
+  `create_ticket`, y notas de compliance (PDFs con copyright: uso permitido para
+  desarrollo/citas con fuente, evitar comitear los originales — carpeta fuente va a
+  `.gitignore`).
+- Esta iniciativa resuelve directamente la decisión pospuesta en el handoff de M4
+  (2026-07-11, ver entrada de abajo): portar `hit_rate`/`mrr`/`evaluate()` quedaba
+  condicionado a que `docs/` creciera más allá de un solo archivo — el corpus nuevo
+  es ese salto de volumen.
+- **Decisión de secuencia (con Juan):** este plan pasa a ser **Capa 5B.4**, prioridad
+  actual — por delante de la Capa 5B.3 (Postgres checkpointer, diseño cerrado
+  2026-07-07, en pausa desde 2026-07-09) y de la Sesión 2 de limpieza (también en
+  pausa). Ambas quedan sin cambios en la cola, solo se corrieron detrás de 5B.4.
+- `ROADMAP.md`: agregada la sub-capa 5B.4 al mapa de capas y al plan de cierre de
+  Capa 5B (nueva "Sesión 0" antes de las Sesiones 1 y 2 ya existentes), con el plan
+  de 6 pasos de `CORPUS_INSTRUMENTACION.MD` resumido (sin duplicar el detalle
+  completo, que vive en ese archivo). El pendiente de "soporte de PDFs reales en
+  `scripts/ingest.py`" pasa de la lista de POSPUESTO a paso activo (paso 2 de 5B.4).
+- **Sin código todavía** — el paso 1 (descargar los 12 PDFs) es una acción manual de
+  Juan, fuera del repo.
+- **Próximo paso concreto:** Juan descarga los PDFs del checklist a una carpeta
+  fuente gitignored; después, extender `scripts/ingest.py` con soporte real de PDFs
+  (paso 2 de 5B.4).
+
+---
+
+## 2026-07-11 — M4 del Zoomcamp terminado (videos + homework) + handoff post-curso
+**Commit:** pendiente (ROADMAP.md + courses/POST_COURSE_ZOOMCAMP_M4.md, sin commitear todavía)
+
+- Terminado el Módulo 4 del LLM Zoomcamp (Evaluation and Monitoring): videos vistos y
+  homework (`M4-lessons/HW4 - Juan Belbey.ipynb`, Q1–Q6) resuelto — HW ya estaba
+  entregado, faltaba el repaso de videos que ahora está al día.
+- `courses/POST_COURSE_ZOOMCAMP_M4.md` (nuevo): handoff completo del módulo — tabla de
+  respuestas confirmadas (Q1–Q6: hit rate 0.76 de `text_search`, MRR 0.55 de
+  `vector_search`, mejor `k` de RRF por MRR fue 1), conceptos clave (ground truth
+  generado con LLM + structured output, Hit Rate, MRR, evaluación por filename no por
+  chunk, tuning de `k` por medición), y auditoría contra el código real del repo:
+  - No existe todavía ningún framework de Hit Rate/MRR en `evals/` — `golden_set.json`
+    mide calidad de respuesta del agente (LLM-as-judge), no si `rag_search()` recupera
+    el chunk correcto.
+  - El `k=60` de `rrf()` (`src/ingestion.py:104`, heredado de 5A.2) nunca se midió
+    contra un ground truth real — quedó en el default del paper sin verificar si es
+    el óptimo para el corpus del repo.
+  - **Decisión tomada:** portar el framework de M4 (ground truth por LLM +
+    `hit_rate`/`mrr`/`evaluate()` + barrido de `k`) queda pospuesto hasta que
+    `docs/` deje de tener un solo archivo (`langgraph-intro.txt`, 16 chunks) — bajo
+    corpus, bajo retorno de construir el framework ahora. Ligado al pendiente ya
+    anotado de soporte de PDFs reales en `scripts/ingest.py`.
+- `ROADMAP.md`: actualizado el estado de M4 (terminado, no "pendiente de repaso"),
+  y corregida una inconsistencia encontrada al revisar el plan de cierre de Capa 5B:
+  el plan del 2026-07-06 asumía "Sesión 2 de limpieza → recién ahí arrancar M4", pero
+  en la práctica M4 se cursó en paralelo sin esperar esa secuencia. Se dejó una nota
+  aclarando el desvío en vez de reescribir el plan como si hubiera pasado como estaba
+  previsto.
+- **Próximo paso concreto:** Juan hace un esquema de M4 en cuaderno (papel), después
+  empieza a portar al repo los contenidos aprendidos — con la salvedad de que los
+  patrones concretos (hit_rate/mrr, tuning de `k`) ya quedaron pospuestos en el propio
+  handoff hasta que el corpus crezca. La Sesión 2 de limpieza (paso 6, tracing real,
+  `tool_calls_used`, `max_tokens`, `SYSTEM_PROMPT`) y la Capa 5B.3 (Postgres
+  checkpointer) siguen en pausa, sin cambios, en la misma cola que ya estaba definida.
+
+---
+
 ## 2026-07-07 — Capa 5B.3 arranca: diseño del Postgres checkpointer (sin código todavía)
 **Commit:** `cd2d5f9` (solo el commit pendiente de 5B.2, ver entrada de abajo — 5B.3 en sí no tiene código)
 

@@ -13,22 +13,44 @@ import psycopg2
 from dotenv import load_dotenv
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_values
+from pypdf import PdfReader
 
 from src.ingestion import chunk_text, embed_texts
 
 DOCS_DIR = Path(__file__).parent.parent / "docs"
+PDFS_DIR = DOCS_DIR / "pdfs"
+
+# Mas grandes que el default de chunk_text (500/250): estos manuales son mas
+# largos y densos que docs/langgraph-intro.txt, con procedimientos y tablas
+# que no conviene cortar cada 500 caracteres. No tocamos el default de
+# src/ingestion.py porque lo comparten el pipeline en memoria (Capa 5A) y los
+# tests/evals -- este ajuste queda local a este script.
+CHUNK_SIZE = 1000
+CHUNK_STEP = 800
 
 
-# Recorro docs/ y leo cada .txt tal cual está en disco. Devuelvo una lista
-# de tuplas (texto completo, nombre de archivo) porque más adelante necesito
-# los dos datos juntos: el texto para chunkear y el nombre para guardarlo
-# como "source" de cada chunk en la tabla.
+# pypdf no hace OCR: si una pagina es una imagen escaneada sin capa de texto,
+# extract_text() devuelve "" para esa pagina y seguimos con las demas.
+def _read_pdf(path: Path) -> str:
+    reader = PdfReader(path)
+    pages = [page.extract_text() or "" for page in reader.pages]
+    return "\n\n".join(pages)
+
+
+# Recorro docs/ y leo cada .txt y cada .pdf (en docs/pdfs/) tal cual estan en
+# disco. Devuelvo una lista de tuplas (texto completo, nombre de archivo)
+# porque mas adelante necesito los dos datos juntos: el texto para chunkear
+# y el nombre para guardarlo como "source" de cada chunk en la tabla.
 def load_documents() -> list[tuple[str, str]]:
-    """Lee cada .txt de docs/ y devuelve (texto, nombre_de_archivo)."""
-    return [
+    """Lee cada .txt de docs/ y cada .pdf de docs/pdfs/, devuelve (texto, nombre_de_archivo)."""
+    txt_documents = [
         (path.read_text(encoding="utf-8"), path.name)
         for path in DOCS_DIR.glob("*.txt")
     ]
+    pdf_documents = [
+        (_read_pdf(path), path.name) for path in PDFS_DIR.glob("*.pdf")
+    ]
+    return txt_documents + pdf_documents
 
 
 # Esta es la función que corro a mano cuando quiero (re)ingestar los docs.
@@ -57,7 +79,7 @@ def main() -> None:
     sources: list[str] = []
     chunk_indices: list[int] = []
     for text, source in documents:
-        for i, (chunk, src) in enumerate(chunk_text(text, source)):
+        for i, (chunk, src) in enumerate(chunk_text(text, source, CHUNK_SIZE, CHUNK_STEP)):
             contents.append(chunk)
             sources.append(src)
             chunk_indices.append(i)

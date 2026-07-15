@@ -88,13 +88,22 @@ def chunk_text(text: str, source: str, size: int = 500, step: int = 250) -> list
 _client = OpenAI()
 
 
+
+# La API de embeddings limita cada request a 300k tokens y 2048 items. Con
+# corpus chicos (Capa 5A, ~16 chunks) un solo request alcanza; con el corpus
+# real (2451 chunks) lo supera, así que lo partimos en lotes de 300 (300 chunks
+# de hasta 1000 caracteres caben cómodos debajo de los dos límites) y unimos
+# las respuestas.
+_BATCH_SIZE = 300
+
+
 def embed_texts(texts: list[str]) -> np.ndarray:
     """Genera embeddings para una lista de textos. Devuelve matriz (N, 1536)."""
-    response = _client.embeddings.create(
-        model="text-embedding-3-small",
-        input=texts,
-    )
-    vectors = [item.embedding for item in response.data]
+    batches = [
+        _client.embeddings.create(model="text-embedding-3-small", input=texts[i : i + _BATCH_SIZE])
+        for i in range(0, len(texts), _BATCH_SIZE)
+    ]
+    vectors = [item.embedding for response in batches for item in response.data]
     return np.array(vectors, dtype=np.float32)
 
 
