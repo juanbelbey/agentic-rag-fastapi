@@ -85,8 +85,20 @@ def chunk_text(text: str, source: str, size: int = 500, step: int = 250) -> list
     return chunks
 
 
-_client = OpenAI()
+_client: OpenAI | None = None
 
+
+def _get_client() -> OpenAI:
+    """Crea el cliente de OpenAI recien la primera vez que hace falta.
+
+    Antes se creaba al importar el modulo (`_client = OpenAI()` a nivel de
+    modulo), lo que exigia OPENAI_API_KEY solo por importar src.tools/src.graph
+    -- rompia el job "rules" de CI, que corre sin API key a proposito.
+    """
+    global _client
+    if _client is None:
+        _client = OpenAI()
+    return _client
 
 
 # La API de embeddings limita cada request a 300k tokens y 2048 items. Con
@@ -99,8 +111,9 @@ _BATCH_SIZE = 300
 
 def embed_texts(texts: list[str]) -> np.ndarray:
     """Genera embeddings para una lista de textos. Devuelve matriz (N, 1536)."""
+    client = _get_client()
     batches = [
-        _client.embeddings.create(model="text-embedding-3-small", input=texts[i : i + _BATCH_SIZE])
+        client.embeddings.create(model="text-embedding-3-small", input=texts[i : i + _BATCH_SIZE])
         for i in range(0, len(texts), _BATCH_SIZE)
     ]
     vectors = [item.embedding for response in batches for item in response.data]

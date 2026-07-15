@@ -1,14 +1,26 @@
 """Tests de reglas deterministas.
 
 Verifican condiciones que siempre deben cumplirse sin invocar el LLM ni el grafo.
-Son los tests mas baratos y rapidos del proyecto: sin red, sin costo, sin API key.
+La mayoria son baratos y rapidos: sin red, sin costo, sin API key. Excepcion:
+los tests de rag_search (desde 5B.2 pega contra Postgres + OpenAI de verdad)
+se saltan solos si faltan OPENAI_API_KEY/DATABASE_URL -- ver skip_if_no_rag_env.
 
 Estructura:
 - TestResponseFormat: reglas sobre el formato de cualquier respuesta del agente.
 - TestToolBehavior:   reglas sobre lo que devuelven las tools directamente.
 """
 
+import os
+
+import pytest
+
 from src.tools import create_ticket, rag_search
+
+
+def skip_if_no_rag_env() -> None:
+    """rag_search() pega contra OpenAI (embeddings) y Postgres real desde 5B.2."""
+    if not os.getenv("OPENAI_API_KEY") or not os.getenv("DATABASE_URL"):
+        pytest.skip("OPENAI_API_KEY/DATABASE_URL no configuradas para tests de rag_search")
 
 
 # ─── Reglas sobre formato de respuesta ───────────────────────────────────────
@@ -50,6 +62,7 @@ class TestToolBehavior:
 
     def test_rag_search_contains_query_word(self):
         # Al menos una palabra del query debe aparecer en el resultado.
+        skip_if_no_rag_env()
         query = "politica de reembolso"
         result = rag_search.invoke({"query": query})
 
@@ -60,6 +73,7 @@ class TestToolBehavior:
 
     def test_rag_search_returns_string(self):
         # El resultado siempre debe ser un string, nunca None ni otro tipo.
+        skip_if_no_rag_env()
         result = rag_search.invoke({"query": "consulta de prueba"})
         assert isinstance(result, str)
 
