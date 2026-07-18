@@ -50,7 +50,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
     5B.3 — Postgres checkpointer      ← EN PAUSA (diseño cerrado 2026-07-07, sin código;
                                           pospuesta detrás del corpus nuevo, ver 5B.4 abajo)
-    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 4/6 completo, 2026-07-17;
+    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 5/6 completo, 2026-07-18;
                                           ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -69,8 +69,17 @@ src/
 ├── tools.py       ✅ rag_search() sobre Postgres (5B.2): _get_connection + _vector_search
 │                     + _keyword_search + _hybrid_search (RRF) + fetch de content/source por id
 │                     + create_ticket() con TicketInput
+│                     _keyword_search reescrita en 5B.4 paso 5 (2026-07-18): config 'simple'
+│                     (no 'spanish' — corpus mezcla EN/ES) + tsquery armado a mano con OR ('|')
+│                     entre palabras vía _build_or_tsquery(), no plainto_tsquery (fuerza AND de
+│                     todas las palabras — inviable con preguntas parafraseadas de 15-20 palabras)
+│                     + _STOPWORDS (ES+EN) para que el OR no matchee solo por "de"/"la"/"el"
+│                     compartidas con la pregunta. Medido contra las 520 preguntas de
+│                     evals/ground_truth_retrieval.json: keyword hit_rate 0.008 → 0.300 (ver
+│                     CHANGELOG 2026-07-18 para la progresión completa del debugging).
 │                     [dead code pendiente: _index/InMemoryIndex/set_index ya no los usa
-│                     rag_search(), quedan sin uso hasta el paso 6 (limpieza)]
+│                     rag_search(), quedan sin uso hasta el paso 6 de la Sesión 2 (limpieza,
+│                     no confundir con el paso 6 de 5B.4 abajo)]
 ├── graph.py       ✅ StateGraph con routing condicional y MemorySaver — SYSTEM_PROMPT con el caso
 │                     de uso real (instrumentación de campo, agua potable/saneamiento) desde 5B.4
 │                     paso 3 (2026-07-15); antes era el placeholder de Capa 1. Sigue inline en este
@@ -131,7 +140,18 @@ evals/
 │                                 133, inferencial 128, borde 121) sobre 130 ventanas / 11 documentos.
 │                                 Cada registro: question, category, chunk_ids (lista — 1 elemento
 │                                 para ventanas de 1 chunk al final de un documento, 2 en el resto),
-│                                 source. Sin commitear todavia (ver cierre de sesion).
+│                                 source. Commiteado 2026-07-18 (commit 15bf4bd).
+├── retrieval_metrics.py ✅ (5B.4 paso 5, 2026-07-18) compute_relevance/hit_rate/mrr/evaluate,
+│                            patron de M4 portado y parametrizado para _vector_search/
+│                            _keyword_search/_hybrid_search de src/tools.py. Acierto definido por
+│                            chunk_ids (no filename, a diferencia de M4 — ver nota del paso 4).
+│                            Script manual (python -m evals.retrieval_metrics), no lo llama la app
+│                            ni CI. Corrida real contra las 520 preguntas destapó y motivo el fix
+│                            de _keyword_search en src/tools.py (ver "Estado actual del repo"
+│                            arriba y CHANGELOG 2026-07-18 para la progresion completa).
+│                            Metricas finales @top_k=5: vector 0.231/0.141, keyword 0.300/0.197,
+│                            hybrid 0.312/0.180 (hit_rate/mrr) — hybrid con k=60 default de RRF no
+│                            supera el MRR de keyword solo, motiva el barrido de k del paso 6.
 ├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
 │                       + @traceable para LangSmith (Capa 3B)
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
@@ -253,9 +273,25 @@ real de Juan como consultor técnico en el rubro) es ese salto de volumen. Pasos
    OpenAI reales (confirmado con Juan antes de ejecutar, ~130 llamadas pagas): 520 preguntas en
    `evals/ground_truth_retrieval.json`. Detalle y hallazgo pendiente de revisar en "Estado actual
    del repo" arriba.
-5. ⬜ Portar hit_rate/mrr/evaluate() a evals/retrieval_metrics.py.
-6. ⬜ Barrido de k de RRF contra el ground truth real; decidir si el k=60 default
-   de src/ingestion.py:104 se ajusta.
+5. ✅ (2026-07-18) — Portado hit_rate/mrr/evaluate() a evals/retrieval_metrics.py, patrón M4
+   parametrizado para _vector_search/_keyword_search/_hybrid_search de src/tools.py (acierto por
+   chunk_ids, no filename — ver paso 4). La primera corrida real (top_k=5, 520 preguntas) destapó
+   un bug real en _keyword_search: hit_rate 0.008, prácticamente inútil. Investigado y arreglado en
+   la misma sesión (dos intentos fallidos antes del fix real — ver CHANGELOG 2026-07-18 para la
+   progresión completa): plainto_tsquery armaba un AND de las 15-20 palabras de cada pregunta
+   parafraseada (criterio casi imposible de cumplir), agravado por el corpus bilingüe (8/11 PDFs en
+   inglés) y por que 'simple' no elimina stopwords españolas. Fix: OR armado a mano
+   (_build_or_tsquery) + filtro de stopwords ES/EN (_STOPWORDS) en src/tools.py. Verificado con
+   Juan que la brecha ES/EN resultante ya no es un artefacto sino el límite estructural real de
+   keyword search monolingüe (ver nota en "Estado actual del repo"); descartada la idea de separar
+   en dos RAGs por idioma porque el corpus no tiene cobertura duplicada (8 PDFs solo existen en
+   inglés). Métricas finales @top_k=5: vector 0.231/0.141, keyword 0.300/0.197 (supera a vector),
+   hybrid 0.312/0.180 (hit_rate mejora, pero MRR queda entre los dos individuales — RRF con k=60
+   default no suma toda la ventaja de keyword). El fix cambia también el rag_search() real que usa
+   el agente (mismo _keyword_search), no solo las métricas — 7 tests de test_rules.py verificados
+   en verde con la query SQL nueva.
+6. ⬜ Barrido de k de RRF contra el ground truth real, motivado por la brecha MRR hybrid/keyword de
+   arriba; decidir si el k=60 default de src/ingestion.py:104 se ajusta.
 
 Nota (2026-07-15): al pushear el trabajo pendiente de 5B.4 pasos 1-2 (primera vez
 que corría CI desde la migración a Postgres de 5B.2), aparecieron dos fallas en
@@ -331,6 +367,22 @@ pausa sin cambios hasta que 5B.4 avance.
 - Separar los prompts a archivo(s) propio(s) en vez de vivir inline en graph.py
   (pedido de Juan, 2026-07-15, al corregir que ROADMAP.md listaba un
   src/prompts.py que nunca existió).
+- Framework de evals de generación (RAGAS u otro) como capa adicional sobre las
+  métricas propias, no reemplazo — discutido 2026-07-18. Orden decidido:
+  primero terminar hit_rate/mrr propios (pasos 5-6 de 5B.4, en curso) porque
+  programarlos a mano es la señal de conocimiento real; recién después sumar
+  RAGAS (o similar) para métricas de generación end-to-end (faithfulness,
+  answer relevancy, context precision/recall) que son tediosas de replicar
+  bien a mano. Combinación retrieval-metrics propias + RAGAS para generación
+  es el objetivo para un repo profesional — no portar hit_rate/mrr a una
+  librería externa.
+- FTS por idioma real (columna `language` por chunk, detectada al ingestar +
+  `to_tsvector(lang::regconfig, content)` en vez del `'simple'` global fijo de
+  hoy) — discutido 2026-07-18 al arreglar `_keyword_search` (ver paso 5 de
+  5B.4 y CHANGELOG). Es el patrón "de producción" correcto para corpus
+  multilingües, pero sobre-ingeniería para 11 documentos; el filtro de
+  stopwords ES/EN alcanza para el tamaño actual del corpus. Reconsiderar si
+  el corpus crece a más idiomas o más documentos por idioma.
 ```
 
 ---

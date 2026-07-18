@@ -6,10 +6,80 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-18 — Capa 5B.4 paso 5: métricas hit_rate/mrr + bug de keyword search bilingüe encontrado y arreglado
+**Commit:** `35a9ce5`
+
+- **`evals/retrieval_metrics.py` nuevo:** porta el framework de M4 (`compute_relevance`/
+  `hit_rate`/`mrr`/`evaluate`) parametrizado para `_vector_search`/`_keyword_search`/
+  `_hybrid_search` de `src/tools.py` tal como están, usando `evals/ground_truth_retrieval.json`
+  (520 preguntas) como dataset real. Adaptado del patrón de M4 en un punto: el acierto no se mide
+  por `filename` (M4 evaluaba a nivel de página completa) sino por `chunk_ids` — la ventana exacta
+  que vio el LLM al generar la pregunta (ver 5B.4 paso 4) — porque acá el chunking sí importa a
+  nivel de precisión.
+- **Hallazgo real corriendo la primera medición (top_k=5):** `keyword` hit_rate=0.008 — básicamente
+  inútil — mientras `vector` daba 0.231. Investigado en vivo con Juan, con dos intentos fallidos
+  antes del fix real:
+  1. Hipótesis inicial (incorrecta): `_keyword_search` usaba `to_tsvector('spanish', ...)`, pero 8
+     de los 11 PDFs del corpus son en inglés — cambiar a `'simple'` (sin stemming) pareció el fix
+     obvio. Resultado: **empeoró** a hit_rate=0.0. Causa real: `plainto_tsquery` arma un AND de
+     *todas* las palabras de la pregunta (15-20 palabras parafraseadas); con `'spanish'` al menos
+     se eliminaban stopwords españolas del AND, con `'simple'` no — el AND terminaba exigiendo que
+     palabras como "de"/"la"/"del" (que casi nunca aparecen en contenido en inglés) estuvieran en
+     el chunk, condenando la búsqueda al fracaso en 8/11 documentos.
+  2. Fix real (parte 1): reemplazar el AND de `plainto_tsquery` por un OR armado a mano
+     (`palabra1 | palabra2 | ...` vía `to_tsquery`), para que cualquier término sume en `ts_rank`
+     en vez de exigir que matcheen todos — mismo principio que `KeywordIndex` TF-IDF de
+     `src/ingestion.py`. Con `'simple'` + OR: hit_rate 0.202, hybrid 0.269 (superando a vector por
+     primera vez).
+  3. **Juan detectó una duda metodológica válida antes de dar el hallazgo por cerrado:** con
+     `'simple'` (sin stopwords) y OR, ¿no estaría el keyword search matcheando chunks solo por
+     compartir "de"/"la"/"el"/"para" con la pregunta, sin relación real de contenido? Verificado
+     empíricamente separando hit_rate por idioma del documento correcto: sin filtro de stopwords,
+     documentos en español 0.4554 vs documentos en inglés 0.0101 — la brecha confirmaba
+     contaminación por stopwords (compartidísimas en cualquier texto en español).
+  4. Fix real (parte 2): `_STOPWORDS` (lista curada ES+EN) + `_build_or_tsquery()` en
+     `src/tools.py` — filtra stopwords antes de armar el OR. Resultado, contra lo esperado: **no
+     solo bajó el número de documentos en español, subieron los dos** (ES 0.4554→0.5893, EN
+     0.0101→0.0811) — `ts_rank` no pondera por rareza (sin IDF), así que las stopwords no solo
+     "hacían trampa" trayendo aciertos falsos, dominaban el ranking y tapaban la señal real de las
+     palabras de contenido en ambos idiomas. La brecha ES/EN que queda ahora ya no es un artefacto:
+     es el límite estructural real de keyword search monolingüe contra preguntas en español sobre
+     documentos en inglés (solo matchean términos técnicos idénticos en ambos idiomas — modelos,
+     unidades, protocolos).
+  5. **Discutido con Juan y descartado como solución:** separar en dos RAGs por idioma. No aplica a
+     este corpus porque no hay cobertura duplicada — los 5 PDFs de Rosemount y los 2 de
+     Endress+Hauser *solo* existen en inglés, así que rutear una pregunta en español al índice
+     "español" dejaría sin respuesta a cualquier consulta sobre esos documentos. La alternativa "de
+     producción real" (columna `language` por chunk + `tsvector` por config detectado, en vez del
+     `'simple'` global actual) queda anotada como mejora futura en POSPUESTO — sobre-ingeniería
+     para 11 documentos, pero es el patrón correcto si el corpus creciera.
+- **Métricas finales (top_k=5, 520 preguntas), progresión completa documentada para trazabilidad:**
+
+  | config                          | vector      | keyword     | hybrid      |
+  |----------------------------------|-------------|-------------|-------------|
+  | `spanish` + AND (original)       | 0.231/0.141 | 0.008/0.005 | 0.229/0.142 |
+  | `simple` + AND                   | 0.231/0.141 | 0.000/0.000 | 0.231/0.141 |
+  | `simple` + OR sin stopwords       | 0.231/0.141 | 0.202/0.132 | 0.269/0.160 |
+  | `simple` + OR + stopwords (final) | 0.231/0.141 | **0.300/0.197** | **0.312/0.180** |
+
+  (hit_rate/mrr). Keyword solo termina superando a vector solo en ambas métricas — inesperado,
+  consistente con un dominio de términos técnicos exactos (modelos, unidades, procedimientos
+  cortos). Hybrid mejora el hit_rate sobre los dos, pero su MRR (0.180) queda *entre* vector y
+  keyword sin superar al mejor individual (0.197) — señal concreta de que el RRF con `k=60`
+  default no está sumando toda la ventaja de keyword, motiva el paso 6.
+- **Efecto en producción, no solo en evals:** el fix de `_keyword_search` cambia el `rag_search()`
+  real que usa el agente (mismo código, `src/tools.py`), no solo el script de métricas. Verificado
+  que los 7 tests de `tests/test_rules.py` siguen pasando con la query SQL nueva.
+- **Próximo paso concreto:** paso 6 de 5B.4 — barrido de `k` de RRF (1/50/100/200, patrón de la
+  notebook de M4) contra el ground truth real, motivado por la brecha MRR hybrid vs keyword de
+  arriba; decidir si el `k=60` default de `src/ingestion.py:104` se ajusta.
+
+---
+
 ## 2026-07-17 — Capa 5B.4 paso 4: ground truth de retrieval generado con LLM + structured output
-**Commit:** sin commitear todavía — `evals/generate_ground_truth.py` y
-`evals/ground_truth_retrieval.json` quedan como untracked al cierre de esta sesión, pendiente de
-confirmar con Juan si se commitean ahora o en la próxima.
+**Commit:** `15bf4bd` (commiteado el 2026-07-18, un día después de generado —
+`evals/generate_ground_truth.py` y `evals/ground_truth_retrieval.json` quedaron untracked al
+cierre de la sesión del 07-17)
 
 - **Diseño discutido y acordado antes de programar (patrón de esta sesión: concepto antes de
   código):** portar el patrón de HW4 (Módulo 4) tal cual no calzaba — HW4 generaba preguntas por
