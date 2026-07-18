@@ -6,6 +6,50 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-17 — Capa 5B.4 paso 4: ground truth de retrieval generado con LLM + structured output
+**Commit:** sin commitear todavía — `evals/generate_ground_truth.py` y
+`evals/ground_truth_retrieval.json` quedan como untracked al cierre de esta sesión, pendiente de
+confirmar con Juan si se commitean ahora o en la próxima.
+
+- **Diseño discutido y acordado antes de programar (patrón de esta sesión: concepto antes de
+  código):** portar el patrón de HW4 (Módulo 4) tal cual no calzaba — HW4 generaba preguntas por
+  página (~4 chunks cada una, granularidad chica); acá cada documento tiene 223 chunks en promedio
+  (rango real verificado contra Supabase: 57 a 485 chunks por PDF, 2451 total / 11 documentos).
+  Generar preguntas por documento completo (como en un proyecto anterior de Juan en Valkimia, 10
+  preguntas por documento) hubiera dejado el "acierto" en Hit Rate demasiado fácil de pasar
+  (cualquier chunk del documento correcto cuenta). Resuelto con: sampling proporcional (1 anclaje
+  cada 20 chunks, equiespaciado por documento → 130 ventanas reales, no ~123 estimadas a mano) +
+  ventana de 2 chunks consecutivos por anclaje (cubre procedimientos cortos; criterio de "acierto
+  vecino" ±1 justificado por el 20% de overlap de `CHUNK_STEP=800`/`CHUNK_SIZE=1000` — a esa
+  distancia dos chunks ya no comparten texto, verificado con la aritmética del chunking real).
+- **Categorías de pregunta:** factual, procedimental, inferencial, borde — decisión explícita de
+  dejar afuera las preguntas "no soportadas" (out-of-scope) porque no tienen chunk correcto por
+  construcción y sirven para un eval distinto (nivel agente, no retrieval); quedan anotadas como
+  pendiente separado, no se generan hoy.
+- **`evals/generate_ground_truth.py` nuevo:** lee `chunks` de Supabase agrupados por `source`,
+  arma las ventanas de sampling, y por cada una llama a `client.beta.chat.completions.parse()`
+  (mismo método de la API que Capa 4) con un modelo Pydantic (`GeneratedQuestions`) que fuerza la
+  categoría de cada pregunta vía `Literal[...]`. El "chunk correcto" de cada pregunta queda
+  definido por construcción: son los `chunk_ids` de la ventana que efectivamente vio el LLM, sin
+  heurística posterior. Script manual (`python -m evals.generate_ground_truth`), mismo patrón que
+  `scripts/ingest.py` — no lo llama la app ni CI.
+- **Corrida real confirmada con Juan antes de ejecutar** (Supabase + OpenAI reales, costo pago):
+  130 ventanas de anclaje sobre los 2451 chunks / 11 documentos → **520 preguntas** generadas en
+  `evals/ground_truth_retrieval.json` (factual 138, procedimental 133, inferencial 128, borde 121).
+- **Hallazgo sin resolver, anotado para revisar en el paso 5:** las 130 ventanas generaron
+  exactamente 4 preguntas cada una, pese a que el prompt pedía explícitamente "entre 1 y 4, solo
+  las categorías que el fragmento sostiene realmente" — no la cantidad forzada que se quería
+  evitar. Se revisó a mano la primera ventana (`emerson_rosemount-2051_manual_en.pdf`, sección de
+  advertencias de seguridad) y las 4 preguntas generadas ahí sí se leen como genuinas, no
+  forzadas/repetidas — pero no se revisaron las 130. Queda pendiente ver si esto genera ruido en
+  `hit_rate`/`mrr` cuando se corran de verdad (paso 5) — no se ajustó el prompt todavía, se decidió
+  con Juan seguir con el dato real en vez de iterar a ciegas sobre una muestra de una sola ventana.
+- **Próximo paso concreto:** paso 5 de 5B.4 — portar `hit_rate`/`mrr`/`evaluate()` a
+  `evals/retrieval_metrics.py`, parametrizado para `_vector_search`/`_keyword_search`/
+  `_hybrid_search` de `src/tools.py`, usando `evals/ground_truth_retrieval.json` como dataset real.
+
+---
+
 ## 2026-07-15 — CI arreglado (job rules) + Capa 5B.4 paso 3: caso de uso real en system prompt y README
 **Commit:** `c600192` (fix CI), `7da07f2` (paso 3) — de paso, se commiteó y pusheó el trabajo de
 5B.4 pasos 1-2 y el handoff de M4 que llevaba días escrito sin subir (`8487502`, `aecfde5`;

@@ -1,0 +1,4670 @@
+[
+  {
+    "question": "¿Qué se debe hacer antes de trabajar con el transmisor para garantizar la seguridad del personal y del sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      1,
+      2
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento correcto para asegurar que el transmisor cumpla con los requisitos de seguridad en atmósferas explosivas?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1,
+      2
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene intentar aflojar los pernos de la brida mientras el transmisor está en servicio?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1,
+      2
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si se utilizan partes de repuesto no aprobadas por Emerson en el transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      1,
+      2
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el paso inicial que debe realizarse para confirmar la capacidad de comunicación HART de los sistemas antes de la instalación?",
+    "category": "procedimental",
+    "chunk_ids": [
+      21,
+      22
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué información se debe verificar para asegurar la correcta comunicación del dispositivo con los sistemas?",
+    "category": "factual",
+    "chunk_ids": [
+      21,
+      22
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene usar un sistema que no es compatible con dispositivos HART Revision 7?",
+    "category": "inferencial",
+    "chunk_ids": [
+      21,
+      22
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "Si un dispositivo tiene un software NAMUR revision no disponible, ¿qué se debe comprobar según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      21,
+      22
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango máximo permitido para el valor de Damping que se puede configurar en el transmisor?",
+    "category": "factual",
+    "chunk_ids": [
+      41,
+      42
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué comando se utiliza para modificar el tiempo de respuesta del transmisor ajustando suavemente las variaciones en las lecturas?",
+    "category": "procedimental",
+    "chunk_ids": [
+      41,
+      42
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cómo se determina el ajuste adecuado del Damping según las dinámicas del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      41,
+      42
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si un cambio de Damping resulta en un valor que podría no ser seguro para aplicar?",
+    "category": "borde",
+    "chunk_ids": [
+      41,
+      42
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las opciones de contenido del mensaje disponibles cuando el transmisor está en modo Burst para HART 5?",
+    "category": "factual",
+    "chunk_ids": [
+      61,
+      62
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deberías seguir para configurar el modo Burst usando el AMS Device Manager?",
+    "category": "procedimental",
+    "chunk_ids": [
+      61,
+      62
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "Si el transmisor está en modo Burst, ¿cómo se gestiona la comunicación entre el último mensaje enviado y la siguiente solicitud de información?",
+    "category": "inferencial",
+    "chunk_ids": [
+      61,
+      62
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "En caso de que se necesite un cambio en el modo de disparo, ¿cuáles son las opciones disponibles en HART 7?",
+    "category": "borde",
+    "chunk_ids": [
+      61,
+      62
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las temperaturas a las que los materiales del proceso no deben estar en contacto directo con los módulos del sensor?",
+    "category": "factual",
+    "chunk_ids": [
+      81,
+      82
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento correcto para instalar los adaptadores de flanges en el módulo del sensor durante la conexión al proceso?",
+    "category": "procedimental",
+    "chunk_ids": [
+      81,
+      82
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Por qué es importante apretar todos los tornillos de los flanges antes de aplicar presión al sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      81,
+      82
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué precauciones se deben tomar al purgar las líneas de líquido para evitar problemas durante el proceso?",
+    "category": "borde",
+    "chunk_ids": [
+      81,
+      82
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de medición expresado en pulgadas de agua para el sistema mencionado en el texto?",
+    "category": "factual",
+    "chunk_ids": [
+      101,
+      102
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer para corregir el error potencial generado por la condición de 'wet leg' en el transmisor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      101,
+      102
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que el cero de la elevación de rango deba ajustarse debido a la presión de cabeza del fluido de referencia?",
+    "category": "inferencial",
+    "chunk_ids": [
+      101,
+      102
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "En el caso de que ocurra una condición de 'wet leg', ¿qué tipo de fluido se utiliza y cuál es su propósito?",
+    "category": "borde",
+    "chunk_ids": [
+      101,
+      102
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué opción se debe elegir para añadir un bloque de terminal de protección transitoria a un transmisor existente en el campo?",
+    "category": "factual",
+    "chunk_ids": [
+      121,
+      122
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el resultado de no conectar adecuadamente a tierra el caso del transmisor en relación con el bloque de terminal de protección contra transitorios?",
+    "category": "inferencial",
+    "chunk_ids": [
+      121,
+      122
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para calibrar un transmisor en el campo según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      121,
+      122
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué advertencia se menciona sobre el ajuste del transmisor si se realiza de manera incorrecta?",
+    "category": "borde",
+    "chunk_ids": [
+      121,
+      122
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de salida analógica que se debe ajustar al realizar un trim en el transmisor?",
+    "category": "factual",
+    "chunk_ids": [
+      141,
+      142
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué secuencia de teclas debes seguir desde la pantalla principal para realizar un trim de salida de 4–20 mA?",
+    "category": "procedimental",
+    "chunk_ids": [
+      141,
+      142
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se añade una resistencia al lazo en el proceso de trimming?",
+    "category": "inferencial",
+    "chunk_ids": [
+      141,
+      142
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguirías si decides realizar el ajuste utilizando el AMS Device Manager?",
+    "category": "procedimental",
+    "chunk_ids": [
+      141,
+      142
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse primero si un parámetro escrito por el usuario no coincide con el valor esperado en el dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      161,
+      162
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "Si el LCD no está actualizando, ¿cuál es una de las posibles causas que se puede verificar primero?",
+    "category": "inferencial",
+    "chunk_ids": [
+      161,
+      162
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué tipo de advertencia se muestra si hay un problema con los datos del usuario que no son críticos?",
+    "category": "factual",
+    "chunk_ids": [
+      161,
+      162
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "En caso de un cambio no intencional de configuración, ¿qué acción se debe tomar para limpiar la alerta de cambio de configuración?",
+    "category": "borde",
+    "chunk_ids": [
+      161,
+      162
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para verificar que el transmisor alcance los valores de salida de corriente de alarma alta y baja?",
+    "category": "procedimental",
+    "chunk_ids": [
+      181,
+      182
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué herramientas son necesarias para llevar a cabo el procedimiento de prueba de verificación?",
+    "category": "factual",
+    "chunk_ids": [
+      181,
+      182
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica realizar una calibración de dos puntos en el sensor de presión durante la prueba de comprobación?",
+    "category": "inferencial",
+    "chunk_ids": [
+      181,
+      182
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer en caso de que el dispositivo registre una falla relacionada con la corriente en reposo?",
+    "category": "borde",
+    "chunk_ids": [
+      181,
+      182
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los caracteres que puede mostrar el interfaz de operador local (LOI)?",
+    "category": "factual",
+    "chunk_ids": [
+      201
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si el texto actual contiene un carácter que el LOI no puede mostrar?",
+    "category": "inferencial",
+    "chunk_ids": [
+      201
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cómo se puede representar un carácter no soportado en la interfaz?",
+    "category": "procedimental",
+    "chunk_ids": [
+      201
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué excepciones se mencionan respecto a los caracteres que el LOI puede mostrar?",
+    "category": "borde",
+    "chunk_ids": [
+      201
+    ],
+    "source": "emerson_rosemount-2051_manual_en.pdf"
+  },
+  {
+    "question": "¿Dónde se pueden encontrar los documentos del producto si no hay un código QR disponible?",
+    "category": "factual",
+    "chunk_ids": [
+      202,
+      203
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento recomendado antes de conectar un comunicador portátil en un ambiente explosivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      202,
+      203
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que durante la instalación se produzcan fugas en el proceso según el manual?",
+    "category": "inferencial",
+    "chunk_ids": [
+      202,
+      203
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuál es una advertencia importante al instalar el transmisor en un entorno explosivo?",
+    "category": "borde",
+    "chunk_ids": [
+      202,
+      203
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los niveles de saturación de alarma que debes verificar en un dispositivo HART 7?",
+    "category": "factual",
+    "chunk_ids": [
+      222,
+      223
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para utilizar la interfaz de operador local (LOI) en la configuración del dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      222,
+      223
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "Si un operador no puede activar la LOI, ¿qué acción inicial deberían intentar?",
+    "category": "inferencial",
+    "chunk_ids": [
+      222,
+      223
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si intentas usar la LOI en un dispositivo que no está en modo HART Revision 7?",
+    "category": "borde",
+    "chunk_ids": [
+      222,
+      223
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué consideraciones deben tenerse en cuenta durante la instalación si el equipo está equipado con un supresor transitorio opcional de 90 V?",
+    "category": "procedimental",
+    "chunk_ids": [
+      242,
+      243
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿En qué rango de temperaturas se puede utilizar el equipo clasificado como T6?",
+    "category": "factual",
+    "chunk_ids": [
+      242,
+      243
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué riesgos se asocian con las pinturas no estándar en la instalación del equipo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      242,
+      243
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué restricciones existen para la instalación de variantes con acabado pintado en relación al flujo de aire?",
+    "category": "borde",
+    "chunk_ids": [
+      242,
+      243
+    ],
+    "source": "emerson_rosemount-2051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las advertencias importantes que se deben considerar antes de instalar el transmisor en un entorno explosivo?",
+    "category": "factual",
+    "chunk_ids": [
+      259,
+      260
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para asegurar la instalación adecuada de los conectores del proceso antes de aplicar presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      259,
+      260
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica no seguir las normas de instalación en un ambiente explosivo respecto a la seguridad?",
+    "category": "inferencial",
+    "chunk_ids": [
+      259,
+      260
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las consecuencias de utilizar piezas de repuesto que no estén aprobadas por Emerson según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      259,
+      260
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de voltaje que debe tener la fuente de alimentación para el AMS Device Manager y AMS Trex?",
+    "category": "factual",
+    "chunk_ids": [
+      279,
+      280
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer antes de configurar un dispositivo con un comunicador?",
+    "category": "procedimental",
+    "chunk_ids": [
+      279,
+      280
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica la ausencia de un resistor en la conexión del AMS Trex con alimentación y HART?",
+    "category": "inferencial",
+    "chunk_ids": [
+      279,
+      280
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué casos no es necesario usar un resistor según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      279,
+      280
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué unidad de medida se utiliza para el flujo en el ejemplo de configuración de la tasa de flujo?",
+    "category": "factual",
+    "chunk_ids": [
+      299,
+      300
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores de presión cuando se introduce un flujo de 20,000 USGPH?",
+    "category": "factual",
+    "chunk_ids": [
+      299,
+      300
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cómo se configura un totalizador de flujo para que rastree el flujo en ambas direcciones?",
+    "category": "procedimental",
+    "chunk_ids": [
+      299,
+      300
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene configurar el corte de flujo bajo en modo 'On'?",
+    "category": "inferencial",
+    "chunk_ids": [
+      299,
+      300
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la función principal que realiza el transmisor al iniciar una caracterización del lazo?",
+    "category": "factual",
+    "chunk_ids": [
+      319,
+      320
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse después de establecer un límite de desviación de voltaje terminal en la caracterización del lazo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      319,
+      320
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué puede implicar un cambio en el voltaje terminal que supere el límite de desviación configurado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      319,
+      320
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué limitación tiene el diagnóstico de integridad del lazo en relación con la detección de fallos eléctricos?",
+    "category": "borde",
+    "chunk_ids": [
+      319,
+      320
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué posición se recomienda montar el transmisor para el modelo Rosemount 3051CD0?",
+    "category": "factual",
+    "chunk_ids": [
+      339,
+      340
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento para eliminar un cambio en el cero del transmisor si se ha inclinado durante la instalación?",
+    "category": "procedimental",
+    "chunk_ids": [
+      339,
+      340
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué podría suceder si el transmisor se instala inclinado y cómo se puede corregir?",
+    "category": "inferencial",
+    "chunk_ids": [
+      339,
+      340
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción se debe tomar si se nota ruido en la salida del transmisor a pesar de tener el ajuste de amortiguamiento en 3.2?",
+    "category": "borde",
+    "chunk_ids": [
+      339,
+      340
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe reemplazar si las juntas tórica del módulo del sensor están dañadas?",
+    "category": "factual",
+    "chunk_ids": [
+      359,
+      360
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la secuencia para apretar los pernos del manifold en el módulo del sensor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      359,
+      360
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene no apretar los conectores de proceso antes de aplicar presión?",
+    "category": "inferencial",
+    "chunk_ids": [
+      359,
+      360
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué precauciones se deben tomar al reemplazar las juntas tórica del sensor para no dañar otras partes?",
+    "category": "borde",
+    "chunk_ids": [
+      359,
+      360
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer con el conductor de drenaje de blindaje antes de llegar al punto de terminación?",
+    "category": "procedimental",
+    "chunk_ids": [
+      379,
+      380
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Por qué es importante que la cubierta de los terminales de campo esté completamente ajustada?",
+    "category": "inferencial",
+    "chunk_ids": [
+      379,
+      380
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la mejor manera de conectar a tierra la caja del transmisor según las normativas eléctricas?",
+    "category": "factual",
+    "chunk_ids": [
+      379,
+      380
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse en caso de que el conductor de drenaje de blindaje esté expuesto?",
+    "category": "borde",
+    "chunk_ids": [
+      379,
+      380
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para realizar un ajuste del sensor de presión inferior usando el AMS Device Manager?",
+    "category": "procedimental",
+    "chunk_ids": [
+      399,
+      400
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si se intenta realizar un ajuste a cero digital cuando el transmisor no está cerca de cero?",
+    "category": "inferencial",
+    "chunk_ids": [
+      399,
+      400
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué botón se debe presionar para realizar un ajuste a cero digital en un área peligrosa?",
+    "category": "factual",
+    "chunk_ids": [
+      399,
+      400
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer antes de pulsar el botón de ajuste a cero digital en el transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      399,
+      400
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para asegurar la correcta desconexión y remoción del transmisor del proceso?",
+    "category": "procedimental",
+    "chunk_ids": [
+      419,
+      420
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe verificar en la conexión de presión del transmisor antes de proceder a su mantenimiento?",
+    "category": "factual",
+    "chunk_ids": [
+      419,
+      420
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué peligro se debe considerar al desmontar el transmisor en atmósferas explosivas?",
+    "category": "inferencial",
+    "chunk_ids": [
+      419,
+      420
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se recomienda hacer con las juntas de PTFE al quitar el adaptador de proceso?",
+    "category": "borde",
+    "chunk_ids": [
+      419,
+      420
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué herramientas se requieren para realizar la calibración del sensor según el procedimiento descrito?",
+    "category": "factual",
+    "chunk_ids": [
+      439,
+      440
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta?",
+    "category": "procedimental",
+    "chunk_ids": [
+      439,
+      440
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "Si al realizar una prueba se obtiene una lectura fuera de rango, ¿qué tipo de problema podrías estar enfrentando con la alimentación del lazo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      439,
+      440
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "En caso de que el transmisor presente fallas, ¿qué acción debe tomarse respecto a la reparación de sus componentes según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      439,
+      440
+    ],
+    "source": "emerson_rosemount-3051_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debe considerarse para la instalación de un dispositivo en un ambiente explosivo?",
+    "category": "factual",
+    "chunk_ids": [
+      450,
+      451
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué tipo de O-ring se debe utilizar para evitar fugas en el proceso?",
+    "category": "factual",
+    "chunk_ids": [
+      450,
+      451
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las medidas de seguridad que se deben tomar para evitar riesgos de choque eléctrico?",
+    "category": "procedimental",
+    "chunk_ids": [
+      450,
+      451
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene remover las cubiertas del transmisor cuando está alimentado en una instalación a prueba de explosiones?",
+    "category": "inferencial",
+    "chunk_ids": [
+      450,
+      451
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las configuraciones iniciales que se deben establecer antes de instalar el transmisor en el proceso?",
+    "category": "factual",
+    "chunk_ids": [
+      470,
+      471
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso en el procedimiento para configurar los valores de alarma y saturación?",
+    "category": "procedimental",
+    "chunk_ids": [
+      470,
+      471
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "Si el transmisor no está funcionando correctamente, ¿qué acción podría implicar la necesidad de instalar la última versión del controlador del dispositivo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      470,
+      471
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se solicita la ubicación del dispositivo al abrir por primera vez el AMS Device Configurator?",
+    "category": "borde",
+    "chunk_ids": [
+      470,
+      471
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las temperaturas de operación permitidas para el sistema según las especificaciones HART?",
+    "category": "factual",
+    "chunk_ids": [
+      490,
+      491
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué precaución se debe tener en cuenta si el equipo se ubica en la Zona 0?",
+    "category": "procedimental",
+    "chunk_ids": [
+      490,
+      491
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué indican las marcaciones reducidas en la placa del equipo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      490,
+      491
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el riesgo asociado con el uso de pinturas no estándar según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      490,
+      491
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Qué empresa es responsable de la marca Rosemount mencionada en el texto?",
+    "category": "factual",
+    "chunk_ids": [
+      510
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cómo se debe proceder para obtener información sobre las condiciones de venta de los productos?",
+    "category": "procedimental",
+    "chunk_ids": [
+      510
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "Si veo que un producto no tiene el logo de Emerson, ¿qué podría inferir sobre su autenticidad o procedencia?",
+    "category": "inferencial",
+    "chunk_ids": [
+      510
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Existen excepciones en el uso de los registros de marca de Emerson según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      510
+    ],
+    "source": "emerson_rosemount-3051_quickstart_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las recomendaciones de seguridad que se deben seguir al manejar e instalar el sensor?",
+    "category": "factual",
+    "chunk_ids": [
+      511,
+      512
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para instalar correctamente el sensor según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      511,
+      512
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué consideraciones se deben tener en cuenta al elegir la ubicación y posición del sensor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      511,
+      512
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse en caso de que el sensor no funcione correctamente después de la instalación, según lo mencionado en el documento?",
+    "category": "borde",
+    "chunk_ids": [
+      511,
+      512
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las consecuencias de sustituir componentes de fábrica por componentes no de fábrica en este producto?",
+    "category": "inferencial",
+    "chunk_ids": [
+      531,
+      532
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debes verificar antes de retirar la tapa del compartimento del electrodo?",
+    "category": "factual",
+    "chunk_ids": [
+      531,
+      532
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir si el producto ha estado expuesto a sustancias peligrosas antes de devolverlo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      531,
+      532
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Se puede utilizar este producto en aplicaciones que requieren hardware o productos calificados para nuclear?",
+    "category": "borde",
+    "chunk_ids": [
+      531,
+      532
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuánto torque se debe aplicar a un sensor de 1.5 pulgadas con forro de fluoropolímero en clase 150?",
+    "category": "factual",
+    "chunk_ids": [
+      551,
+      552
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para asegurar que se aplique el valor de torque correcto antes de instalar el sensor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      551,
+      552
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si se observa que un sensor ha deformado su material después de estar bajo presión, ¿qué acción se debe tomar?",
+    "category": "inferencial",
+    "chunk_ids": [
+      551,
+      552
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si el forro del sensor no es de fluoropolímero en relación con los valores de torque sugeridos?",
+    "category": "borde",
+    "chunk_ids": [
+      551,
+      552
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el tamaño de los puertos de entrada del transmisor que se pueden solicitar?",
+    "category": "factual",
+    "chunk_ids": [
+      571,
+      572
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para asegurar correctamente el transmisor al hardware de montaje?",
+    "category": "procedimental",
+    "chunk_ids": [
+      571,
+      572
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué consideraciones se deben tener en cuenta al utilizar cables de alimentación junto con cables de electrodos?",
+    "category": "inferencial",
+    "chunk_ids": [
+      571,
+      572
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué tipo de tapones deben usarse para sellar entradas de conduit que no se utilizan?",
+    "category": "borde",
+    "chunk_ids": [
+      571,
+      572
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de valores que puede establecerse para el Upper Range Value (URV) en el sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      591,
+      592
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para instalar la cubierta del transmisor correctamente?",
+    "category": "procedimental",
+    "chunk_ids": [
+      591,
+      592
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué podría suceder si se aplica un torque excesivo al tornillo de bloqueo durante la instalación?",
+    "category": "inferencial",
+    "chunk_ids": [
+      591,
+      592
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué precaución se debe tener en cuenta al ingresar números negativos para el URV?",
+    "category": "borde",
+    "chunk_ids": [
+      591,
+      592
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los códigos que identifican las configuraciones de la carcasa del modelo 8705?",
+    "category": "factual",
+    "chunk_ids": [
+      611,
+      612
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para instalar una válvula de alivio de presión en el modelo 8705 con la opción M1?",
+    "category": "procedimental",
+    "chunk_ids": [
+      611,
+      612
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene una falla en el sello primario en la configuración M1 del sensor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      611,
+      612
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué casos el modelo 8711 y 8721 no ofrecen opciones de configuración de carcasa separadas?",
+    "category": "borde",
+    "chunk_ids": [
+      611,
+      612
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los límites altos y bajos especificados para el Control 1 en el dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      631,
+      632
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para realizar la calibración de un sensor en el sistema?",
+    "category": "procedimental",
+    "chunk_ids": [
+      631,
+      632
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si un dato de flujo está por debajo del límite bajo, ¿qué implicaciones podría tener para el funcionamiento del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      631,
+      632
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué condiciones pueden causar una alerta de diagnóstico según el manual técnico?",
+    "category": "borde",
+    "chunk_ids": [
+      631,
+      632
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las configuraciones principales relacionadas con el modo de operación en el sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      651,
+      652
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para realizar un reinicio en los contadores de totales?",
+    "category": "procedimental",
+    "chunk_ids": [
+      651,
+      652
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué podría indicar una lectura fuera de los límites de saturación en el sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      651,
+      652
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Existen excepciones para los ajustes de alarma según los límites inferiores y superiores de un sensor?",
+    "category": "borde",
+    "chunk_ids": [
+      651,
+      652
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el valor máximo de flujo que pueden registrar los totalizadores antes de que ocurra el rollover?",
+    "category": "factual",
+    "chunk_ids": [
+      671,
+      672
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para configurar la dirección de los totalizadores en el sistema?",
+    "category": "procedimental",
+    "chunk_ids": [
+      671,
+      672
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene el hecho de que un totalizador esté configurado para registrar en dirección inversa?",
+    "category": "inferencial",
+    "chunk_ids": [
+      671,
+      672
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué circunstancias se menciona la necesidad de configurar unidades especiales en los totalizadores?",
+    "category": "borde",
+    "chunk_ids": [
+      671,
+      672
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué opción se debe seleccionar para activar la comunicación en modo multi-drop con un transmisor HART?",
+    "category": "procedimental",
+    "chunk_ids": [
+      691,
+      692
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango permitido para cambiar la dirección de sondeo del transmisor en modo multi-drop para HART 5?",
+    "category": "factual",
+    "chunk_ids": [
+      691,
+      692
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede con la señal de salida analógica cuando la dirección de sondeo del transmisor se establece en un número entero distinto de cero en HART 5?",
+    "category": "inferencial",
+    "chunk_ids": [
+      691,
+      692
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "En casos donde se desea salir en modo multi-drop, ¿por qué es importante cambiar la dirección de sondeo desde su configuración inicial?",
+    "category": "borde",
+    "chunk_ids": [
+      691,
+      692
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de valores para configurar los conteos de tubería vacía en el sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      711,
+      712
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para optimizar el diagnóstico de tubería vacía una vez que se activa la alerta?",
+    "category": "procedimental",
+    "chunk_ids": [
+      711,
+      712
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si la temperatura de los componentes electrónicos excede los límites especificados, ¿qué acción toma el transmisor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      711,
+      712
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si se desea menor sensibilidad para las condiciones de tubería vacía debido a posibles burbujas de aire?",
+    "category": "borde",
+    "chunk_ids": [
+      711,
+      712
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el valor por defecto del criterio de prueba para condiciones de no flujo en las pruebas manuales?",
+    "category": "factual",
+    "chunk_ids": [
+      731,
+      732
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cómo se debe configurar el límite para el criterio de prueba de un tubo vacío en un medidor de flujo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      731,
+      732
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué puede suceder si la banda de tolerancia se establece demasiado estrechamente durante condiciones de flujo ruidoso?",
+    "category": "inferencial",
+    "chunk_ids": [
+      731,
+      732
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué casos se aplican los límites configurables del cinco al diez por ciento durante las pruebas de diagnóstico?",
+    "category": "borde",
+    "chunk_ids": [
+      731,
+      732
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las condiciones de prueba que se pueden seleccionar para la verificación de calibración del transmisor?",
+    "category": "factual",
+    "chunk_ids": [
+      751,
+      752
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para verificar la calibración del transmisor del flujo y cuáles son los resultados que se pueden obtener?",
+    "category": "procedimental",
+    "chunk_ids": [
+      751,
+      752
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales?",
+    "category": "inferencial",
+    "chunk_ids": [
+      751,
+      752
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "En qué situaciones podría ocurrir un fallo falso en la prueba del transmisor según se menciona en el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      751,
+      752
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el número de modelo del transmisor con el que son compatibles las electrónicas de la revisión 4?",
+    "category": "factual",
+    "chunk_ids": [
+      771,
+      772
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para instalar el conector serie en el stack electrónico?",
+    "category": "procedimental",
+    "chunk_ids": [
+      771,
+      772
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué podría ocurrir si se excede el rango de 360 grados al rotar el LOI/Display?",
+    "category": "inferencial",
+    "chunk_ids": [
+      771,
+      772
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si se descubre que el modelo del transmisor no es 8732EM durante la instalación de la nueva electrónica?",
+    "category": "borde",
+    "chunk_ids": [
+      771,
+      772
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los componentes principales del sistema de flujo que se deben verificar?",
+    "category": "factual",
+    "chunk_ids": [
+      791,
+      792
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse antes de conectar la alimentación al transmisor del sistema de medidor de flujo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      791,
+      792
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene conectar un sensor no compatible a un transmisor en un ambiente con atmósferas explosivas?",
+    "category": "inferencial",
+    "chunk_ids": [
+      791,
+      792
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si el producto devuelto fue expuesto a una sustancia peligrosa según OSHA?",
+    "category": "borde",
+    "chunk_ids": [
+      791,
+      792
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué condiciones deben cumplirse para realizar la verificación de un transmisor manualmente según el texto?",
+    "category": "procedimental",
+    "chunk_ids": [
+      811,
+      812
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción se debe realizar si la verificación de calibración del transmisor falla?",
+    "category": "procedimental",
+    "chunk_ids": [
+      811,
+      812
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el valor que debe estar configurado en el medidor para verificar la electrónica del transmisor con el estándar de calibración 8714D?",
+    "category": "factual",
+    "chunk_ids": [
+      811,
+      812
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si la trim de electrónica no resuelve el problema con el transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      811,
+      812
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción se debe tomar si se presenta un fallo en el sensor debido a un electrodo en cortocircuito?",
+    "category": "procedimental",
+    "chunk_ids": [
+      831,
+      832
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de flujo recomendado para evitar problemas con fluidos de baja conductividad en un medidor de flujo magnético?",
+    "category": "factual",
+    "chunk_ids": [
+      831,
+      832
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si el sensor no está en una correcta operación, ¿cuál podría ser una causa relacionada con la presencia de aire o gas en la línea?",
+    "category": "inferencial",
+    "chunk_ids": [
+      831,
+      832
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se recomienda hacer en caso de que se presenten partículas aislantes como el poliestireno en el proceso?",
+    "category": "borde",
+    "chunk_ids": [
+      831,
+      832
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la temperatura de proceso recomendada para el material de neoprene en aplicaciones de alta presión?",
+    "category": "factual",
+    "chunk_ids": [
+      851,
+      852
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguirías para elegir un liner adecuado para aplicaciones en agua con productos químicos?",
+    "category": "procedimental",
+    "chunk_ids": [
+      851,
+      852
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si un material tiene mejor resistencia química que el poliuretano, ¿cuál podría ser y en qué aplicaciones se usaría comúnmente?",
+    "category": "inferencial",
+    "chunk_ids": [
+      851,
+      852
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué excepciones se mencionan respecto a la resistencia del tantalio en ciertos ácidos?",
+    "category": "borde",
+    "chunk_ids": [
+      851,
+      852
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los rangos de velocidad y precisión estándar para el sensor Rosemount 8705-M?",
+    "category": "factual",
+    "chunk_ids": [
+      871,
+      872
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para obtener una alta precisión en el sensor Rosemount 8721?",
+    "category": "procedimental",
+    "chunk_ids": [
+      871,
+      872
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si un sensor muestra una precisión del 0.5% del valor, ¿qué implicaría una lectura por debajo del rango de 0.04 ft/s?",
+    "category": "inferencial",
+    "chunk_ids": [
+      871,
+      872
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede con la precisión de los sensores que son mayores de 12 pulgadas cuando se miden velocidades superiores a 39 ft/s?",
+    "category": "borde",
+    "chunk_ids": [
+      871,
+      872
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tamaño de las líneas que se pueden utilizar con los sensores Rosemount?",
+    "category": "factual",
+    "chunk_ids": [
+      891,
+      892
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para ingresar el número de calibración de un sensor en el transmisor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      891,
+      892
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "Si un líquido tiene una conductividad inferior a 5 microSiemens/cm, ¿qué implica esto para el uso de los sensores en el sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      891,
+      892
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué condiciones excepcionales o limitaciones se deben tener en cuenta al instalar la transmisión en un sensor de tamaño de 4 pulgadas?",
+    "category": "borde",
+    "chunk_ids": [
+      891,
+      892
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las conexiones necesarias para conectar un sensor Brooks Model 5000 al transmisor Rosemount 8732?",
+    "category": "factual",
+    "chunk_ids": [
+      911,
+      912
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso que debes seguir después de conectar todos los cables entre el sensor y el transmisor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      911,
+      912
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué advertencia se menciona sobre el suministro de energía al sensor de flujo magnético y al circuito de excitación del transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      911,
+      912
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que el conector de potencia del sensor no deba conectarse a la red eléctrica?",
+    "category": "inferencial",
+    "chunk_ids": [
+      911,
+      912
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los colores de los cables que se deben conectar en un sensor Taylor Rosemount 8732?",
+    "category": "factual",
+    "chunk_ids": [
+      931,
+      932
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguir para conectar un sensor Yamatake Honeywell al transmisor Rosemount 8732?",
+    "category": "procedimental",
+    "chunk_ids": [
+      931,
+      932
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué precaución se debe tener al conectar el sensor de flujo magnético y el circuito de excitación del transmisor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      931,
+      932
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Hay alguna advertencia específica al conectar el circuito de excitación del transmisor según los manuales mencionados?",
+    "category": "borde",
+    "chunk_ids": [
+      931,
+      932
+    ],
+    "source": "emerson_rosemount-8732em_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los requisitos para el personal que trabaja con el dispositivo iTEMP TMT36?",
+    "category": "factual",
+    "chunk_ids": [
+      937,
+      938
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para realizar las comprobaciones después de la instalación del dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      937,
+      938
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que un dispositivo no cumpla con los requisitos de seguridad operacional mencionados?",
+    "category": "inferencial",
+    "chunk_ids": [
+      937,
+      938
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué excepciones se pueden encontrar sobre el almacenamiento y transporte del iTEMP TMT36 según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      937,
+      938
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué deberías hacer primero al instalar el transmisor de cabeza según el procedimiento indicado?",
+    "category": "procedimental",
+    "chunk_ids": [
+      957,
+      958
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la importancia de asegurarte de que los anillos de sellado estén instalados según las regulaciones especiales?",
+    "category": "inferencial",
+    "chunk_ids": [
+      957,
+      958
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las herramientas necesarias para asegurar el termowell a la tubería de proceso?",
+    "category": "factual",
+    "chunk_ids": [
+      957,
+      958
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "En caso de condiciones ambientales adversas, ¿qué se debe tener en cuenta al instalar el equipo?",
+    "category": "borde",
+    "chunk_ids": [
+      957,
+      958
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de valores medidos de temperatura que puede reportar el dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      977,
+      978
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso que debe realizar un maestro IO-Link para iniciar la comunicación digital con el dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      977,
+      978
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que la lectura de temperatura sea 3.3 · 10+38?",
+    "category": "inferencial",
+    "chunk_ids": [
+      977,
+      978
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué estado del dispositivo se reporta como 'Failure' según las especificaciones PI?",
+    "category": "borde",
+    "chunk_ids": [
+      977,
+      978
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debes verificar si el voltaje en el transmisor no está dentro de los márgenes especificados?",
+    "category": "procedimental",
+    "chunk_ids": [
+      997,
+      998
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "Cuando un valor medido es erróneo, ¿cuál puede ser una causa relacionada con la orientación del sensor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      997,
+      998
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguirías si el cable de comunicación del dispositivo no está correctamente conectado?",
+    "category": "procedimental",
+    "chunk_ids": [
+      997,
+      998
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si la resistencia del cable del sensor no es compensada correctamente?",
+    "category": "borde",
+    "chunk_ids": [
+      997,
+      998
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es la máxima humedad relativa permitida para el dispositivo según la norma IEC 60068-2-30?",
+    "category": "factual",
+    "chunk_ids": [
+      1017,
+      1018
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos específicos se deben seguir para asegurar la resistencia a las vibraciones de acuerdo con la IEC 60068-2-6?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1017,
+      1018
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "Si un medidor opera a una temperatura extrema, ¿qué implicaría eso para su rendimiento, dado el rango de humedad permitido?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1017,
+      1018
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué condiciones específicas deben cumplirse para que el dispositivo no exceda la categoría de sobrevoltaje II?",
+    "category": "borde",
+    "chunk_ids": [
+      1017,
+      1018
+    ],
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las condiciones de instalación que se deben tener en cuenta para el Proline Promag 55?",
+    "category": "factual",
+    "chunk_ids": [
+      1020,
+      1021
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para la aceptación y transporte del Proline Promag 55?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1020,
+      1021
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Si la ubicación del sensor no cumple con las especificaciones recomendadas, ¿qué podría suceder durante su operación?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1020,
+      1021
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Hay alguna indicación sobre qué hacer si el dispositivo no es utilizado dentro de su uso designado?",
+    "category": "borde",
+    "chunk_ids": [
+      1020,
+      1021
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de temperatura que el sensor puede manejar según la placa de identificación?",
+    "category": "factual",
+    "chunk_ids": [
+      1040,
+      1041
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para verificar las conexiones del transmisor según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1040,
+      1041
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué puede indicar una temperatura ambiente fuera del rango permitido para el sensor según el manual?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1040,
+      1041
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción debe tomarse si se presenta un caso de detección de tubería vacía en el sistema?",
+    "category": "borde",
+    "chunk_ids": [
+      1040,
+      1041
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el valor máximo permitido para la longitud del cable de conexión según la conductividad del fluido?",
+    "category": "factual",
+    "chunk_ids": [
+      1060,
+      1061
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué instrucciones se deben seguir al instalar el cable de conexión de la versión remota para asegurar la precisión de la medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1060,
+      1061
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Si la señal de medición se falsifica, ¿qué podría estar causando este problema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1060,
+      1061
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción debe evitarse con el cable de conexión para prevenir falsificaciones en la medición?",
+    "category": "borde",
+    "chunk_ids": [
+      1060,
+      1061
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango máximo permitido para girar la caja del transmisor en cualquiera de las direcciones?",
+    "category": "factual",
+    "chunk_ids": [
+      1080,
+      1081
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para ajustar la posición de la pantalla local del transmisor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1080,
+      1081
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Por qué es importante que las entradas de los cables apunten hacia abajo al instalar la caja de montaje en pared?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1080,
+      1081
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué advertencia se menciona respecto a la temperatura ambiente al instalar la caja de montaje en pared?",
+    "category": "borde",
+    "chunk_ids": [
+      1080,
+      1081
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las opciones de conexión disponibles para el sistema HART según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1100,
+      1101
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué configuración se debe realizar después de la puesta en marcha del dispositivo HART?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1100,
+      1101
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Por qué es importante que el medio y el sensor tengan el mismo potencial eléctrico en el sistema de medición?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1100,
+      1101
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué advertencia se menciona en relación con la igualación de potencial durante la medición?",
+    "category": "borde",
+    "chunk_ids": [
+      1100,
+      1101
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el tiempo tras el cual el sistema retorna automáticamente a la posición inicial si no se presiona ninguna tecla?",
+    "category": "factual",
+    "chunk_ids": [
+      1120,
+      1121
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debe hacer un usuario para habilitar el modo de programación después de haberlo deshabilitado previamente?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1120,
+      1121
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede con los valores configurados en caso de un fallo en la energía eléctrica?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1120,
+      1121
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se ingresan ciertos parámetros que influencian las características del sensor en el sistema de medición?",
+    "category": "borde",
+    "chunk_ids": [
+      1120,
+      1121
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores que se utilizan para establecer el rango de medición para el flujo volumétrico en el dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      1140,
+      1141
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos debo seguir para escribir el rango de medición del variable de proceso primario en el dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1140,
+      1141
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué significa si el código de unidad HART no es el correcto para el variable de proceso primario?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1140,
+      1141
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se establece un valor de entrada de 0 al simular la salida de corriente del variable de proceso primario?",
+    "category": "borde",
+    "chunk_ids": [
+      1140,
+      1141
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué tipo de bombas requieren la configuración rápida de \"Flujo Pulsante\" según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1160,
+      1161
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso que debe realizarse antes de llevar a cabo la configuración rápida de \"Flujo Pulsante\"?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1160,
+      1161
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica que se use la configuración rápida de \"Flujo Pulsante\" cuando hay dudas sobre las características del flujo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1160,
+      1161
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué casos no es obligatorio utilizar el menú de configuración rápida de \"Flujo Pulsante\"?",
+    "category": "borde",
+    "chunk_ids": [
+      1160,
+      1161
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿A qué porcentaje de contenido sólido el sistema de medición debe ser encendido?",
+    "category": "factual",
+    "chunk_ids": [
+      1180,
+      1181
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para obtener los valores de referencia necesarios para el análisis de tendencias en el sistema de medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1180,
+      1181
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué puede indicar una caída en el tiempo de decaimiento de los pulsos de prueba en los electrodos?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1180,
+      1181
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué sucede si se detecta acumulación o corrosión en los electrodos de medición?",
+    "category": "borde",
+    "chunk_ids": [
+      1180,
+      1181
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué deben hacer si no hay señales de salida y la pantalla no es visible?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1200,
+      1201
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las especificaciones del fusible necesario para el equipo?",
+    "category": "factual",
+    "chunk_ids": [
+      1200,
+      1201
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Si el texto de la pantalla aparece en un idioma extranjero, ¿qué pasos se deben seguir para cambiarlo a inglés?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1200,
+      1201
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implica la aparición de un mensaje de error de tipo sistema en el equipo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1200,
+      1201
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para realizar un ajuste de detección de tubería vacía después de haber realizado el ajuste de tubería llena?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1220,
+      1221
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debes hacer si el dispositivo siempre muestra una señal de salida de 4 mA sin importar el flujo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1220,
+      1221
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué información es importante proporcionar al servicio técnico de Endress+Hauser cuando se reporta un fallo en el equipo?",
+    "category": "factual",
+    "chunk_ids": [
+      1220,
+      1221
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué debes hacer antes de retornar un medidor de flujo a Endress+Hauser para reparación o calibración?",
+    "category": "borde",
+    "chunk_ids": [
+      1220,
+      1221
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Cuáles son las dos versiones disponibles del dispositivo de medición y cómo se diferencian entre sí?",
+    "category": "factual",
+    "chunk_ids": [
+      1240,
+      1241
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Cuál es el rango típico de velocidad de flujo que puede medir el sistema y cuál es su precisión?",
+    "category": "factual",
+    "chunk_ids": [
+      1240,
+      1241
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Qué pasos seguirías para ajustar el valor de salida del sistema en un rango específico?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1240,
+      1241
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Qué implicaría que el flujo medido no esté dentro del rango operable mencionado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1240,
+      1241
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué material se utiliza para los tubos de medición de diámetros nominales menores a 350 mm?",
+    "category": "factual",
+    "chunk_ids": [
+      1260,
+      1261
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las especificaciones para los flanges de diámetros menores a 350 mm según la norma JIS?",
+    "category": "factual",
+    "chunk_ids": [
+      1260,
+      1261
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe considerar al seleccionar el material del flange para diámetros mayores de 300 mm?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1260,
+      1261
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué excepciones se mencionan respecto a las recubrimientos protectores para los flanges de diferentes diámetros nominales?",
+    "category": "borde",
+    "chunk_ids": [
+      1260,
+      1261
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de presión que se menciona en el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1280,
+      1281
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cómo se realiza la calibración de un dispositivo según las instrucciones?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1280,
+      1281
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "Si la temperatura del fluido excede los límites especificados, ¿qué consecuencias podría tener para el sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1280,
+      1281
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué aspectos se deben tener en cuenta al manejar sustancias peligrosas en el mantenimiento del equipo?",
+    "category": "borde",
+    "chunk_ids": [
+      1280,
+      1281
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué puede ocurrir si no se sigue el procedimiento establecido para la devolución de paquetes?",
+    "category": "factual",
+    "chunk_ids": [
+      1300
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el paso a seguir para asegurar que un paquete sea aceptado en las instalaciones?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1300
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaría no incluir el número de devolución en los documentos de envío y en el exterior del paquete?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1300
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se ignoran las instrucciones sobre la numeración de devolución?",
+    "category": "borde",
+    "chunk_ids": [
+      1300
+    ],
+    "source": "endresshauser_promag-55_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las consignas de seguridad que deben seguirse al utilizar el SITRANS P DS III/P410 con HART?",
+    "category": "factual",
+    "chunk_ids": [
+      1301,
+      1302
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para la puesta en servicio del transmisor de presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1301,
+      1302
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si la lectura del SITRANS P DS III/P410 con HART está fuera de los rangos establecidos, ¿qué implicaciones podría tener eso en el sistema de medición?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1301,
+      1302
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué medidas deben tomarse si se encuentra un peligro al seguir las instrucciones del manual del SITRANS P DS III/P410?",
+    "category": "borde",
+    "chunk_ids": [
+      1301,
+      1302
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de medición se utiliza para la medición de caudal según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1321,
+      1322
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento para desactivar el bloqueo de teclas o funciones en el equipo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1321,
+      1322
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué puede indicar un resultado de medición que se encuentre fuera del rango especificado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1321,
+      1322
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Existen excepciones mencionadas en el texto sobre la selección de tipos de medición?",
+    "category": "borde",
+    "chunk_ids": [
+      1321,
+      1322
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el propósito de las instrucciones incluidas en el manual del SITRANS P DS III/P410?",
+    "category": "factual",
+    "chunk_ids": [
+      1341,
+      1342
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir antes de realizar la instalación del aparato de medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1341,
+      1342
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Por qué es importante familiarizarse con el funcionamiento del aparato antes de usarlo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1341,
+      1342
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué información se menciona sobre el soporte técnico en el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      1341,
+      1342
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipos de presión puede medir el transmisor de presión mencionado en el texto?",
+    "category": "factual",
+    "chunk_ids": [
+      1361,
+      1362
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de carga recomendado para un comunicador HART según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1361,
+      1362
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cómo se puede utilizar el transmisor de presión para medir el caudal volumétrico?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1361,
+      1362
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿En qué condiciones se puede montar un transmisor de presión con tipo de protección 'Seguridad intrínseca'?",
+    "category": "borde",
+    "chunk_ids": [
+      1361,
+      1362
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué parte del cabezal de medición protege al sensor contra sobrecarga?",
+    "category": "factual",
+    "chunk_ids": [
+      1381,
+      1382
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el proceso que sigue la presión absoluta desde su entrada hasta el sensor de presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1381,
+      1382
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué implica que la membrana separadora toque el cuerpo del cabezal?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1381,
+      1382
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si la presión de entrada excede los límites de medida?",
+    "category": "borde",
+    "chunk_ids": [
+      1381,
+      1382
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son las condiciones ambientales que debe evitar el transmisor de presión durante su instalación?",
+    "category": "factual",
+    "chunk_ids": [
+      1401,
+      1402
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos debes seguir para instalar correctamente un transmisor de presión en relación al punto de toma si se trata de un líquido?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1401,
+      1402
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene para la medición si el transmisor de presión se instala por encima del punto de toma en lugar de abajo, especialmente con vapor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1401,
+      1402
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué situación puede alterar los resultados de medición si no se sigue la recomendación sobre la posición del transmisor y la tubería de presión?",
+    "category": "borde",
+    "chunk_ids": [
+      1401,
+      1402
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la restricción de altura para el líquido de relleno si se utiliza aceite halocarbonado en un montaje tipo J?",
+    "category": "factual",
+    "chunk_ids": [
+      1421,
+      1422
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir al montar el cabezal de medición opuesto a la caja del transmisor de presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1421,
+      1422
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si el nivel de presión medido es inferior al fondo de escala, ¿qué implicaciones podría tener esto para el funcionamiento del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1421,
+      1422
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué limitación se menciona para el montaje en caso de usar un líquido de relleno diferente al aceite halocarbonado?",
+    "category": "borde",
+    "chunk_ids": [
+      1421,
+      1422
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué función no está disponible a través del uso de teclas en el dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      1441,
+      1442
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cómo se puede ajustar rápidamente el valor en el dispositivo al mantener una tecla presionada?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1441,
+      1442
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué puede ocurrir si se cambia la función del transmisor sin verificar las magnitudes básicas?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1441,
+      1442
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué limitación tiene un aparato sin display respecto a las funciones disponibles?",
+    "category": "borde",
+    "chunk_ids": [
+      1441,
+      1442
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son las dos claves que se deben pulsar para asignar un valor deseado en el modo de manejo del dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      1461,
+      1462
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguirías para guardar un ajuste en el modo de medición del dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1461,
+      1462
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué sucede si no se presiona ninguna tecla en el dispositivo durante más de 2 minutos?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1461,
+      1462
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si el transmisor no está en modo de medición 'Presión' al intentar ajustar la configuración?",
+    "category": "borde",
+    "chunk_ids": [
+      1461,
+      1462
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de medida permitido para el transmisor de presión según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1481,
+      1482
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos debo seguir para ajustar el inicio de escala del transmisor a 2 bar?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1481,
+      1482
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué sucede si se sobrepasan o no se alcanzan los límites de medida en más del 20% durante el ajuste?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1481,
+      1482
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse si hay un aumento drástico del cero en el transmisor de presión?",
+    "category": "borde",
+    "chunk_ids": [
+      1481,
+      1482
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de mediciones se pueden visualizar según el modo 13 del SITRANS P DS III/P410?",
+    "category": "factual",
+    "chunk_ids": [
+      1501,
+      1502
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso que se debe seguir para seleccionar el tipo de indicación en el transmisor de presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1501,
+      1502
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si se selecciona un modo de visualización no estándar, ¿qué podría implicar para la medición de la presión?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1501,
+      1502
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué sucede si no se parametrizan las variables antes de utilizar las funciones de manejo del dispositivo?",
+    "category": "borde",
+    "chunk_ids": [
+      1501,
+      1502
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué rango de presión está presuponiendo el cálculo para todos los bloques del sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      1521,
+      1522
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cómo se establece la curva característica personalizada para la salida analógica en este sistema?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1521,
+      1522
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué significa que una reducción de 1:2 se aplique al rango nominal de medida?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1521,
+      1522
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la condición de presión de proceso a la que se muestra 10 m en DV4?",
+    "category": "borde",
+    "chunk_ids": [
+      1521,
+      1522
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué corriente de salida corresponde a 10 metros en el tipo de medición \"nivel de relleno\"?",
+    "category": "factual",
+    "chunk_ids": [
+      1541,
+      1542
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para ajustar el rango de la variable de aparato en el bloque \"terminal analógico\"?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1541,
+      1542
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si se establece un rango de 12 a 18 metros, ¿qué implicación tiene esto en la medición de la corriente?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1541,
+      1542
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué sucede si la medición se establece fuera del rango definido de 12 a 18 metros?",
+    "category": "borde",
+    "chunk_ids": [
+      1541,
+      1542
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe ser mayor, el punto de compensación superior o el inferior del sensor?",
+    "category": "factual",
+    "chunk_ids": [
+      1561,
+      1562
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso para realizar la compensación de corriente del sensor según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1561,
+      1562
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué implica que la corriente generada por el transmisor se pueda compensar independientemente del circuito de medición?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1561,
+      1562
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿En qué caso se menciona la necesidad de ajustar la caída de tensión para nivelar la medición de corriente?",
+    "category": "borde",
+    "chunk_ids": [
+      1561,
+      1562
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el momento exacto en que se emite la alarma en este sistema de monitoreo?",
+    "category": "factual",
+    "chunk_ids": [
+      1581,
+      1582
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre con el estado de la corriente de defecto si la saturación de corriente dura menos que el tiempo de respuesta?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1581,
+      1582
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe ocurrir para que la corriente de defecto se desconecte después de que se haya emitido una alarma?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1581,
+      1582
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "En caso de que la corriente baje brevemente del límite de saturación, ¿qué determina que la alarma siga activa?",
+    "category": "borde",
+    "chunk_ids": [
+      1581,
+      1582
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los rangos de HFT y sus correspondientes niveles de SIL según se indican en el documento?",
+    "category": "factual",
+    "chunk_ids": [
+      1601,
+      1602
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para permitir la reducción de la tolerancia a fallos en aparatos complejos?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1601,
+      1602
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si un aparato tiene un HFT de 1, ¿qué implica sobre su configuración de parámetros y su seguridad funcional?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1601,
+      1602
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué condiciones deben cumplirse para que un aparato con una función de SIL inferior a 4 pueda tener su tolerancia a fallos reducida?",
+    "category": "borde",
+    "chunk_ids": [
+      1601,
+      1602
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son las comprobaciones que se deben realizar en la conexión del transmisor de presión con el bloque de válvulas?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1621,
+      1622
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué riesgo se presenta si los accesorios no son aptos para el medio que se está midiendo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1621,
+      1622
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué elementos se deben verificar para asegurar la hermeticidad de las válvulas en el control del aparato?",
+    "category": "factual",
+    "chunk_ids": [
+      1621,
+      1622
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué advertencias deben considerarse si el medio medido es peligroso?",
+    "category": "borde",
+    "chunk_ids": [
+      1621,
+      1622
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de cubiertas no se deben usar en dispositivos con protección contra explosión?",
+    "category": "factual",
+    "chunk_ids": [
+      1641,
+      1642
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para realizar mantenimiento en un área potencialmente explosiva?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1641,
+      1642
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué consecuencias puede tener la inobservancia de los requisitos de protección en los dispositivos?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1641,
+      1642
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer si un dispositivo presenta un mensaje de error durante su funcionamiento?",
+    "category": "borde",
+    "chunk_ids": [
+      1641,
+      1642
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la presión de prueba máxima admitida para el sistema según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1661,
+      1662
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para ajustar el inicio de escala en el cabezal de medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1661,
+      1662
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si un cabezal de medición tiene un límite inferior de medición de 750 mbar, ¿qué implicaciones puede tener si la lectura cae por debajo de ese valor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1661,
+      1662
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué limitación se menciona para los cabezales de medición de 250 mbar?",
+    "category": "borde",
+    "chunk_ids": [
+      1661,
+      1662
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tiempo que se puede ajustar en el sensor, y en qué incrementos se realiza esta regulación?",
+    "category": "factual",
+    "chunk_ids": [
+      1681,
+      1682
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cómo se ajusta la constante de tiempo (T63) en este sistema de instrumentación en el campo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1681,
+      1682
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si se detecta que la señal de fallo está fuera del rango de 3,55 a 23 mA, ¿qué implicaciones podría tener eso en el equipo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1681,
+      1682
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué condiciones específicas deben cumplirse para que se considere válida la precisión de medida, según lo mencionado en el texto?",
+    "category": "borde",
+    "chunk_ids": [
+      1681,
+      1682
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores de presión máxima que se mencionan para el cabezal de medición en este manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1701,
+      1702
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para garantizar la precisión de medida al instalar un cabezal de medición para presiones superiores a 1600 mbar?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1701,
+      1702
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si la presión medida es inferior a la nominal, ¿qué implicaciones tiene esto sobre la estabilidad a largo plazo del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1701,
+      1702
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué condiciones podrían afectar la precisión de las mediciones y cómo se deben considerar al diseñar el sistema de montaje?",
+    "category": "borde",
+    "chunk_ids": [
+      1701,
+      1702
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el material de la membrana separadora utilizada en el transmisor de presión?",
+    "category": "factual",
+    "chunk_ids": [
+      1721,
+      1722
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para asegurar la correcta instalación del cableado utilizando los pasacables especificados?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1721,
+      1722
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué significa que el conector tenga una clase de protección IP65?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1721,
+      1722
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de conexiones se mencionan para el uso alimentario y farmacéutico?",
+    "category": "borde",
+    "chunk_ids": [
+      1721,
+      1722
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué longitud de rosca es recomendable considerar al instalar el SITRANS P DS III/P410?",
+    "category": "factual",
+    "chunk_ids": [
+      1741,
+      1742
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la distancia mínima requerida para girar el indicador del SITRANS P DS III/P410?",
+    "category": "factual",
+    "chunk_ids": [
+      1741,
+      1742
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene la opción de protección antideflagrante para el modelo SITRANS P DS III/P410?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1741,
+      1742
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de protección no es adecuado para usar con el SITRANS P DS III/P410 según el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      1741,
+      1742
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Dónde se pueden encontrar los certificados relacionados con el SITRANS P DS III/P410?",
+    "category": "factual",
+    "chunk_ids": [
+      1761,
+      1762
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué normas son relevantes para la seguridad funcional de los sistemas mencionados en el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1761,
+      1762
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de destinatarios están involucrados según la norma IEC 61511?",
+    "category": "factual",
+    "chunk_ids": [
+      1761,
+      1762
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos debes seguir para acceder a la bibliografía y catálogos proporcionados en el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1761,
+      1762
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el intervalo de calibración mencionado en el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1781,
+      1782
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para la instalación adecuada del sensor según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1781,
+      1782
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "Si se recibe un mensaje de error, ¿qué implicaciones podría tener para la operación del dispositivo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1781,
+      1782
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse si hay modificaciones indebidas en el dispositivo?",
+    "category": "borde",
+    "chunk_ids": [
+      1781,
+      1782
+    ],
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el propósito de las consignas de seguridad en el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1786,
+      1787
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debes hacer si aparecen alertas de peligro en el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1786,
+      1787
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si las señales de advertencia están presentes, ¿qué implicaciones tiene esto para la seguridad personal?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1786,
+      1787
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué se debería hacer si un aviso de precaución sin triángulo de advertencia aparece durante el uso del transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      1786,
+      1787
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para compensar el sensor según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1806,
+      1807
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué significa que el sensor tenga un punto de cero ajustable?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1806,
+      1807
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué se debe hacer para ajustar los límites de corriente en el sistema?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1806,
+      1807
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el propósito del bloqueo del teclado mencionado en el manual?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1806,
+      1807
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué formación deben tener las personas que instalen o mantengan el equipo para considerarlas cualificadas?",
+    "category": "factual",
+    "chunk_ids": [
+      1826,
+      1827
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es un requisito previo para evitar daños por sobretensión al tocar componentes eléctricos?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1826,
+      1827
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué consecuencias pueden surgir de no descargarse de electricidad electrostática antes de trabajar en un grupo constructivo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1826,
+      1827
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿En qué situaciones se requiere formación o autorización especial para trabajar en circuitos eléctricos peligrosos?",
+    "category": "borde",
+    "chunk_ids": [
+      1826,
+      1827
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿En qué presión y temperatura se puede utilizar el transmisor en zonas con peligro de explosión?",
+    "category": "factual",
+    "chunk_ids": [
+      1846,
+      1847
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos que debe seguir un operario para instalar un dispositivo en una zona 0?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1846,
+      1847
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe tener en cuenta un operario si decide usar el aparato fuera de los límites establecidos por el certificado CE?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1846,
+      1847
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué requerimientos adicionales hay para la instalación de un transmisor en una zona 0?",
+    "category": "borde",
+    "chunk_ids": [
+      1846,
+      1847
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué información se muestra en la pantalla digital del SITRANS P300 además del valor de medición?",
+    "category": "factual",
+    "chunk_ids": [
+      1866,
+      1867
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué acciones se consideran cuando la pantalla indica que el valor límite superior ha sido superado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1866,
+      1867
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento para visualizar el diagrama de barras de medición en la pantalla del SITRANS P300?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1866,
+      1867
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué significa cuando parpadea la indicación de comunicación en la pantalla?",
+    "category": "borde",
+    "chunk_ids": [
+      1866,
+      1867
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de presión que se puede medir según el manual?",
+    "category": "factual",
+    "chunk_ids": [
+      1886,
+      1887
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para establecer el inicio y el fin de la medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1886,
+      1887
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si el inicio de la medición se establece incorrectamente, ¿qué podría afectar eso en los resultados obtenidos?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1886,
+      1887
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debe hacerse si se requiere modificar el fin de la medición cuando ya se ha establecido el inicio?",
+    "category": "borde",
+    "chunk_ids": [
+      1886,
+      1887
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la corriente de salida generada por el transmisor cuando se aplica una presión de entrada de 14 bares?",
+    "category": "factual",
+    "chunk_ids": [
+      1906,
+      1907
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué debes hacer si el punto cero de la medición aumenta considerablemente durante el ajuste?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1906,
+      1907
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué sucede si se sobrepasan los límites de medición en más del 20% durante la calibración?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1906,
+      1907
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasa si se intenta establecer la medición sin presión cuando ya se han superado los límites de medición por más del 20%?",
+    "category": "borde",
+    "chunk_ids": [
+      1906,
+      1907
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son algunas de las unidades que se pueden seleccionar para medir la presión en el SITRANS P300?",
+    "category": "factual",
+    "chunk_ids": [
+      1926,
+      1927
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para ajustar la unidad física en un SITRANS P300?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1926,
+      1927
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si un operador necesita medir presión en mmHg, ¿qué implica si la unidad seleccionada no se encuentra en la tabla correspondiente?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1926,
+      1927
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué mecanismo se debe seguir si se desea utilizar unidades de medida inusuales no listadas en las tablas del manual?",
+    "category": "borde",
+    "chunk_ids": [
+      1926,
+      1927
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores de inicio y fin de la medición que se deben parametrizar en el bloque de salida analógica?",
+    "category": "factual",
+    "chunk_ids": [
+      1946,
+      1947
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cómo se configura un sistema de medición basado en la escalada de presión para obtener un valor de medición en un rango 1:1?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1946,
+      1947
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si se tiene un límite de medición de 0 y 100 l, ¿qué implica una presión de proceso de 1 bar en cuanto al volumen medido?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1946,
+      1947
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si se establece una configuración diferente a los límites de 0 y 100 l para la medición de volumen?",
+    "category": "borde",
+    "chunk_ids": [
+      1946,
+      1947
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si los valores de inicio y fin de la medición están fuera de los límites establecidos durante la parametrización?",
+    "category": "borde",
+    "chunk_ids": [
+      1966,
+      1967
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento para escalar el valor representado en la pantalla digital en el dispositivo, según el texto?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1966,
+      1967
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué condición debe cumplirse para que la función de raíz esté disponible en la medición?",
+    "category": "factual",
+    "chunk_ids": [
+      1966,
+      1967
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué implica que el aparato mantenga los valores parametrizados si se rechazan nuevos valores durante la parametrización?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1966,
+      1967
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué valor debe generar el transmisor durante la compensación del sensor de corriente?",
+    "category": "factual",
+    "chunk_ids": [
+      1986,
+      1987
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el primer paso para deshacer la compensación de corriente según el manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      1986,
+      1987
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si el valor medido se encuentra fuera del rango esperado, ¿qué implicación tiene esto en la calibración del transmitidor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      1986,
+      1987
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre con el valor de 4 mA al realizar una compensación de 20 mA?",
+    "category": "borde",
+    "chunk_ids": [
+      1986,
+      1987
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuántos recorridos de simulación se pueden parametrizar en el sistema?",
+    "category": "factual",
+    "chunk_ids": [
+      2006,
+      2007
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos debo seguir para activar los transmisores de valor límite en el sistema?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2006,
+      2007
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si el transmisor de valor límite emite una alarma, ¿qué condición podría estar causando esto?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2006,
+      2007
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si la simulación de presión está activa en el transmisor?",
+    "category": "borde",
+    "chunk_ids": [
+      2006,
+      2007
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de temperatura en el que puede operar la célula de medida con líquido inerte?",
+    "category": "factual",
+    "chunk_ids": [
+      2026,
+      2027
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para corregir la influencia causada por la energía auxiliar UH en un sistema de medición?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2026,
+      2027
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si la temperatura ambiente excede +60 °C, ¿qué implicaciones podría tener sobre la medición del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2026,
+      2027
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "En qué caso se debe considerar la formación de rocío según las condiciones de clima mencionadas en el manual?",
+    "category": "borde",
+    "chunk_ids": [
+      2026,
+      2027
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son las dimensiones aproximadas de la conexión BiocontrolTM de 40 mm PN?",
+    "category": "factual",
+    "chunk_ids": [
+      2046,
+      2047
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para realizar la conexión en una instalación utilizando bridas Connect STM?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2046,
+      2047
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué se puede inferir si las dimensiones de la conexión estándar PMC son menores que las conexiones BiocontrolTM?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2046,
+      2047
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "En caso de utilizar un estilo PMC con medidas fuera de rango, ¿qué especificación se menciona como excepción?",
+    "category": "borde",
+    "chunk_ids": [
+      2046,
+      2047
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué significa la abreviatura HART en el contexto de un sistema de medición?",
+    "category": "factual",
+    "chunk_ids": [
+      2066,
+      2067
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la secuencia para realizar la compensación del punto cero en un dispositivo SITRANS P300?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2066,
+      2067
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Si la pantalla digital indica un mensaje 'OVER', ¿qué podría estar indicando respecto a la medición de presión?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2066,
+      2067
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "Dentro del documento, se menciona un caso donde el SITRANS P300 puede funcionar sin comunicación HART. ¿Qué implica esto para su uso?",
+    "category": "borde",
+    "chunk_ids": [
+      2066,
+      2067
+    ],
+    "source": "siemens_sitrans-p300_manual_es.pdf"
+  },
+  {
+    "question": "¿Qué tipos de presión pueden medir los transmisores SITRANS P320/P420?",
+    "category": "factual",
+    "chunk_ids": [
+      2069,
+      2070
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es una de las funciones que permite la parametrización remota del SITRANS P420?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2069,
+      2070
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué parte del proceso se simplifica gracias a la función 'Remote Safety Handling'?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2069,
+      2070
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿En qué situaciones debería considerarse el uso de sellos separadores con los transmisores de presión SITRANS P320/P420?",
+    "category": "borde",
+    "chunk_ids": [
+      2069,
+      2070
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los tipos de conectores disponibles para los modelos Han 7D y Han 8D?",
+    "category": "factual",
+    "chunk_ids": [
+      2089,
+      2090
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para el montaje de la entrada de cable y conector?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2089,
+      2090
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué se deduce si un conector fijo no está disponible en acero inoxidable?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2089,
+      2090
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Se requiere algún tipo de certificado especial para las piezas en contacto con el medio?",
+    "category": "borde",
+    "chunk_ids": [
+      2089,
+      2090
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tensión de alimentación permitido para el transmisor de presión?",
+    "category": "factual",
+    "chunk_ids": [
+      2109,
+      2110
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para configurar la conexión eléctrica del dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2109,
+      2110
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si la tensión de alimentación está fuera del rango recomendado, ¿qué implicaciones tendría para el funcionamiento del dispositivo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2109,
+      2110
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿En qué condiciones se aplica el marcado de seguridad intrínseca en este dispositivo?",
+    "category": "borde",
+    "chunk_ids": [
+      2109,
+      2110
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el grado de protección que ofrecen los dispositivos mencionados en el manual para condiciones adversas?",
+    "category": "factual",
+    "chunk_ids": [
+      2129,
+      2130
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para garantizar la seguridad funcional del dispositivo según la norma IEC 61508?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2129,
+      2130
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si un dispositivo mide presiones y su respuesta es más lenta de lo esperado, ¿qué factor podría estar afectando su tiempo de respuesta?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2129,
+      2130
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué ocurre si el dispositivo no es compatible con la homologación Ex mencionada en el texto?",
+    "category": "borde",
+    "chunk_ids": [
+      2129,
+      2130
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tensión en los bornes del transmisor de presión para su correcto funcionamiento?",
+    "category": "factual",
+    "chunk_ids": [
+      2149,
+      2150
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué proceso se debe seguir para conectar adecuadamente el cable al dispositivo en el pasacables correspondiente?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2149,
+      2150
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si se observa que la tensión de alimentación en los bornes cae por debajo de 10,5 V DC, ¿qué implicaciones podría tener para el funcionamiento del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2149,
+      2150
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué certificación se requiere para el uso del dispositivo en agua potable según la normativa británica?",
+    "category": "borde",
+    "chunk_ids": [
+      2149,
+      2150
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de protección contra sobretensiones para ambos tipos (interna y externa)?",
+    "category": "factual",
+    "chunk_ids": [
+      2169,
+      2170
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué procedimiento se debe seguir para completar la referencia con homologaciones especiales?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2169,
+      2170
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si un dispositivo no cuenta con homologación EX, ¿en qué regiones puede ser utilizado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2169,
+      2170
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de homologación se menciona específicamente para aplicaciones con oxígeno?",
+    "category": "borde",
+    "chunk_ids": [
+      2169,
+      2170
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tensión de alimentación recomendada para el transmisor de presión?",
+    "category": "factual",
+    "chunk_ids": [
+      2189,
+      2190
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para garantizar la conexión de circuitos con seguridad intrínseca en el transmisor?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2189,
+      2190
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene que la temperatura ambiente admisible sea de -40 a +80 °C para la operación del transmisor?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2189,
+      2190
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué certificación se menciona para el transmisor en relación a su protección contra explosiones en Brasil?",
+    "category": "borde",
+    "chunk_ids": [
+      2189,
+      2190
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué materiales están disponibles para los pasacables en la selección de transmisores de presión?",
+    "category": "factual",
+    "chunk_ids": [
+      2209,
+      2210
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la secuencia para solicitar la rosca para pasacables en el pedido del transmisor de presión?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2209,
+      2210
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué implica que un transmisor tenga una tapa cerrada sin pantalla local?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2209,
+      2210
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué tipo de pasacable se debe elegir si se requiere acero inoxidable para el modelo CAPRI ADE 4F?",
+    "category": "borde",
+    "chunk_ids": [
+      2209,
+      2210
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de tensión en los bornes del transmisor de presión?",
+    "category": "factual",
+    "chunk_ids": [
+      2229,
+      2230
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para instalar el sistema de seguridad intrínseca en los circuitos?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2229,
+      2230
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué implica un funcionamiento del dispositivo con una tensión menor a 10,5 V DC?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2229,
+      2230
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué excepciones considera el dispositivo al tratar con temperaturas ambientales extremas?",
+    "category": "borde",
+    "chunk_ids": [
+      2229,
+      2230
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es el rango de sobretensión que toleran estos dispositivos?",
+    "category": "factual",
+    "chunk_ids": [
+      2249,
+      2250
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué homologaciones tienen los dispositivos para aplicaciones en caso de explosiones?",
+    "category": "factual",
+    "chunk_ids": [
+      2249,
+      2250
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para completar la referencia de un producto con una opción clave?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2249,
+      2250
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si un dispositivo no tiene homologación Ex, ¿en qué partes del mundo puede ser utilizado?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2249,
+      2250
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los límites de temperatura ambiente y del medio para la clase de temperatura T4 en el sistema de protección marcado Ex II 1D?",
+    "category": "factual",
+    "chunk_ids": [
+      2269,
+      2270
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué medidas de seguridad se deben considerar al utilizar circuitos con seguridad intrínseca en zonas de peligro?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2269,
+      2270
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos seguirías para instalar un circuito con envolvente antideflagrante 'd'?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2269,
+      2270
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué condiciones modificarían el uso del circuito marcado Ex II 3G en una zona con temperaturas superiores a las especificadas?",
+    "category": "borde",
+    "chunk_ids": [
+      2269,
+      2270
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores de presión nominal que se pueden ajustar para el sistema mencionado?",
+    "category": "factual",
+    "chunk_ids": [
+      2289,
+      2290
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué instrucciones se deben seguir para instalar los tapones de cierre en este dispositivo?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2289,
+      2290
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si se observa que el rango de presión está fuera de los valores nominales permitidos, ¿qué implicaciones puede tener eso para la operación del sistema?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2289,
+      2290
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué excepciones se mencionan sobre el grado de protección en relación con los conectores fijos M12 y Han?",
+    "category": "borde",
+    "chunk_ids": [
+      2289,
+      2290
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los valores de presión máxima que estos transmisores pueden soportar?",
+    "category": "factual",
+    "chunk_ids": [
+      2309,
+      2310
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para corregir el cero debido a la influencia de la presión estática?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2309,
+      2310
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué significa si un sensor muestra un error mayor al indicado para su rango de presión?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2309,
+      2310
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Existen excepciones para la estabilidad a largo plazo de los valores de presión mínima y máxima?",
+    "category": "borde",
+    "chunk_ids": [
+      2309,
+      2310
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la longitud de rosca a considerar al desatornillar la tapa del dispositivo?",
+    "category": "factual",
+    "chunk_ids": [
+      2329,
+      2330
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los conectores eléctricos compatibles con el transmisor de presión mencionado en el texto?",
+    "category": "factual",
+    "chunk_ids": [
+      2329,
+      2330
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué implica el uso del modo de protección 'envolvente antideflagrante' en el contexto del dispositivo?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2329,
+      2330
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué medidas deben tomarse en cuenta para la instalación si se utiliza un tapón ciego?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2329,
+      2330
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuál es la temperatura máxima permitida del medio al usar lacado epoxi en los transmisores?",
+    "category": "factual",
+    "chunk_ids": [
+      2349,
+      2350
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos para completar la referencia en la selección de opciones clave?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2349,
+      2350
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene un certificado de seguridad funcional (SIL2/3) para los dispositivos según los estándares IEC 61508 e IEC 61511?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2349,
+      2350
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿En qué circunstancias es relevante el certificado de inspección según EN 10204‑3.1 para las piezas en contacto con el medio?",
+    "category": "borde",
+    "chunk_ids": [
+      2349,
+      2350
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Cuáles son los rangos de voltaje y corriente que soporta el circuito mencionado para su funcionamiento?",
+    "category": "factual",
+    "chunk_ids": [
+      2369,
+      2370
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué pasos deben seguirse para asegurar la protección contra explosiones en el equipo mencionado?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2369,
+      2370
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "Si un transmisor de presión presenta una lectura fuera del rango esperado, ¿qué implicaciones podría tener esto para la instalación?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2369,
+      2370
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Se mencionan condiciones especiales de seguridad en relación con ciertos tipos de clasificación del dispositivo? ¿Cuáles son esas condiciones?",
+    "category": "borde",
+    "chunk_ids": [
+      2369,
+      2370
+    ],
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf"
+  },
+  {
+    "question": "¿Qué advertencias se deben tener en cuenta para evitar lesiones personales al trabajar con el transmisor de presión SITRANS P?",
+    "category": "factual",
+    "chunk_ids": [
+      2386,
+      2387
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el procedimiento para garantizar la seguridad personal y la de propiedad al usar este manual?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2386,
+      2387
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "Si ignoro una advertencia de peligro al manipular el equipo, ¿cuáles podrían ser las consecuencias en términos de seguridad personal?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2386,
+      2387
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "En caso de que un aviso de advertencia esté presente, ¿cómo debo actuar si se presentan múltiples grados de peligro?",
+    "category": "borde",
+    "chunk_ids": [
+      2386,
+      2387
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué acción se debe tomar si el contador de eventos indica que se han superado los umbrales de los valores del proceso?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2406,
+      2407
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué implicaciones tiene que el contador de eventos registre un número de sobrepasos por encima del valor establecido?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2406,
+      2407
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son las posibles causas del mensaje de alarma de número de sobrepasos en el contador de eventos?",
+    "category": "factual",
+    "chunk_ids": [
+      2406,
+      2407
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿En qué casos ciertas mensajes de diagnóstico pueden no ser aplicables según las configuraciones del dispositivo?",
+    "category": "borde",
+    "chunk_ids": [
+      2406,
+      2407
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuáles son los pasos a seguir para desconectar los electrónicos del sensor del conector de 6 pines?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2426,
+      2427
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué se debe verificar respecto al número de serie al instalar nuevos electrónicos de transmisión?",
+    "category": "factual",
+    "chunk_ids": [
+      2426,
+      2427
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué podría suceder si las cintas de conexión detrás de los electrónicos del transmisor están dañadas?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2426,
+      2427
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es un caso específico que requiere atención al instalar los electrónicos del transmisor en cuanto a su colocación?",
+    "category": "borde",
+    "chunk_ids": [
+      2426,
+      2427
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Cuál es el par de apriete recomendado para un adaptador NPT de metal en una caja de aluminio?",
+    "category": "factual",
+    "chunk_ids": [
+      2446,
+      2447
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué pasos se deben seguir para ajustar el par de apriete de los tornillos de montaje del soporte M8?",
+    "category": "procedimental",
+    "chunk_ids": [
+      2446,
+      2447
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "Si el par de apriete de un tornillo supera el valor especificado, ¿qué implicaciones podría tener para la seguridad de la instalación?",
+    "category": "inferencial",
+    "chunk_ids": [
+      2446,
+      2447
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  },
+  {
+    "question": "¿Qué par de apriete se debe aplicar a los tornillos de retención en una caja de aluminio?",
+    "category": "borde",
+    "chunk_ids": [
+      2446,
+      2447
+    ],
+    "source": "siemens_sitrans-p320-p420_manual_en.pdf"
+  }
+]

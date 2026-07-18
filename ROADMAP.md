@@ -50,7 +50,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
     5B.3 — Postgres checkpointer      ← EN PAUSA (diseño cerrado 2026-07-07, sin código;
                                           pospuesta detrás del corpus nuevo, ver 5B.4 abajo)
-    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 3/6 completo, 2026-07-15;
+    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 4/6 completo, 2026-07-17;
                                           ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -112,7 +112,26 @@ tests/
 └── reports/       ✅ pytest-html local + artefacto en CI
 
 evals/
-├── golden_set.json  ✅ 20 preguntas sobre LangGraph docs
+├── golden_set.json           ✅ 20 preguntas sobre LangGraph docs (eval de agente completo,
+│                                 corpus viejo — no se toca)
+├── generate_ground_truth.py  ✅ (5B.4 paso 4, 2026-07-17) genera ground truth de retrieval:
+│                                 samplea 1 anclaje cada 20 chunks por documento (equiespaciado),
+│                                 ventana de 2 chunks consecutivos por anclaje, LLM + structured
+│                                 output (client.beta.chat.completions.parse, patron HW4) genera
+│                                 preguntas factual/procedimental/inferencial/borde por ventana.
+│                                 Script manual (python -m evals.generate_ground_truth), no lo
+│                                 llama la app ni CI — mismo patron que scripts/ingest.py.
+│                                 [hallazgo sin resolver: las 130 ventanas generaron exactamente
+│                                 4 preguntas cada una pese a que el prompt pedia "1 a 4, solo las
+│                                 categorias que el fragmento sostiene" — muestreo manual de la
+│                                 primera ventana no mostro preguntas forzadas, pero no se reviso
+│                                 el resto; vigilar si esto genera ruido en hit_rate/mrr del paso 5]
+├── ground_truth_retrieval.json ✅ (5B.4 paso 4, 2026-07-17) salida real de generate_ground_truth.py
+│                                 contra Supabase+OpenAI: 520 preguntas (factual 138, procedimental
+│                                 133, inferencial 128, borde 121) sobre 130 ventanas / 11 documentos.
+│                                 Cada registro: question, category, chunk_ids (lista — 1 elemento
+│                                 para ventanas de 1 chunk al final de un documento, 2 en el resto),
+│                                 source. Sin commitear todavia (ver cierre de sesion).
 ├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
 │                       + @traceable para LangSmith (Capa 3B)
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
@@ -217,7 +236,23 @@ real de Juan como consultor técnico en el rubro) es ese salto de volumen. Pasos
    citar fuente, no inventar datos de calibración/rangos/procedimientos) y de
    cuándo usar create_ticket. README.md reescrito: caso de uso, cómo funciona,
    de dónde sale el corpus (nota de compliance), cómo correrlo.
-4. ⬜ Generar ground truth con LLM + structured output (patrón HW4 de M4).
+4. ✅ (2026-07-17) — Generar ground truth con LLM + structured output (patrón HW4 de M4).
+   Diseño acordado con Juan antes de programar: la unidad de generación no podía ser "documento
+   completo" (11 docs, demasiado grueso — cualquier chunk del documento contaría como acierto en
+   Hit Rate) ni "5 preguntas por documento" al estilo de un proyecto anterior de Juan en Valkimia
+   (mismo problema de granularidad). Se resolvió con sampling proporcional al tamaño real de cada
+   documento: 1 anclaje cada 20 chunks (equiespaciado por chunk_index, no al azar, para cubrir todo
+   el manual), ventana de 2 chunks consecutivos por anclaje (cubre procedimientos cortos que cruzan
+   un chunk; criterio de "acierto vecino" ±1 justificado por el 20% de overlap real de
+   CHUNK_STEP=800/CHUNK_SIZE=1000 — a esa distancia dos chunks ya no comparten texto). El "chunk
+   correcto" de cada pregunta queda definido por construcción (los chunk_ids de la ventana que vio
+   el LLM), no por una heurística posterior. Se acotó el alcance a 4 categorías que sí alimentan
+   Hit Rate/MRR (factual, procedimental, inferencial, borde) — preguntas "no soportadas"
+   (out-of-scope) quedan pendientes aparte porque no tienen chunk correcto y sirven para otro tipo
+   de eval (nivel agente, no retrieval). `evals/generate_ground_truth.py` corrido contra Supabase +
+   OpenAI reales (confirmado con Juan antes de ejecutar, ~130 llamadas pagas): 520 preguntas en
+   `evals/ground_truth_retrieval.json`. Detalle y hallazgo pendiente de revisar en "Estado actual
+   del repo" arriba.
 5. ⬜ Portar hit_rate/mrr/evaluate() a evals/retrieval_metrics.py.
 6. ⬜ Barrido de k de RRF contra el ground truth real; decidir si el k=60 default
    de src/ingestion.py:104 se ajusta.
