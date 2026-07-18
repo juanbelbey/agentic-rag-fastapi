@@ -123,9 +123,18 @@ def embed_texts(texts: list[str]) -> np.ndarray:
 def rrf(
     list_a: list[tuple[int, float]],
     list_b: list[tuple[int, float]],
-    k: int = 60,
+    k: int = 1,
 ) -> list[tuple[int, float]]:
-    """Reciprocal Rank Fusion: combina dos listas de resultados por posición, no por score."""
+    """Reciprocal Rank Fusion: combina dos listas de resultados por posición, no por score.
+
+    k=1 (no el 60 del paper original): medido contra las 520 preguntas de
+    evals/ground_truth_retrieval.json (5B.4 paso 6, barrido k=[1,50,60,100,200]),
+    k=1 ganó en hit_rate y MRR a la vez. k bajo le da mucho más peso a la posición
+    exacta -- deja que la lista que rankeó mejor un chunk domine la fusión, en vez
+    de diluirla contra la otra lista. A partir de k=50 los resultados quedan
+    identicos entre si (con candidate_k=10, k>>10 aplana las diferencias de rank
+    hasta volverlas irrelevantes).
+    """
     scores: dict[int, float] = {}
     for rank, (idx, _) in enumerate(list_a):
         # _ descarta el score original — RRF solo usa la posición (rank)

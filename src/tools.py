@@ -106,11 +106,17 @@ def _keyword_search(conn, query: str, top_k: int) -> list[tuple[int, float]]:
         return cur.fetchall()
 
 
-def _hybrid_search(conn, query: str, query_embedding, top_k: int, candidate_k: int = 10) -> list[tuple[int, float]]:
-    """Combina _vector_search + _keyword_search con RRF. Devuelve [(chunk_id, rrf_score), ...]."""
+def _hybrid_search(
+    conn, query: str, query_embedding, top_k: int, candidate_k: int = 10, rrf_k: int = 1
+) -> list[tuple[int, float]]:
+    """Combina _vector_search + _keyword_search con RRF. Devuelve [(chunk_id, rrf_score), ...].
+
+    rrf_k expone el parámetro k de rrf() -- default 1, no 60, desde el barrido real
+    del paso 6 de 5B.4 (ver rrf() en src/ingestion.py para el detalle de la medición).
+    """
     vector_results = _vector_search(conn, query_embedding, candidate_k)
     keyword_results = _keyword_search(conn, query, candidate_k)
-    fused = rrf(vector_results, keyword_results)
+    fused = rrf(vector_results, keyword_results, k=rrf_k)
     return fused[:top_k]
 
 

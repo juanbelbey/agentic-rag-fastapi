@@ -63,6 +63,23 @@ SEARCH_FUNCTIONS = {
     "hybrid": _hybrid_search_ids,
 }
 
+# Barrido de k de RRF (paso 6 de 5B.4) -- mismo patron de la notebook de M4
+# (1/50/100/200), agregamos 60 (default actual de rrf() en src/ingestion.py)
+# como punto de referencia.
+RRF_K_VALUES = [1, 50, 60, 100, 200]
+
+
+def _hybrid_search_ids_for_k(rrf_k: int):
+    """Arma un search_fn de firma (conn, query, query_embedding, top_k) con rrf_k fijo."""
+
+    def _search(conn, query: str, query_embedding, top_k: int) -> list[int]:
+        return [
+            chunk_id
+            for chunk_id, _ in _hybrid_search(conn, query, query_embedding, top_k, rrf_k=rrf_k)
+        ]
+
+    return _search
+
 
 def evaluate(search_fn, ground_truth: list[dict], embeddings, conn, top_k: int = TOP_K) -> dict[str, float]:
     """Corre search_fn sobre cada pregunta de ground_truth y agrega hit_rate/mrr."""
@@ -88,6 +105,11 @@ def main() -> None:
         for name, search_fn in SEARCH_FUNCTIONS.items():
             metrics = evaluate(search_fn, ground_truth, embeddings, conn)
             print(f"  {name:8s} hit_rate={metrics['hit_rate']}  mrr={metrics['mrr']}")
+
+        print(f"\nBarrido de k de RRF (hybrid) @top_k={TOP_K}:\n")
+        for rrf_k in RRF_K_VALUES:
+            metrics = evaluate(_hybrid_search_ids_for_k(rrf_k), ground_truth, embeddings, conn)
+            print(f"  k={rrf_k:<4d} hit_rate={metrics['hit_rate']}  mrr={metrics['mrr']}")
     finally:
         conn.close()
 
