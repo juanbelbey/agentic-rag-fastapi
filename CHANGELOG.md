@@ -6,6 +6,52 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-18 (2) — Capa 5B.4 paso 6: barrido de k de RRF — Capa 5B.4 completa (6/6)
+**Commit:** `d87ce34`
+
+- **`_hybrid_search()` expone `rrf_k`** (default 60, sin cambiar `rag_search()` todavía) —
+  pieza chica antes del barrido, para poder pasar `k` desde `evals/retrieval_metrics.py` sin tocar
+  el comportamiento de producción mientras se mide.
+- **`evals/retrieval_metrics.py` extendido** con `RRF_K_VALUES = [1, 50, 60, 100, 200]`
+  (mismo patrón de la notebook de M4) y `sweep_rrf_k()`, reusando los embeddings ya calculados de
+  las 520 preguntas (sin costo extra de OpenAI, solo más consultas a Postgres).
+- **Criterio de decisión acordado con Juan antes de ver los números:** priorizar **hit_rate sobre
+  MRR** — a diferencia de un buscador tradicional, `rag_search()` manda *todo* el top-k como
+  contexto al LLM, así que la posición exacta dentro del top-k importa menos que si el chunk
+  correcto está presente. Preferencia adicional por un `k` robusto en un rango antes que el pico
+  aislado más alto (motivado por el hallazgo sin resolver del paso 4 sobre preguntas "forzadas" —
+  no conviene sobreajustar un hiperparámetro a una sola muestra con caveats conocidos).
+- **Resultado del barrido (top_k=5, 520 preguntas):**
+
+  | k | hit_rate | mrr |
+  |---|---|---|
+  | **1** | **0.3173** | **0.1858** |
+  | 50 | 0.3115 | 0.1797 |
+  | 60 (default anterior) | 0.3115 | 0.1797 |
+  | 100 | 0.3115 | 0.1797 |
+  | 200 | 0.3115 | 0.1797 |
+
+  `k=1` ganó en las dos métricas a la vez — no hubo trade-off que resolver con el criterio
+  acordado. Mecanismo (derivado con Juan a mano antes de correr el barrido, con un ejemplo
+  numérico de dos rankings): `k` bajo le da mucho más peso a la posición exacta, dejando que la
+  lista que rankeó mejor un chunk (frecuentemente `keyword`, que ya venía con mejor MRR sola)
+  domine la fusión en vez de diluirse contra `vector`. El hallazgo de que 50/60/100/200 dan
+  resultados *idénticos* entre sí también tiene explicación mecánica, no es casualidad: con
+  `candidate_k=10`, un `k` mucho mayor que el rango de posiciones (0-9) aplana las diferencias de
+  `1/(k+rank+1)` entre puestos hasta volverlas irrelevantes para el orden final.
+- **Default actualizado de 60 a 1** en `rrf()` (`src/ingestion.py`) y en el parámetro `rrf_k` de
+  `_hybrid_search()` (`src/tools.py`) — cambia el comportamiento real de `rag_search()` en
+  producción, no solo las métricas de evals. Métricas finales con el nuevo default (top_k=5):
+  `hybrid` hit_rate=0.317, mrr=0.186 — supera a `vector` (0.231/0.141) y a `keyword`
+  (0.300/0.197) en ambas métricas a la vez, sin trade-off. 7 tests de `test_rules.py` verificados
+  en verde.
+- **Capa 5B.4 completa (6/6 pasos).** Sesión 0 (prioridad desde 2026-07-13) cerrada. Sesión 1
+  (5B.3, Postgres checkpointer) es la siguiente en la cola — pausada además por el curso en
+  paralelo (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20); retomar después de esa
+  entrega.
+
+---
+
 ## 2026-07-18 — Capa 5B.4 paso 5: métricas hit_rate/mrr + bug de keyword search bilingüe encontrado y arreglado
 **Commit:** `35a9ce5`
 

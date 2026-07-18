@@ -50,8 +50,7 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
     5B.3 — Postgres checkpointer      ← EN PAUSA (diseño cerrado 2026-07-07, sin código;
                                           pospuesta detrás del corpus nuevo, ver 5B.4 abajo)
-    5B.4 — Corpus real + evals M4     ← EN PROGRESO (paso 5/6 completo, 2026-07-18;
-                                          ver CORPUS_INSTRUMENTACION.MD)
+    5B.4 — Corpus real + evals M4     ✅ COMPLETADA (2026-07-18; ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
 
@@ -141,17 +140,19 @@ evals/
 │                                 Cada registro: question, category, chunk_ids (lista — 1 elemento
 │                                 para ventanas de 1 chunk al final de un documento, 2 en el resto),
 │                                 source. Commiteado 2026-07-18 (commit 15bf4bd).
-├── retrieval_metrics.py ✅ (5B.4 paso 5, 2026-07-18) compute_relevance/hit_rate/mrr/evaluate,
+├── retrieval_metrics.py ✅ (5B.4 pasos 5-6, 2026-07-18) compute_relevance/hit_rate/mrr/evaluate,
 │                            patron de M4 portado y parametrizado para _vector_search/
 │                            _keyword_search/_hybrid_search de src/tools.py. Acierto definido por
 │                            chunk_ids (no filename, a diferencia de M4 — ver nota del paso 4).
 │                            Script manual (python -m evals.retrieval_metrics), no lo llama la app
 │                            ni CI. Corrida real contra las 520 preguntas destapó y motivo el fix
 │                            de _keyword_search en src/tools.py (ver "Estado actual del repo"
-│                            arriba y CHANGELOG 2026-07-18 para la progresion completa).
-│                            Metricas finales @top_k=5: vector 0.231/0.141, keyword 0.300/0.197,
-│                            hybrid 0.312/0.180 (hit_rate/mrr) — hybrid con k=60 default de RRF no
-│                            supera el MRR de keyword solo, motiva el barrido de k del paso 6.
+│                            arriba y CHANGELOG 2026-07-18 para la progresion completa). Tambien
+│                            corre el barrido de k de RRF (RRF_K_VALUES) para el paso 6.
+│                            Metricas finales @top_k=5, k=1 (default nuevo, ver src/ingestion.py):
+│                            vector 0.231/0.141, keyword 0.300/0.197, hybrid 0.317/0.186
+│                            (hit_rate/mrr) — hybrid ahora supera a los dos individuales en ambas
+│                            metricas, sin trade-off.
 ├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
 │                       + @traceable para LangSmith (Capa 3B)
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
@@ -290,8 +291,18 @@ real de Juan como consultor técnico en el rubro) es ese salto de volumen. Pasos
    default no suma toda la ventaja de keyword). El fix cambia también el rag_search() real que usa
    el agente (mismo _keyword_search), no solo las métricas — 7 tests de test_rules.py verificados
    en verde con la query SQL nueva.
-6. ⬜ Barrido de k de RRF contra el ground truth real, motivado por la brecha MRR hybrid/keyword de
-   arriba; decidir si el k=60 default de src/ingestion.py:104 se ajusta.
+6. ✅ (2026-07-18) — Barrido de k de RRF (k=[1,50,60,100,200]) contra las 520 preguntas del ground
+   truth, top_k=5. Resultado: k=1 gana en hit_rate (0.3173) y MRR (0.1858) a la vez — sin trade-off
+   que resolver con el criterio acordado (priorizar hit_rate: el agente manda todo el top-k al LLM
+   como contexto, no hay "posición #1" que importe como en un buscador tradicional). k=50/60/100/200
+   dan resultados idénticos entre sí (0.3115/0.1797) — con candidate_k=10, un k mucho mayor que el
+   rango de posiciones aplana las diferencias de rank hasta volverlas irrelevantes, no es que 60 sea
+   "casi tan bueno" como 100, es que a partir de cierto punto k deja de cambiar el resultado. Default
+   actualizado de 60 a 1 en `rrf()` (`src/ingestion.py`) y `_hybrid_search()` (`src/tools.py`,
+   parámetro `rrf_k`) — cambia el comportamiento real de `rag_search()` en producción, no solo las
+   métricas. 7 tests de `test_rules.py` verificados en verde con el nuevo default.
+
+**Capa 5B.4 completa (6/6 pasos), 2026-07-18.**
 
 Nota (2026-07-15): al pushear el trabajo pendiente de 5B.4 pasos 1-2 (primera vez
 que corría CI desde la migración a Postgres de 5B.2), aparecieron dos fallas en
@@ -318,16 +329,15 @@ Ver courses/POST_COURSE_ZOOMCAMP_M3.md para el detalle completo de la auditoría
 porqué de cada punto. Orden acordado originalmente, uno por sesión — reordenado el
 2026-07-13 (ver nota abajo):
 
-Sesión 0 (nueva, prioridad actual) — 5B.4, corpus real + evals de M4. Ver plan de
-  6 pasos arriba y detalle completo en CORPUS_INSTRUMENTACION.MD. Arranca antes que
-  las Sesiones 1 y 2 de abajo porque resuelve una decisión que quedó pospuesta en
-  el handoff de M4, y porque el paso 2 (soporte de PDFs en ingest.py) es prerequisito
-  real para tener un corpus de producción, no solo para evals.
+Sesión 0 — 5B.4, corpus real + evals de M4. ✅ COMPLETA (2026-07-18, 6/6 pasos —
+  ver plan arriba y detalle completo en CORPUS_INSTRUMENTACION.MD).
 
-Sesión 1 — 5B.3 (Postgres checkpointer). Cierra Capa 5B formalmente.
-  Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en PRÓXIMO PASO) —
-  EN PAUSA desde 2026-07-09, ahora detrás de la Sesión 0 en la cola. Nada instalado
-  ni codeado todavía en 5B.3.
+Sesión 1 (siguiente en la cola) — 5B.3 (Postgres checkpointer). Cierra Capa 5B
+  formalmente. Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en
+  PRÓXIMO PASO) — EN PAUSA desde 2026-07-09. Nada instalado ni codeado todavía en
+  5B.3. Nota (2026-07-18): esta sesión se pausó además por el curso en paralelo
+  (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20) — retomar recién
+  después de esa entrega.
 
 Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
 15-45 min cada uno):
