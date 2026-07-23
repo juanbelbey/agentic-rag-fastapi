@@ -6,6 +6,53 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-22 — M5 del Zoomcamp terminado (videos + homework) + handoff post-curso + Sesión 1 desbloqueada
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- Terminado el Módulo 5 del LLM Zoomcamp (Monitoring): videos vistos, apuntes
+  (`M5-lessons/apuntes.md`) completos y HW5 repasado (`M5-lessons/HW5 - Juan Belbey.ipynb`,
+  Q1–Q6) — HW ya estaba entregado (excepción puntual corriendo código real contra OpenAI),
+  faltaba el repaso.
+- `courses/POST_COURSE_ZOOMCAMP_M5.md` (nuevo): handoff completo del módulo — tabla de
+  respuestas confirmadas (Q1–Q6: 3 spans por trace, ~7000 input tokens, span `llm`
+  concentra >99% del tiempo), conceptos clave de OpenTelemetry (trace/span/attributes,
+  processor vs exporter, anidamiento automático de spans, instrumentación vía subclase +
+  `super()`, exporter custom), y auditoría contra el código real del repo:
+  - El runtime real (`/chat`) sigue sin tracing prendido — LangSmith (Capa 3B) solo cubre
+    `evals/`, gap ya confirmado en el handoff de M3 y todavía sin resolver.
+  - No hay collector propio desplegado en ningún lado (repo corre local o en Render/Fly.io) —
+    montar uno ahora sería infraestructura sin usuario que la necesite.
+  - Tokens y costo no se trackean en ningún lado del repo hoy — terreno limpio para aplicar
+    el patrón de M5 (atributos de span, no logs sueltos) el día que se prenda tracing real.
+  - **Decisión tomada:** adoptar el patrón de M5 (spans nombrados por paso interno,
+    tokens/costo como atributos) pero implementado *dentro de LangSmith* (que ya soporta
+    metadata por span vía `@traceable`), no con el exporter/collector OTel crudo del
+    homework — segunda vía de tracing en paralelo sin necesidad real. Migrar de LangSmith a
+    OpenTelemetry puro queda pospuesto en `ROADMAP.md`, condicionado a dos escenarios
+    concretos (pasos no-LangChain que LangSmith no pueda trazar, o superar el tier gratuito
+    de 5.000 trazas/mes) — hoy no hay señal de que eso esté pasando.
+- **Consulta aparte resuelta (no es de M5):** se revisó si se había corrido LLM-as-judge
+  sobre las 520 preguntas del ground truth nuevo (`evals/ground_truth_retrieval.json`,
+  pasos 4-6 de 5B.4). Confirmado leyendo el JSON y `run_evals.py`: no se hizo — el archivo
+  no tiene `expected_answer`, y `evaluators.py`/`run_evals.py` siguen corriendo solo contra
+  `golden_set.json` (20 preguntas del corpus viejo). Anotado como pendiente aparte en
+  `ROADMAP.md` (POSPUESTO), distinto del punto ya existente sobre RAGAS.
+- `ROADMAP.md`: Sesión 1 (Capa 5B.3, Postgres checkpointer) marcada como desbloqueada — la
+  pausa por HW5 ya no aplica. Sesión 2 actualizada para sumar el patrón de M5 al mismo
+  cambio de "prender tracing real". Corregida una inconsistencia encontrada al pasar: el
+  ítem "actualizar SYSTEM_PROMPT de graph.py" seguía listado como pendiente en Sesión 2
+  pese a estar hecho desde el paso 3 de 5B.4 (2026-07-15) — tachado, ya no es parte de la
+  cola. Dos entradas nuevas en POSPUESTO (LLM-as-judge sobre corpus nuevo, migración a OTel
+  condicional).
+- **Próximo paso concreto:** Capa 5B.3 (Postgres checkpointer) es la siguiente en la cola,
+  sin condición pendiente — diseño de 4 pasos ya cerrado (ver PRÓXIMO PASO en `ROADMAP.md`).
+  Estimado ~1.5-2h. Sesión 2 de limpieza (ahora con la pieza de M5 sumada) queda después,
+  ~1.5h. El LLM-as-judge sobre las 520 preguntas queda aparte, sin bloquear nada, estimado
+  como sesión completa (2-4h) por el costo de generar `expected_answer` + correr el juez
+  contra el dataset real.
+
+---
+
 ## 2026-07-18 (2) — Capa 5B.4 paso 6: barrido de k de RRF — Capa 5B.4 completa (6/6)
 **Commit:** `d87ce34`
 

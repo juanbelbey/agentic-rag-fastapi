@@ -332,26 +332,32 @@ porqué de cada punto. Orden acordado originalmente, uno por sesión — reorden
 Sesión 0 — 5B.4, corpus real + evals de M4. ✅ COMPLETA (2026-07-18, 6/6 pasos —
   ver plan arriba y detalle completo en CORPUS_INSTRUMENTACION.MD).
 
-Sesión 1 (siguiente en la cola) — 5B.3 (Postgres checkpointer). Cierra Capa 5B
-  formalmente. Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en
+Sesión 1 (siguiente en la cola, desbloqueada) — 5B.3 (Postgres checkpointer). Cierra
+  Capa 5B formalmente. Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en
   PRÓXIMO PASO) — EN PAUSA desde 2026-07-09. Nada instalado ni codeado todavía en
   5B.3. Nota (2026-07-18): esta sesión se pausó además por el curso en paralelo
-  (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20) — retomar recién
-  después de esa entrega.
+  (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20). Actualización
+  (2026-07-22): HW5 entregado, videos/apuntes de M5 completos (ver
+  courses/POST_COURSE_ZOOMCAMP_M5.md) — la pausa ya no aplica, 5B.3 es la
+  siguiente en la cola sin condición pendiente.
 
 Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
 15-45 min cada uno):
 - Paso 6: sacar build_index()/set_index()/_index/InMemoryIndex muerto de
   src/main.py y src/tools.py (ya no alimentan a rag_search() desde 5B.2).
 - Prender tracing real del agente (LANGCHAIN_TRACING_V2 para el runtime de /chat,
-  no solo para evals/ — gap encontrado en la auditoría de M3).
+  no solo para evals/ — gap encontrado en la auditoría de M3, reconfirmado en la
+  auditoría de M5). Actualización (2026-07-22, ver
+  courses/POST_COURSE_ZOOMCAMP_M5.md): al prender esto, sumar en el mismo cambio
+  el patrón de M5 — nombrar spans por paso interno (rag_search, vector/keyword,
+  create_ticket) y tokens/costo como atributos de span, aplicado vía LangSmith
+  (no vía OTel crudo, ver POSPUESTO).
 - Poblar ChatResponse.tool_calls_used en main.py (deuda técnica desde Capa 5A,
   2026-06-20, campo siempre devuelve []).
 - max_tokens explícito en get_bound_llm() (aprendizaje empírico de M3: resúmenes
   largos escalan ~2.3x tokens de output).
-- Actualizar el SYSTEM_PROMPT de graph.py (sigue siendo el placeholder de Capa 1,
-  no menciona rag_search/create_ticket reales — puede terminar fusionado con el
-  paso 3 de la Sesión 0 si el system prompt nuevo ya lo cubre).
+- ~~Actualizar el SYSTEM_PROMPT de graph.py~~ — hecho en 5B.4 paso 3 (2026-07-15),
+  ya no es parte de esta sesión.
 
 Nota (2026-07-11): este plan asumía "Sesión 2 → recién ahí arrancar M4". En la
 práctica M4 se cursó en paralelo, sin esperar a la Sesión 2, y ya terminó (videos +
@@ -393,6 +399,26 @@ pausa sin cambios hasta que 5B.4 avance.
   multilingües, pero sobre-ingeniería para 11 documentos; el filtro de
   stopwords ES/EN alcanza para el tamaño actual del corpus. Reconsiderar si
   el corpus crece a más idiomas o más documentos por idioma.
+- LLM-as-judge (relevance) sobre las 520 preguntas del corpus nuevo — no se
+  hizo todavía. `evals/ground_truth_retrieval.json` (pasos 4-6 de 5B.4) solo
+  tiene question/category/chunk_ids/source, sin expected_answer, y solo se
+  evaluó retrieval (hit_rate/mrr). `evaluators.py` (relevance LLM-judge,
+  citation, convergence) sigue corriendo solo contra `golden_set.json` (20
+  preguntas del corpus viejo de LangGraph docs) vía `run_evals.py` — nunca se
+  conectó al corpus de instrumentación. Detectado 2026-07-22 al revisar qué
+  faltaba de evals de generación. Distinto del punto de RAGAS de arriba (esto
+  es más básico: ni el LLM-as-judge casero que ya existe se corrió sobre el
+  corpus nuevo).
+- Migrar de LangSmith a OpenTelemetry puro para tracing — discutido 2026-07-22
+  al revisar el handoff de M5 (Monitoring, LLM Zoomcamp). No hay señal
+  concreta hoy de que LangSmith se quede corto; sería una migración motivada
+  por dos escenarios hipotéticos a futuro: (1) el agente crece con pasos que
+  no son LangChain/LangGraph (llamadas propias, otros servicios/lenguajes)
+  que LangSmith no puede trazar, o (2) el volumen de trazas supera el tier
+  gratuito (5.000/mes, ver Capa 3B) y el costo o el vendor lock-in empiezan a
+  pesar. Hasta que uno de esos dos pase, LangSmith sigue siendo la elección
+  correcta para este stack (estándar de industria para LangGraph, ya
+  integrado con evals) — no resta profesionalismo al repo.
 ```
 
 ---
