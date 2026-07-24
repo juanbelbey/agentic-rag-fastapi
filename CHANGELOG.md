@@ -6,8 +6,88 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
-## 2026-07-22 — M5 del Zoomcamp terminado (videos + homework) + handoff post-curso + Sesión 1 desbloqueada
+## 2026-07-24 — Revisión estratégica del repo + roadmap (sin cambios de código)
+**Commit:** pendiente (solo docs: ROADMAP.md + CHANGELOG.md)
+
+- Sesión de review completo del repo y el roadmap con Opus 4.8 (el trabajo día-a-día
+  venía con Sonnet 5). No se tocó código: se leyó el core (`tools.py`, `graph.py`,
+  `ingestion.py`, `main.py`, `schemas.py`, `config.py`, `test_rules.py`, `ci.yml`) y
+  se cruzó contra ROADMAP/CHANGELOG. Verificado que lo documentado de 5B.3 ("código
+  de los 4 pasos completo, falta verificar contra Supabase real") coincide con el
+  código real — sin inconsistencias de ✅.
+- **Objetivo confirmado:** portfolio para conseguir trabajo, pero SIN fecha dura →
+  balancear la profundidad de retrieval (ya sólida) con cerrar huecos de producto.
+- **Prioridades reordenadas (después de cerrar 5B.3):** (1) CI en verde + seguridad
+  — arreglar/aislar el job de evals roto y adelantar a AHORA la rotación de
+  credenciales + limpieza de historial de git (deja de ser "antes de público");
+  (2) evals del corpus real — LLM-as-judge sobre las 520 preguntas de instrumentación.
+  Sinérgicas: el dataset de evals real puede alimentar el job de CI que hoy falla.
+- **Hallazgos técnicos anotados para la Sesión 2 de limpieza:**
+  - `RAGResult.score` (`src/schemas.py`) declara `ge=0.0/le=1.0` y "similitud coseno",
+    pero `rag_search()` le pasa el score de RRF. No explota hoy solo porque con k=1 el
+    máximo de RRF es exactamente 1.0; frágil si cambia k (score>1.0 → ValidationError
+    en producción). Contrato mentiroso, arreglo de 2 min.
+  - `create_ticket`: el schema `bug/feature/question` es vocabulario prestado del curso
+    DeepLearning y no encaja en instrumentación. Decisión: redominar a orden de trabajo
+    / aviso de mantenimiento (schema barato, sin persistencia); la persistencia real en
+    Postgres queda como capa futura explícita opcional atada al deploy (Capa 6).
+  - Confirmada la deriva menor ya conocida: el `build_index()` del lifespan de `main.py`
+    quedó inerte (docs/ ya no tiene `.txt`), no "re-embebe en cada arranque" como decía
+    la nota vieja — parte del código muerto a limpiar en Sesión 2.
+- **Modelo de trabajo acordado:** Sonnet 5 para construir día-a-día; Opus 4.8 para
+  sesiones de arquitectura/estrategia/bugs difíciles.
+- **Próximo paso concreto:** cerrar 5B.3 (verificación contra Supabase real: script
+  chico con pool + `setup()` + dos `invoke()` con el mismo `thread_id`), y recién ahí
+  abrir el bloque de CI + seguridad. Se retoma con Sonnet 5.
+
+---
+
+## 2026-07-23 — Capa 5B.3 (Postgres checkpointer): código completo (4/4 pasos), falta verificar contra Supabase real
 **Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- Arrancada Capa 5B.3 (MemorySaver → PostgresSaver), diseño ya cerrado desde 2026-07-07,
+  desbloqueada el 2026-07-22 al terminar M5 del Zoomcamp. Los 4 pasos del plan quedaron
+  implementados en la misma sesión:
+  1. Instalado `langgraph-checkpoint-postgres==3.1.0` (trae `psycopg` v3 + `psycopg_pool`,
+     conviven a propósito con `psycopg2-binary` que ya usa `tools.py` — no se migra ese
+     archivo). Hallazgo en el camino: `psycopg` puro necesita la librería nativa `libpq`
+     instalada en el sistema, ausente en este Windows — el import fallaba. Se resolvió
+     instalando `psycopg[binary]` (wheel autocontenido, mismo motivo por el que el proyecto
+     ya usa `psycopg2-binary` en vez de `psycopg2` a secas). `requirements.txt` actualizado.
+  2. `src/graph.py`: dejó de compilar el grafo a nivel de módulo (antes corría al importar,
+     antes de que exista el lifespan de FastAPI — mismo tipo de bug que el cliente de OpenAI
+     de `ingestion.py` arreglado el 2026-07-15). Ahora exporta `graph_builder` sin compilar;
+     se sacó el import de `MemorySaver` del archivo.
+  3. `src/main.py`: el lifespan abre un `psycopg_pool.ConnectionPool` real a Postgres
+     (`autocommit=True` — cada operación del checkpointer se confirma sola, sin dejar
+     transacciones abiertas; `prepare_threshold=0` — evita prepared statements, que pueden
+     fallar si `DATABASE_URL` pasa por un pooler tipo pgbouncer), llama `checkpointer.setup()`
+     (idempotente, crea las tablas de `PostgresSaver` si no existen) y recién ahí compila
+     `graph_builder.compile(checkpointer=...)`, guardado en la variable global `graph`. El
+     pool se cierra después del `yield`. `/chat` ahora valida `graph is None` además de
+     `settings is None`.
+  4. `tests/conftest.py` y `evals/run_evals.py` ya no importan `graph` compilado (ese nombre
+     dejó de existir en `src/graph.py`) — importan `graph_builder` y lo compilan ellos mismos
+     con `MemorySaver()`: `conftest.py` dentro de la fixture `agent_graph` (lazy, por test),
+     `run_evals.py` a nivel de módulo (sin el problema del paso 2, porque `MemorySaver` no
+     abre ninguna conexión real ni depende de credenciales). Motivo de fondo: los evals/tests
+     corren en una sola pasada de principio a fin, no necesitan que el estado sobreviva un
+     reinicio — eso solo importa para `main.py`, que corre como servidor de larga duración.
+  Verificado: los 7 tests de `test_rules.py` pasan en verde con el fix, y `python -c "import
+  src.main"` / `python -c "import evals.run_evals"` importan sin errores.
+- **Pendiente antes de cerrar 5B.3 (no se hizo hoy):** todo lo de arriba es código nuevo
+  nunca corrido contra Supabase real. Falta confirmar que `checkpointer.setup()`
+  efectivamente crea las tablas de `PostgresSaver`, y que un `/chat` real persiste y
+  recupera una conversación por `thread_id` entre llamadas. No requiere levantar el
+  servidor completo con `uvicorn` — alcanza con un script chico que abra el pool, corra
+  `setup()`, compile el grafo y haga dos `graph.invoke()` seguidos con el mismo `thread_id`.
+- **Próximo paso concreto:** esa verificación contra Supabase real, para recién ahí dar
+  Capa 5B.3 (y Capa 5B completa) por cerrada.
+
+---
+
+## 2026-07-22 — M5 del Zoomcamp terminado (videos + homework) + handoff post-curso + Sesión 1 desbloqueada
+**Commit:** `79a8f17`
 
 - Terminado el Módulo 5 del LLM Zoomcamp (Monitoring): videos vistos, apuntes
   (`M5-lessons/apuntes.md`) completos y HW5 repasado (`M5-lessons/HW5 - Juan Belbey.ipynb`,

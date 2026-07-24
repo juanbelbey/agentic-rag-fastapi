@@ -4,7 +4,6 @@ from typing import Literal
 
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
@@ -67,6 +66,3 @@ graph_builder.add_node("tools", tool_node)
 graph_builder.add_edge(START, "agent")
 graph_builder.add_conditional_edges("agent", route_after_agent)
 graph_builder.add_edge("tools", "agent")
-
-checkpointer = MemorySaver()
-graph = graph_builder.compile(checkpointer=checkpointer)

@@ -48,8 +48,8 @@ CAPA 5 — RAG real con PDFs            ← EN PROGRESO
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
-    5B.3 — Postgres checkpointer      ← EN PAUSA (diseño cerrado 2026-07-07, sin código;
-                                          pospuesta detrás del corpus nuevo, ver 5B.4 abajo)
+    5B.3 — Postgres checkpointer      ← EN PROGRESO (2026-07-23: 4/4 pasos de codigo
+                                          completos, falta verificar contra Supabase real)
     5B.4 — Corpus real + evals M4     ✅ COMPLETADA (2026-07-18; ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -79,13 +79,24 @@ src/
 │                     [dead code pendiente: _index/InMemoryIndex/set_index ya no los usa
 │                     rag_search(), quedan sin uso hasta el paso 6 de la Sesión 2 (limpieza,
 │                     no confundir con el paso 6 de 5B.4 abajo)]
-├── graph.py       ✅ StateGraph con routing condicional y MemorySaver — SYSTEM_PROMPT con el caso
-│                     de uso real (instrumentación de campo, agua potable/saneamiento) desde 5B.4
-│                     paso 3 (2026-07-15); antes era el placeholder de Capa 1. Sigue inline en este
-│                     archivo, no en uno propio (ver pendiente en POSPUESTO)
+├── graph.py       ✅ StateGraph con routing condicional — SYSTEM_PROMPT con el caso de uso real
+│                     (instrumentación de campo, agua potable/saneamiento) desde 5B.4 paso 3
+│                     (2026-07-15). Sigue inline en este archivo, no en uno propio (ver pendiente
+│                     en POSPUESTO). Desde 5B.3 paso 2 (2026-07-23) exporta `graph_builder` SIN
+│                     compilar (antes compilaba con MemorySaver a nivel de módulo) — cada
+│                     consumidor decide su propio checkpointer llamando `.compile()`
 ├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
 │                     [pendiente paso 6: ese build_index() ya no lo usa rag_search(),
 │                     re-embebe docs.txt con la API de OpenAI en cada arranque para nada]
+│                     Desde 5B.3 paso 3 (2026-07-23): el lifespan abre un `psycopg_pool.ConnectionPool`
+│                     real a Postgres (autocommit=True, prepare_threshold=0 — ver nota abajo),
+│                     corre `checkpointer.setup()` (idempotente, crea tablas de PostgresSaver) y
+│                     recien ahi compila `graph_builder.compile(checkpointer=...)`, guardado en
+│                     variable global `graph`. Pool se cierra despues del `yield`. `/chat` valida
+│                     `graph is None` ademas de `settings is None`.
+│                     [pendiente de verificar: código completo pero nunca corrido contra Supabase
+│                     real — falta confirmar que `checkpointer.setup()` crea las tablas y que un
+│                     `/chat` real persiste/recupera conversación por thread_id, ver PRÓXIMO PASO]
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 └── ingestion.py   ✅ chunking + embeddings OpenAI (embed_texts() batchea de a 300 textos por request,
                       límite de la API de OpenAI: 300k tokens / 2048 items por request, tocado 5B.4
@@ -112,7 +123,9 @@ archive/
                              leen docs/*.txt, docs/ ahora solo tiene pdfs/
 
 tests/
-├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent
+├── conftest.py    ✅ fixtures: agent_graph, sample_responses, invoke_agent. Desde 5B.3 paso 4
+│                     (2026-07-23): agent_graph importa `graph_builder` (sin compilar) y compila
+│                     con `MemorySaver()` en la fixture — no depende de Postgres para correr
 ├── test_rules.py  ✅ 7 tests — 5 deterministas sin API; los 2 de rag_search pegan a Postgres+OpenAI
 │                     reales desde 5B.2 y se saltan con pytest.skip si falta OPENAI_API_KEY/
 │                     DATABASE_URL (fix 2026-07-15, mismo patrón que invoke_agent en conftest.py)
@@ -156,7 +169,11 @@ evals/
 ├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
 │                       + @traceable para LangSmith (Capa 3B)
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
-│                       + client.create_feedback() para LangSmith (Capa 3B)
+│                       + client.create_feedback() para LangSmith (Capa 3B). Desde 5B.3 paso 4
+│                       (2026-07-23): importa `graph_builder` y compila con `MemorySaver()` a
+│                       nivel de módulo (sin problema, a diferencia de Postgres no abre ninguna
+│                       conexión real ni depende de credenciales) — un eval es una corrida de
+│                       una sola pasada, no necesita que el checkpoint sobreviva un reinicio
 └── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
                         (corridas: 2026-05-29, 05-30, 06-01, 06-03)
 
@@ -187,18 +204,38 @@ Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
    de test_rules.py pasando sin cambios.
 
 Capa 5B.3 — Postgres checkpointer (MemorySaver → PostgresSaver). Diseño cerrado
-(2026-07-07), código pendiente — EN PAUSA, pospuesta detrás de 5B.4 (ver abajo):
-1. ⬜ Instalar langgraph-checkpoint-postgres (trae psycopg v3 + psycopg_pool, driver
-   distinto al psycopg2 que ya usa tools.py — conviven a propósito, no se migra tools.py).
-2. ⬜ graph.py: dejar de compilar el grafo a nivel de módulo (hoy corre al importar,
-   antes de que exista el lifespan). Exportar graph_builder sin compilar.
-3. ⬜ main.py: abrir un psycopg_pool.ConnectionPool en el lifespan (no una conexión
-   cruda — los endpoints sync de FastAPI corren en threadpool, pueden llegar varios
-   /chat concurrentes), llamar checkpointer.setup() (idempotente, crea las tablas de
-   PostgresSaver) y compilar graph_builder.compile(checkpointer=...) ahí adentro.
-4. ⬜ tests/conftest.py y evals/run_evals.py: hoy importan graph ya compilado
-   (from src.graph import graph) — pasan a compilar ellos mismos con MemorySaver(),
-   para no depender de que Supabase esté arriba solo para correr tests/evals.
+(2026-07-07), código de los 4 pasos completo (2026-07-23) — falta verificar contra
+Supabase real antes de dar la capa por cerrada (ver nota abajo):
+1. ✅ (2026-07-23) Instalado langgraph-checkpoint-postgres==3.1.0 (trae psycopg v3 +
+   psycopg_pool, driver distinto al psycopg2 que ya usa tools.py — conviven a
+   propósito, no se migra tools.py). Hallazgo en el camino: `psycopg` puro necesita
+   la librería nativa `libpq` instalada en el sistema — no está en este Windows, el
+   import fallaba. Se instaló `psycopg[binary]` (wheel autocontenido, mismo motivo
+   por el que el proyecto ya usa `psycopg2-binary` y no `psycopg2` a secas).
+2. ✅ (2026-07-23) graph.py: ya no compila el grafo a nivel de módulo (antes corría
+   al importar, antes de que exista el lifespan). Ahora exporta `graph_builder` sin
+   compilar — se sacó el import de MemorySaver del archivo, ya no se usa ahí.
+3. ✅ (2026-07-23) main.py: el lifespan abre un `psycopg_pool.ConnectionPool` real
+   (kwargs `autocommit=True` — cada operación del checkpointer se confirma sola, sin
+   dejar transacciones abiertas; `prepare_threshold=0` — evita prepared statements,
+   que pueden fallar si DATABASE_URL pasa por un pooler tipo pgbouncer), llama
+   `checkpointer.setup()` (idempotente) y compila `graph_builder.compile(checkpointer=...)`
+   ahí adentro, guardado en variable global `graph`. Pool se cierra después del `yield`.
+   `/chat` valida `graph is None` además de `settings is None`.
+4. ✅ (2026-07-23) tests/conftest.py y evals/run_evals.py ya no importan `graph`
+   compilado (ya no existe ese nombre) — importan `graph_builder` y compilan cada
+   uno con `MemorySaver()`: conftest.py dentro de la fixture `agent_graph` (lazy, por
+   test), run_evals.py a nivel de módulo (sin problema — MemorySaver no abre
+   conexión real ni depende de credenciales, a diferencia del Postgres de main.py).
+   7 tests de test_rules.py verificados en verde con el fix.
+
+**Pendiente antes de cerrar 5B.3:** todo lo de arriba es código nuevo nunca corrido
+contra Supabase real — falta confirmar que `checkpointer.setup()` efectivamente crea
+las tablas de PostgresSaver, y que un `/chat` real persiste y recupera una conversación
+por `thread_id` entre llamadas. No requiere levantar el servidor completo con uvicorn;
+alcanza con un script chico que abra el pool, corra `setup()`, compile el grafo y haga
+dos `graph.invoke()` seguidos con el mismo `thread_id` para confirmar que el segundo
+"recuerda" el primero.
 
 Capa 5B.4 — Corpus real (instrumentación de campo) + framework de evals de M4.
 PRIORIDAD ACTUAL (decidido 2026-07-13). Plan completo en CORPUS_INSTRUMENTACION.MD
@@ -332,14 +369,14 @@ porqué de cada punto. Orden acordado originalmente, uno por sesión — reorden
 Sesión 0 — 5B.4, corpus real + evals de M4. ✅ COMPLETA (2026-07-18, 6/6 pasos —
   ver plan arriba y detalle completo en CORPUS_INSTRUMENTACION.MD).
 
-Sesión 1 (siguiente en la cola, desbloqueada) — 5B.3 (Postgres checkpointer). Cierra
-  Capa 5B formalmente. Diseño cerrado el 2026-07-07 (ver plan de 4 pasos arriba, en
-  PRÓXIMO PASO) — EN PAUSA desde 2026-07-09. Nada instalado ni codeado todavía en
-  5B.3. Nota (2026-07-18): esta sesión se pausó además por el curso en paralelo
-  (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20). Actualización
-  (2026-07-22): HW5 entregado, videos/apuntes de M5 completos (ver
-  courses/POST_COURSE_ZOOMCAMP_M5.md) — la pausa ya no aplica, 5B.3 es la
-  siguiente en la cola sin condición pendiente.
+Sesión 1 — 5B.3 (Postgres checkpointer). Cierra Capa 5B formalmente. Diseño cerrado
+  el 2026-07-07, EN PROGRESO desde 2026-07-23: los 4 pasos de código están completos
+  (ver detalle en PRÓXIMO PASO) — falta la verificación real contra Supabase antes de
+  dar la sesión por terminada. Nota (2026-07-18): esta sesión se había pausado por el
+  curso en paralelo (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20).
+  Actualización (2026-07-22): HW5 entregado, videos/apuntes de M5 completos (ver
+  courses/POST_COURSE_ZOOMCAMP_M5.md) — la pausa ya no aplicaba, por eso se retomó
+  5B.3 el 2026-07-23.
 
 Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
 15-45 min cada uno):
@@ -358,6 +395,18 @@ Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos 
   largos escalan ~2.3x tokens de output).
 - ~~Actualizar el SYSTEM_PROMPT de graph.py~~ — hecho en 5B.4 paso 3 (2026-07-15),
   ya no es parte de esta sesión.
+- Arreglar el contrato de RAGResult.score (src/schemas.py): dice ge=0.0/le=1.0 y se
+  describe como "similitud coseno", pero rag_search() le pasa el score de RRF (no
+  coseno). Safe hoy SOLO por casualidad — con k=1 el máximo de RRF es exactamente 1.0
+  (un chunk en rank 0 de ambas listas: 0.5+0.5); si cambiara k, score>1.0 tiraría
+  ValidationError dentro de rag_search() en producción. Sacar/subir el le=1.0 y
+  corregir la descripción a "score de fusión RRF" (detectado 2026-07-24).
+- Redominar el schema de create_ticket (src/schemas.py:TicketInput): las categorías
+  bug/feature/question son vocabulario prestado del curso DeepLearning (soporte de
+  software) y no encajan en instrumentación de campo. Reformular como orden de
+  trabajo / aviso de mantenimiento con campos del dominio (equipo/modelo, planta,
+  síntoma, código de error, prioridad). Cambio de schema barato, sin persistencia
+  (ver POSPUESTO para la persistencia real). Detectado 2026-07-24.
 
 Nota (2026-07-11): este plan asumía "Sesión 2 → recién ahí arrancar M4". En la
 práctica M4 se cursó en paralelo, sin esperar a la Sesión 2, y ya terminó (videos +
@@ -367,6 +416,24 @@ Nota (2026-07-13): con CORPUS_INSTRUMENTACION.MD ya diseñado, Juan decidió pri
 el corpus nuevo (Sesión 0 / 5B.4) por delante de las Sesiones 1 y 2, que quedan en
 pausa sin cambios hasta que 5B.4 avance.
 
+Nota (2026-07-24, revisión estratégica con Opus 4.8): repaso completo del repo +
+roadmap. Objetivo confirmado: portfolio para conseguir trabajo, pero SIN fecha dura
+→ balancear profundidad de retrieval (ya muy sólida) con cerrar huecos de "producto
+navegable". Diagnóstico: se profundizó mucho en retrieval y quedaron huecos de
+producto (CI en rojo, sin deploy, create_ticket stub, evals de generación nunca
+corridos sobre el corpus real). Reordenamiento de prioridades acordado, DESPUÉS de
+cerrar 5B.3:
+1. CI en verde + seguridad — arreglar/aislar el job de evals roto (ver ci.yml) y
+   ADELANTAR la rotación de credenciales + limpieza de historial de git a AHORA (ya
+   no "antes de hacerlo público": reescribir historial se vuelve más difícil cuanto
+   más crece, ver POSPUESTO actualizado).
+2. Evals del corpus real — correr el LLM-as-judge sobre las 520 preguntas de
+   instrumentación (medir si el agente RESPONDE bien, no solo si recupera; ver
+   POSPUESTO "LLM-as-judge sobre corpus nuevo"). Sinérgico con el punto 1: ese
+   dataset puede alimentar el job de CI de evals que hoy está roto.
+Sesión 2 (limpieza) y deploy (Capa 6) quedan después, sin fecha. Modelo de trabajo:
+Sonnet 5 para construir día-a-día, Opus 4.8 para sesiones de arquitectura/estrategia.
+
 ── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
 - Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
   anotado como mejora de performance desde 5B.2).
@@ -374,7 +441,11 @@ pausa sin cambios hasta que 5B.4 avance.
   git (pendiente de seguridad desde 2026-07-02, no bloquea desarrollo local).
   Confirmado 2026-07-15: el repo en GitHub es privado hoy, así que no es urgente
   por exposición pública inmediata — pero es condición explícita antes de pasarlo
-  a público.
+  a público. ACTUALIZADO 2026-07-24: adelantado — deja de ser "antes de público" y
+  pasa a ser la prioridad #1 después de 5B.3 (junto con CI en verde). Motivo:
+  reescribir historial de git se vuelve más difícil cuanto más crece, y es fácil que
+  el repo se haga público por impulso/accidente con las keys adentro. Ver nota de la
+  revisión estratégica 2026-07-24 en el plan de cierre de Capa 5B, arriba.
 - Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
   en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
 - .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el
@@ -383,6 +454,13 @@ pausa sin cambios hasta que 5B.4 avance.
 - Separar los prompts a archivo(s) propio(s) en vez de vivir inline en graph.py
   (pedido de Juan, 2026-07-15, al corregir que ROADMAP.md listaba un
   src/prompts.py que nunca existió).
+- Persistencia real de create_ticket en Postgres (capa futura explícita opcional,
+  no deuda escondida — discutido 2026-07-24). El concepto de escalar SÍ encaja en el
+  dominio (orden de trabajo cuando el manual no cubre la consulta o requiere técnico
+  de campo), pero hoy la tool es un stub que solo hace print() y devuelve un string;
+  nunca persiste. Primero se redomina el schema (ver Sesión 2); la tabla tickets +
+  INSERT real + recuperación cierran el caso de uso end-to-end recién cuando se
+  encare el deploy (Capa 6) — no antes, no es prioridad con el objetivo actual.
 - Framework de evals de generación (RAGAS u otro) como capa adicional sobre las
   métricas propias, no reemplazo — discutido 2026-07-18. Orden decidido:
   primero terminar hit_rate/mrr propios (pasos 5-6 de 5B.4, en curso) porque

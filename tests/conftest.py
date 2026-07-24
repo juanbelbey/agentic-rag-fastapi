@@ -11,17 +11,18 @@ from typing import Any
 import pytest
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 
 # Carga el .env desde la raiz del proyecto antes de que cualquier test corra.
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from src.graph import graph
+from src.graph import graph_builder
 
 
 @pytest.fixture(scope="session")
 def agent_graph():
-    """Devuelve el grafo compilado del agente para usar en tests."""
-    return graph
+    """Compila el grafo con MemorySaver para tests: no depende de Postgres."""
+    return graph_builder.compile(checkpointer=MemorySaver())
 
 
 @pytest.fixture

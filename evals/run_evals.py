@@ -15,6 +15,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 from langsmith import Client  # Cliente para enviar feedback a LangSmith
 
 from evals.evaluators import (
@@ -22,7 +23,11 @@ from evals.evaluators import (
     convergence_evaluator,
     relevance_evaluator,
 )
-from src.graph import graph
+from src.graph import graph_builder
+
+# MemorySaver: los evals corren en una sola pasada de principio a fin, no
+# necesitan que el estado sobreviva un reinicio. No depende de Postgres.
+graph = graph_builder.compile(checkpointer=MemorySaver())
 
 
 GOLDEN_SET_PATH = ROOT_DIR / "evals" / "golden_set.json"
