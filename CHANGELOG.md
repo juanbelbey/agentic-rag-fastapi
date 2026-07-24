@@ -6,6 +6,26 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-24 (2) — Capa 5B.3 verificada contra Supabase real — Capa 5B y Capa 5 completas
+**Commit:** `921ab4f`
+
+- Script manual (pool + `checkpointer.setup()` + dos `graph.invoke()` con el mismo
+  `thread_id`, fuera del repo) corrido contra Supabase real: `setup()` creó/confirmó las
+  4 tablas de `PostgresSaver` (`checkpoints`/`checkpoint_blobs`/`checkpoint_writes`/
+  `checkpoint_migrations`); el segundo invoke recordó el dato dado en el primero —
+  persistencia real por `thread_id` confirmada, no solo código que compila.
+- Commiteados y pusheados los 7 archivos que quedaban pendientes de la sesión de 5B.3
+  (`src/graph.py`, `src/main.py`, `tests/conftest.py`, `evals/run_evals.py`,
+  `requirements.txt`, `ROADMAP.md`, `CHANGELOG.md`).
+- `ROADMAP.md`: 5B.3 pasa de "en progreso" a ✅ completa; con eso, Capa 5B
+  (pgvector/Supabase + FTS) y Capa 5 (RAG real con PDFs) quedan completas — sus 5
+  subcapas (5A, 5A.2, 5B.0–5B.4) ya estaban hechas.
+- **Próximo paso concreto:** arranca la prioridad 1 de la revisión estratégica de más
+  abajo — CI en verde + seguridad (arreglar/aislar el job de evals roto en `ci.yml` y
+  rotar credenciales reales + limpiar historial de git).
+
+---
+
 ## 2026-07-24 — Revisión estratégica del repo + roadmap (sin cambios de código)
 **Commit:** pendiente (solo docs: ROADMAP.md + CHANGELOG.md)
 

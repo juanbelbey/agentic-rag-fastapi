@@ -41,15 +41,16 @@ CAPA 3 — Observabilidad y evals       ✅ COMPLETADA
   3A — Evaluadores a mano             ✅ COMPLETADA
   3B — Integración LangSmith          ✅ COMPLETADA
 CAPA 4 — Outputs tipados con Pydantic ✅ COMPLETADA
-CAPA 5 — RAG real con PDFs            ← EN PROGRESO
+CAPA 5 — RAG real con PDFs            ✅ COMPLETADA (2026-07-24)
   5A  — Índice en memoria (numpy)     ✅ COMPLETADA (2026-06-20)
   5A.2 — Hybrid search + RRF          ✅ COMPLETADA (2026-07-01)
-  5B  — pgvector/Supabase + FTS       ← EN PROGRESO
+  5B  — pgvector/Supabase + FTS       ✅ COMPLETADA (2026-07-24)
     5B.0 — Infraestructura Supabase   ✅ COMPLETADA (2026-07-01)
     5B.1 — Script de ingesta          ✅ COMPLETADA (2026-07-01)
     5B.2 — Migrar rag_search()        ✅ COMPLETADA (2026-07-04)
-    5B.3 — Postgres checkpointer      ← EN PROGRESO (2026-07-23: 4/4 pasos de codigo
-                                          completos, falta verificar contra Supabase real)
+    5B.3 — Postgres checkpointer      ✅ COMPLETADA (2026-07-24; verificado contra
+                                          Supabase real: setup() crea tablas,
+                                          persistencia por thread_id confirmada)
     5B.4 — Corpus real + evals M4     ✅ COMPLETADA (2026-07-18; ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy en AWS                ← PENDIENTE (H2)
 ```
@@ -94,9 +95,11 @@ src/
 │                     recien ahi compila `graph_builder.compile(checkpointer=...)`, guardado en
 │                     variable global `graph`. Pool se cierra despues del `yield`. `/chat` valida
 │                     `graph is None` ademas de `settings is None`.
-│                     [pendiente de verificar: código completo pero nunca corrido contra Supabase
-│                     real — falta confirmar que `checkpointer.setup()` crea las tablas y que un
-│                     `/chat` real persiste/recupera conversación por thread_id, ver PRÓXIMO PASO]
+│                     Verificado contra Supabase real (2026-07-24): `checkpointer.setup()` crea
+│                     las 4 tablas (checkpoints/checkpoint_blobs/checkpoint_writes/
+│                     checkpoint_migrations) y dos `graph.invoke()` con el mismo thread_id
+│                     confirman persistencia real de la conversación (script manual fuera del
+│                     repo, no vive en scripts/).
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 └── ingestion.py   ✅ chunking + embeddings OpenAI (embed_texts() batchea de a 300 textos por request,
                       límite de la API de OpenAI: 300k tokens / 2048 items por request, tocado 5B.4
@@ -229,13 +232,13 @@ Supabase real antes de dar la capa por cerrada (ver nota abajo):
    conexión real ni depende de credenciales, a diferencia del Postgres de main.py).
    7 tests de test_rules.py verificados en verde con el fix.
 
-**Pendiente antes de cerrar 5B.3:** todo lo de arriba es código nuevo nunca corrido
-contra Supabase real — falta confirmar que `checkpointer.setup()` efectivamente crea
-las tablas de PostgresSaver, y que un `/chat` real persiste y recupera una conversación
-por `thread_id` entre llamadas. No requiere levantar el servidor completo con uvicorn;
-alcanza con un script chico que abra el pool, corra `setup()`, compile el grafo y haga
-dos `graph.invoke()` seguidos con el mismo `thread_id` para confirmar que el segundo
-"recuerda" el primero.
+**Verificado contra Supabase real (2026-07-24):** script manual (pool + `setup()` + dos
+`graph.invoke()` con el mismo `thread_id`, fuera del repo). `setup()` creó/confirmó las
+4 tablas de PostgresSaver. El segundo invoke recordó el dato dado en el primero —
+persistencia real confirmada, no solo código que compila.
+
+**Capa 5B.3 completa, 2026-07-24. Capa 5B (pgvector/Supabase + FTS) y Capa 5 (RAG real
+con PDFs) quedan completas.**
 
 Capa 5B.4 — Corpus real (instrumentación de campo) + framework de evals de M4.
 PRIORIDAD ACTUAL (decidido 2026-07-13). Plan completo en CORPUS_INSTRUMENTACION.MD
@@ -369,10 +372,10 @@ porqué de cada punto. Orden acordado originalmente, uno por sesión — reorden
 Sesión 0 — 5B.4, corpus real + evals de M4. ✅ COMPLETA (2026-07-18, 6/6 pasos —
   ver plan arriba y detalle completo en CORPUS_INSTRUMENTACION.MD).
 
-Sesión 1 — 5B.3 (Postgres checkpointer). Cierra Capa 5B formalmente. Diseño cerrado
-  el 2026-07-07, EN PROGRESO desde 2026-07-23: los 4 pasos de código están completos
-  (ver detalle en PRÓXIMO PASO) — falta la verificación real contra Supabase antes de
-  dar la sesión por terminada. Nota (2026-07-18): esta sesión se había pausado por el
+Sesión 1 — 5B.3 (Postgres checkpointer). ✅ COMPLETA (2026-07-24). Cierra Capa 5B
+  formalmente. Diseño cerrado el 2026-07-07, código completo el 2026-07-23, verificado
+  contra Supabase real el 2026-07-24 (ver detalle en PRÓXIMO PASO). Nota (2026-07-18):
+  esta sesión se había pausado por el
   curso en paralelo (LLM Zoomcamp M5, Monitoring, HW con entrega 2026-07-20).
   Actualización (2026-07-22): HW5 entregado, videos/apuntes de M5 completos (ver
   courses/POST_COURSE_ZOOMCAMP_M5.md) — la pausa ya no aplicaba, por eso se retomó
@@ -433,6 +436,11 @@ cerrar 5B.3:
    dataset puede alimentar el job de CI de evals que hoy está roto.
 Sesión 2 (limpieza) y deploy (Capa 6) quedan después, sin fecha. Modelo de trabajo:
 Sonnet 5 para construir día-a-día, Opus 4.8 para sesiones de arquitectura/estrategia.
+
+Actualización (2026-07-24, misma sesión): Capa 5B.3 verificada contra Supabase real y
+commiteada/pusheada (`921ab4f`). Capa 5B y Capa 5 quedan completas. Arranca la
+prioridad 1 de arriba: CI en verde + seguridad (rotación de credenciales + limpieza de
+historial de git).
 
 ── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
 - Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
@@ -594,7 +602,7 @@ debe satisfacer. `TicketInput` está listo para conectarse a Postgres cuando lle
 
 ---
 
-## Capa 5 — RAG real con PDFs ← EN PROGRESO
+## Capa 5 — RAG real con PDFs ✅ COMPLETADA (2026-07-24)
 
 **Curso:** LLM Zoomcamp — DataTalks.Club (M1 completo 2026-06-20)
 **Decisión:** Zoomcamp sobre Coursera (proyecto real + comunidad + profundidad)
