@@ -10,7 +10,7 @@ class TestRelevanceEval:
 
     def test_rag_response_is_relevant(self, invoke_agent):
         # El agente recibe una pregunta de busqueda y debe dar una respuesta util.
-        question = "Como puedo solicitar un reembolso?"
+        question = "Que boton se debe presionar para realizar un ajuste a cero digital en un area peligrosa?"
         result = invoke_agent(question)
         response = result["messages"][-1].content
 
@@ -24,7 +24,11 @@ class TestRelevanceEval:
 
     def test_ticket_response_is_relevant(self, invoke_agent):
         # El agente recibe un pedido de ticket y debe confirmar la creacion.
-        question = "Necesito crear un ticket porque no puedo iniciar sesion"
+        question = (
+            "El transmisor Rosemount 3051 de la linea de impulsion esta "
+            "descalibrado y necesito que un tecnico lo revise en planta, "
+            "pueden generar un ticket?"
+        )
         result = invoke_agent(question)
         response = result["messages"][-1].content
 
@@ -47,7 +51,7 @@ class TestTraceEval:
     """
 
     def test_trace_records_multiple_steps(self, invoke_agent):
-        question = "Como puedo solicitar un reembolso?"
+        question = "Que boton se debe presionar para realizar un ajuste a cero digital en un area peligrosa?"
         result = invoke_agent(question)
         steps = convergence_evaluator(result)
 

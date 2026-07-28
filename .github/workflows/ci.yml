@@ -59,10 +59,13 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       MAX_EVAL_CASES: "1"
-      # GitHub lee este secret desde:
-      # Settings → Secrets and variables → Actions → OPENAI_API_KEY
-      # Nunca aparece en logs ni en el código — GitHub lo enmascara automáticamente
+      # GitHub lee estos secrets desde:
+      # Settings → Secrets and variables → Actions → OPENAI_API_KEY / DATABASE_URL
+      # Nunca aparecen en logs ni en el código — GitHub los enmascara automáticamente
+      # DATABASE_URL usa el rol ci_readonly (solo SELECT sobre chunks, ver Supabase) —
+      # no la credencial completa de producción.
       # MAX_EVAL_CASES limita el golden set en CI para evitar gastar tokens de más.
 
     steps:

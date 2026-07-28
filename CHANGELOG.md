@@ -6,6 +6,45 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-07-27 — Golden set nuevo del corpus real + accuracy_evaluator — evals de generación corridas
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- Al abrir la prioridad 1 (arreglar/aislar el job `evals` de CI, roto con `RuntimeError:
+  Falta DATABASE_URL`), se encontró que el problema no era solo técnico: `golden_set.json`
+  seguía teniendo 20 preguntas sobre LangGraph docs, corpus que ya no existe en Supabase
+  desde 5B.4. Conectar `DATABASE_URL` sin resolver eso solo hubiera cambiado el error, no
+  arreglado el job — se priorizó resolver el contenido primero.
+- `evals/generate_golden_set.py` (nuevo): samplea 12 preguntas por categoría (48 total,
+  seed=42 fijo) de las 520 de `ground_truth_retrieval.json` (5B.4 paso 4), trae el
+  contenido real de sus `chunk_ids` desde Supabase, y le pide al LLM (gpt-4o-mini,
+  structured output) que escriba la `expected_answer` grounded en ese texto. No genera
+  preguntas nuevas ni cambia el mapeo pregunta→chunk, ya verificado en 5B.4. Corrido
+  contra Supabase+OpenAI reales: `evals/golden_set.json` sobrescrito con las 48 preguntas
+  nuevas, reemplazando las 20 del corpus viejo.
+- `evals/evaluators.py`: nuevo `accuracy_evaluator(question, expected_answer, answer)` —
+  LLM-judge que compara la respuesta del agente contra la referencia del golden set.
+  Complementa a `relevance_evaluator` (que juzga sin referencia), no lo reemplaza:
+  `relevance_evaluator` sigue siendo el único evaluador que sirve para casos sin
+  `expected_answer` (ej. el flujo de `create_ticket` en `test_evals.py`, o tráfico real en
+  producción).
+- `evals/run_evals.py`: cada caso corre `accuracy_evaluator` además de
+  `relevance_evaluator`, el resumen agrega `avg_accuracy`, y el feedback a LangSmith manda
+  las dos keys (`relevance`/`accuracy`) en vez de solo `relevance`.
+- Corrida real completa contra las 48 preguntas del golden set nuevo: relevancia 4.44/5,
+  accuracy 3.88/5, 85% con cita, 4.08 pasos promedio (resultados en
+  `evals/results/2026-07-27/10-18-16.json`). **Hallazgo sin investigar:** 5 de las 48
+  preguntas, todas respondibles con el manual, terminaron en `create_ticket` en vez de una
+  respuesta directa por `rag_search` — candidato a explicar buena parte de la brecha entre
+  relevancia y accuracy.
+- **Próximo paso concreto:** cerrar la prioridad 1 (CI en verde + seguridad) — agregar
+  `DATABASE_URL` como secret de CI usando un rol de Postgres de solo lectura (GRANT SELECT
+  en `chunks`, sin permisos de escritura/DDL — decidido con Juan para no exponer la
+  credencial completa de producción a CI, todavía no creado) y reemplazar las 2 preguntas
+  hardcodeadas del dominio viejo (reembolso, ticket de login) en `tests/test_evals.py`. La
+  rotación de credenciales + limpieza de historial de git sigue sin tocarse.
+
+---
+
 ## 2026-07-24 (2) — Capa 5B.3 verificada contra Supabase real — Capa 5B y Capa 5 completas
 **Commit:** `921ab4f`
 

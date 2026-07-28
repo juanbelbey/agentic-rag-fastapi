@@ -1,142 +1,338 @@
 [
   {
-    "id": "q001",
-    "question": "Que es un StateGraph en LangGraph y cuando conviene usarlo?",
-    "expected_answer": "StateGraph es una abstraccion para modelar un flujo de trabajo como un grafo donde cada nodo recibe y actualiza un estado compartido. Conviene usarlo cuando un agente necesita varios pasos, routing condicional o persistencia entre nodos.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
+    "id": "g001",
+    "question": "¿Qué advertencias deben considerarse si el medio medido es peligroso?",
+    "expected_answer": "Si el medio medido es peligroso, se deben considerar las siguientes advertencias:\n\n- Los accesorios deben ser aptos para el medio medido. El uso de piezas no adecuadas puede resultar en la liberación de sustancias calientes, tóxicas o corrosivas, lo que representa un peligro de lesiones y daños al aparato.\n- Se debe verificar la estanqueidad entre los componentes, como el transmisor de presión y las válvulas, para evitar fugas que puedan comprometer la seguridad.\n- Asegúrese de que los accesorios sean adecuados en términos de medios a medir, temperatura y presión.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "borde"
   },
   {
-    "id": "q002",
-    "question": "Cual es la diferencia entre add_edge y add_conditional_edges en LangGraph?",
-    "expected_answer": "add_edge conecta dos nodos de forma fija. add_conditional_edges usa una funcion de routing para decidir el siguiente nodo segun el estado actual.",
-    "source": "langgraph_docs",
-    "category": "routing"
+    "id": "g002",
+    "question": "¿En qué casos no es necesario usar un resistor según el manual?",
+    "expected_answer": "No es necesario usar un resistor en las siguientes configuraciones:\n- AMS Trex (HART® + power)\n- AMS Device Configurator Bluetooth® app\n- Quick Service buttons\n- Local operator interface (LOI).",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q003",
-    "question": "Para que sirve el nodo START en un StateGraph?",
-    "expected_answer": "START es el punto de entrada del grafo. Se usa para indicar desde que nodo comienza la ejecucion del flujo.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
+    "id": "g003",
+    "question": "En caso de que se necesite un cambio en el modo de disparo, ¿cuáles son las opciones disponibles en HART 7?",
+    "expected_answer": "En HART 7, las opciones disponibles para el modo de disparo son:\n\n- Continuous (mismo que el modo Burst de HART 5)\n- Rising\n- Falling\n- Windowed\n- On change",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q004",
-    "question": "Para que sirve el nodo END en LangGraph?",
-    "expected_answer": "END representa el final del flujo del grafo. Cuando el routing devuelve END, la ejecucion termina y se devuelve el estado final.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
+    "id": "g004",
+    "question": "¿Qué pasa si se intenta establecer la medición sin presión cuando ya se han superado los límites de medición por más del 20%?",
+    "expected_answer": "Si se intenta establecer la medición sin presión y se han superado los límites de medición por más del 20%, no se ejecutará la función de establecimiento y se mantendrá el valor antiguo.",
+    "source": "siemens_sitrans-p300_manual_es.pdf",
+    "category": "borde"
   },
   {
-    "id": "q005",
-    "question": "Como se define el estado compartido de un agente en LangGraph?",
-    "expected_answer": "El estado compartido se define normalmente con TypedDict o con un esquema compatible. Ese estado describe las claves que cada nodo puede leer y actualizar durante la ejecucion.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
+    "id": "g005",
+    "question": "¿Qué se debe hacer si se desea menor sensibilidad para las condiciones de tubería vacía debido a posibles burbujas de aire?",
+    "expected_answer": "Para lograr menor sensibilidad ante condiciones de tubería vacía debido a posibles burbujas de aire, se debe establecer el nivel de conteo de tubería vacía (empty pipe counts) a un valor correspondiente al nivel de sensibilidad deseado para el diagnóstico. Se recomienda configurar los conteos a un valor mayor para disminuir la sensibilidad, como por ejemplo, estableciendo los conteos en 10.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q006",
-    "question": "Que hace add_messages cuando se usa en el estado del agente?",
-    "expected_answer": "add_messages es un reducer para la clave messages. En vez de reemplazar la lista completa, acumula los mensajes nuevos sobre el historial existente.",
-    "source": "langgraph_docs",
-    "category": "persistence"
+    "id": "g006",
+    "question": "¿Qué condiciones pueden causar una alerta de diagnóstico según el manual técnico?",
+    "expected_answer": "Las condiciones que pueden causar una alerta de diagnóstico incluyen: fallo eléctrico, circuito abierto en la bobina, tubo vacío, flujo inverso, falla de tierra o cableado, ruido en el proceso, temperatura eléctrica inadecuada y recubrimiento eléctrico.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q007",
-    "question": "Para que sirve MemorySaver en LangGraph?",
-    "expected_answer": "MemorySaver es un checkpointer en memoria que guarda el estado del grafo entre invocaciones. Permite retener historial por thread_id sin usar una base de datos externa.",
-    "source": "langgraph_docs",
-    "category": "persistence"
+    "id": "g007",
+    "question": "¿Qué tipo de tapones deben usarse para sellar entradas de conduit que no se utilizan?",
+    "expected_answer": "Los tapones que deben usarse para sellar entradas de conduit que no se utilizan son tapones certificados apropiados. Los tapones de plástico de envío no proporcionan protección contra la entrada.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q008",
-    "question": "Que rol cumple thread_id cuando se usa persistencia con MemorySaver?",
-    "expected_answer": "thread_id identifica una conversacion o hilo de ejecucion. El checkpointer lo usa para separar y recuperar el estado correcto de cada sesion.",
-    "source": "langgraph_docs",
-    "category": "persistence"
+    "id": "g008",
+    "question": "¿Qué precauciones se deben tomar al reemplazar las juntas tórica del sensor para no dañar otras partes?",
+    "expected_answer": "Al reemplazar las juntas tóricas del sensor, se deben tomar las siguientes precauciones: \n1. No rasgar ni dañar las ranuras de las juntas tóricas ni la superficie del diafragma aislante al retirar las juntas dañadas.\n2. Inspeccionar las juntas tóricas de PTFE; se pueden reutilizar si no están dañadas. Si están dañadas, reemplazar con juntas diseñadas para transmisores Rosemount.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q009",
-    "question": "Por que LangGraph separa nodos y estado en vez de pasar variables sueltas entre funciones?",
-    "expected_answer": "Porque el estado compartido hace explicito que datos circulan por el grafo y permite persistencia, depuracion y routing sobre una estructura comun en lugar de variables dispersas.",
-    "source": "langgraph_docs",
-    "category": "graph_structure"
+    "id": "g009",
+    "question": "¿Cuáles son las consecuencias de utilizar piezas de repuesto que no estén aprobadas por Emerson según el manual?",
+    "expected_answer": "El uso de piezas de repuesto que no estén aprobadas por Emerson puede reducir las capacidades de retención de presión del transmisor y hacer que el instrumento sea peligroso.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "borde"
   },
   {
-    "id": "q010",
-    "question": "Que es una tool en el contexto de LangGraph y LangChain?",
-    "expected_answer": "Una tool es una funcion expuesta al modelo para ejecutar acciones o recuperar informacion externa. El agente puede decidir llamarla y luego usar su resultado en un paso posterior.",
-    "source": "langgraph_docs",
-    "category": "tools"
+    "id": "g010",
+    "question": "¿Qué tipo de conexiones se mencionan para el uso alimentario y farmacéutico?",
+    "expected_answer": "Para el uso alimentario y farmacéutico se mencionan conexiones de bridas, conexiones roscadas y tipo clamp, así como las conexiones NEUMO BioConnect/BioControl.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "borde"
   },
   {
-    "id": "q011",
-    "question": "Para que sirve bind_tools cuando se configura un chat model?",
-    "expected_answer": "bind_tools registra las tools en el modelo para que pueda emitir tool calls estructuradas. Asi el LLM puede decidir que herramienta usar y con que argumentos.",
-    "source": "langgraph_docs",
-    "category": "tools"
+    "id": "g011",
+    "question": "¿Existen excepciones para la estabilidad a largo plazo de los valores de presión mínima y máxima?",
+    "expected_answer": "No se mencionan excepciones para la estabilidad a largo plazo de los valores de presión mínima y máxima. La estabilidad está definida por las tolerancias específicas indicadas para distintos rangos de presión en el fragmento.",
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+    "category": "borde"
   },
   {
-    "id": "q012",
-    "question": "Que hace ToolNode dentro de un grafo de LangGraph?",
-    "expected_answer": "ToolNode ejecuta las tool calls que vienen en el ultimo mensaje del modelo. Toma esos llamados estructurados, corre las funciones correspondientes y agrega ToolMessages al estado.",
-    "source": "langgraph_docs",
-    "category": "tools"
+    "id": "g012",
+    "question": "¿Qué ocurre si la presión de entrada excede los límites de medida?",
+    "expected_answer": "Si la presión de entrada excede los límites de medida, la membrana de sobrecarga se desvía hasta que la membrana separadora entra en contacto con el cuerpo del cabezal. Esto protege el sensor de presión absoluta contra sobrecarga.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "borde"
   },
   {
-    "id": "q013",
-    "question": "Como se detecta normalmente en un router que el agente necesita llamar una tool?",
-    "expected_answer": "Se inspecciona el ultimo mensaje del modelo y se revisa si contiene tool_calls. Si existen llamadas de herramienta, el router envia la ejecucion al ToolNode; si no, termina o sigue otro camino.",
-    "source": "langgraph_docs",
-    "category": "routing"
+    "id": "g013",
+    "question": "¿Qué botón se debe presionar para realizar un ajuste a cero digital en un área peligrosa?",
+    "expected_answer": "Para realizar un ajuste a cero digital en un área peligrosa, se debe presionar el botón de ajuste a cero (Digital zero button) mientras el transmisor está a presión cero.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q014",
-    "question": "Que problema resuelve el routing condicional en un agente?",
-    "expected_answer": "El routing condicional evita flujos rigidos. Permite que el siguiente paso dependa del estado actual, por ejemplo si hay que llamar una tool, pedir aprobacion humana o terminar la conversacion.",
-    "source": "langgraph_docs",
-    "category": "routing"
+    "id": "g014",
+    "question": "¿Cuáles son algunas de las unidades que se pueden seleccionar para medir la presión en el SITRANS P300?",
+    "expected_answer": "Las unidades que se pueden seleccionar para medir la presión en el SITRANS P300 son:\n\n- mbar\n- bar\n- mm columna de agua (4 °C/39 °F)\n- pulgada columna de agua (4 °C/39 °F)\n- ATM\n- Torr\n- g/cm²\n- kg/cm²\n- MPa\n- kPa\n- Pa\n- psi\n- mm columna de mercurio\n- mm columna de agua (20 °C/68 °F)\n- pie columna de agua (20 °C/68 °F)\n- pulgada columna de mercurio\n- pulgada columna de agua (20 °C/68 °F)",
+    "source": "siemens_sitrans-p300_manual_es.pdf",
+    "category": "factual"
   },
   {
-    "id": "q015",
-    "question": "Que significa human in the loop en LangGraph?",
-    "expected_answer": "Human in the loop significa insertar un punto donde una persona puede revisar, aprobar o modificar el estado antes de continuar la ejecucion del grafo.",
-    "source": "langgraph_docs",
-    "category": "human_in_loop"
+    "id": "g015",
+    "question": "¿Qué tipo de advertencia se muestra si hay un problema con los datos del usuario que no son críticos?",
+    "expected_answer": "La advertencia que se muestra si hay un problema con los datos del usuario que no son críticos es: \"Status: Advisory\". Esto indica que un parámetro escrito por el usuario no coincide con el valor esperado y se representa en la pantalla LCD y la pantalla de la Interfaz de Operador Local (LOI) como \"MEMRY WARN\". Se recomienda confirmar y corregir todos los parámetros listados en la Información del Dispositivo, realizar un reinicio del dispositivo y, si es necesario, reemplazar el transmisor de presión.",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q016",
-    "question": "Para que sirve interrupt_before en un flujo con aprobacion humana?",
-    "expected_answer": "interrupt_before pausa la ejecucion antes de un nodo especifico. Eso permite inspeccionar el estado y decidir manualmente si continuar, editar datos o cancelar el flujo.",
-    "source": "langgraph_docs",
-    "category": "human_in_loop"
+    "id": "g016",
+    "question": "¿Cuál es el rango de salida analógica que se debe ajustar al realizar un trim en el transmisor?",
+    "expected_answer": "El rango de salida analógica que se debe ajustar al realizar un trim en el transmisor es de 4-20 mA (1-5 Vdc).",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q017",
-    "question": "Que ventaja tiene pausar el grafo antes de una accion sensible como crear un ticket?",
-    "expected_answer": "Permite validar que el agente no vaya a ejecutar una accion incorrecta o costosa. Un humano puede revisar el contexto y autorizar la operacion antes de que ocurra.",
-    "source": "langgraph_docs",
-    "category": "human_in_loop"
+    "id": "g017",
+    "question": "¿Qué se debe verificar en la conexión de presión del transmisor antes de proceder a su mantenimiento?",
+    "expected_answer": "Se debe verificar la conexión de presión del transmisor para asegurarse de que no esté obstruida y que los diafragmas aislantes no estén dañados.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q018",
-    "question": "Por que conviene evaluar router y tools por separado en un agente?",
-    "expected_answer": "Porque una respuesta final mala puede venir de varias causas distintas. Separar router y tools permite saber si el problema fue elegir mal el camino o ejecutar mal la accion.",
-    "source": "langgraph_docs",
-    "category": "routing"
+    "id": "g018",
+    "question": "¿Cuál es la máxima humedad relativa permitida para el dispositivo según la norma IEC 60068-2-30?",
+    "expected_answer": "La máxima humedad relativa permitida para el dispositivo es del 95% según la norma IEC 60068-2-30.",
+    "source": "endresshauser_itemp-tmt36_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q019",
-    "question": "Que informacion util aportan las trazas en la evaluacion de un agente?",
-    "expected_answer": "Las trazas muestran cada paso del agente, que nodo se ejecuto, que tool se llamo y como cambio el estado. Eso ayuda a diagnosticar fallos y medir convergencia.",
-    "source": "langgraph_docs",
-    "category": "routing"
+    "id": "g019",
+    "question": "¿Cuál es el rango máximo permitido para girar la caja del transmisor en cualquiera de las direcciones?",
+    "expected_answer": "El rango máximo permitido para girar la caja del transmisor es de 2 × 90° en cualquiera de las direcciones.",
+    "source": "endresshauser_promag-55_manual_en.pdf",
+    "category": "factual"
   },
   {
-    "id": "q020",
-    "question": "Por que un golden set construido desde trazas reales suele ser mejor que uno inventado?",
-    "expected_answer": "Porque refleja preguntas, errores y recorridos que el agente realmente enfrento. Asi la evaluacion mide comportamientos reales del sistema y no solo casos ideales inventados manualmente.",
-    "source": "langgraph_docs",
-    "category": "human_in_loop"
+    "id": "g020",
+    "question": "¿Cuáles son los valores de presión máxima que estos transmisores pueden soportar?",
+    "expected_answer": "Los valores de presión máxima que estos transmisores pueden soportar son:\n\n- 70 bar / 7 MPa / 1015 psi\n- 160 bar / 16 MPa / 2320 psi",
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+    "category": "factual"
+  },
+  {
+    "id": "g021",
+    "question": "¿Qué opción se debe elegir para añadir un bloque de terminal de protección transitoria a un transmisor existente en el campo?",
+    "expected_answer": "Para añadir un bloque de terminal de protección transitoria a un transmisor existente en el campo, se debe elegir la opción de pedido como parte de repuesto para retrofitar los transmisores existentes (Option Code T1). El bloque de terminal de protección transitoria está identificado por el símbolo de rayo. Es importante asegurar que el case del transmisor esté correctamente conectado a tierra para que proporcione protección transitoria.",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "factual"
+  },
+  {
+    "id": "g022",
+    "question": "¿Cuáles son las conexiones necesarias para conectar un sensor Brooks Model 5000 al transmisor Rosemount 8732?",
+    "expected_answer": "Para conectar un sensor Brooks Model 5000 al transmisor Rosemount 8732, se deben realizar las siguientes conexiones:\n\n- Conectar COILS (+) del sensor a la terminal 1 del transmisor.\n- Conectar COILS (-) del sensor a la terminal 2 del transmisor.\n- Conectar COILS (GND) del sensor a la terminal 3 del transmisor.\n- Conectar ELECTRODES (SHLD) del sensor a la terminal 17 del transmisor.\n- Conectar ELECTRODES (-) del sensor a la terminal 18 del transmisor.\n- Conectar ELECTRODES (+) del sensor a la terminal 19 del transmisor.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "factual"
+  },
+  {
+    "id": "g023",
+    "question": "¿Cuál es la corriente de salida generada por el transmisor cuando se aplica una presión de entrada de 14 bares?",
+    "expected_answer": "La corriente de salida generada por el transmisor al aplicar una presión de entrada de 14 bares es de 20 mA.",
+    "source": "siemens_sitrans-p300_manual_es.pdf",
+    "category": "factual"
+  },
+  {
+    "id": "g024",
+    "question": "¿Cuáles son las condiciones de instalación que se deben tener en cuenta para el Proline Promag 55?",
+    "expected_answer": "Las condiciones de instalación para el Proline Promag 55 son las siguientes:\n\n1. **Dimensiones**: Se deben respetar las dimensiones especificadas en el manual para asegurar un espacio adecuado para la instalación del dispositivo.\n\n2. **Ubicación**: Es importante seleccionar una ubicación que evite interferencias en la medición, como vibraciones o fuentes de calor.\n\n3. **Orientación**: La orientación del dispositivo debe ser tal que permita un flujo adecuado del líquido a medir.\n\n4. **Entradas y salidas**: Se debe asegurar que las corridas de entrada y salida cumplan con las especificaciones necesarias para garantizar una medición precisa.",
+    "source": "endresshauser_promag-55_manual_en.pdf",
+    "category": "factual"
+  },
+  {
+    "id": "g025",
+    "question": "¿Qué implicaciones tiene que la temperatura ambiente admisible sea de -40 a +80 °C para la operación del transmisor?",
+    "expected_answer": "La temperatura ambiente admisible de -40 a +80 °C implica que el transmisor puede operar en una amplia gama de condiciones ambientales, permitiendo su uso en entornos extremos tanto de frío como de calor. Esto asegura la funcionalidad y fiabilidad del dispositivo en diversas aplicaciones, incluidos lugares donde las variaciones de temperatura pueden ser significativas. Además, la especificación cumple con los requisitos de seguridad intrínseca y envolvente antideflagrante, garantizando su seguridad en aplicaciones donde existe riesgo de explosiones.",
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g026",
+    "question": "¿Por qué es importante familiarizarse con el funcionamiento del aparato antes de usarlo?",
+    "expected_answer": "Es importante familiarizarse con el modo de funcionamiento del aparato para garantizar un manejo correcto. Esto asegura que el usuario pueda poner en servicio y utilizar el dispositivo adecuadamente, evitando errores en la instalación y puesta en marcha.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g027",
+    "question": "¿Qué implicaciones tiene usar un sistema que no es compatible con dispositivos HART Revision 7?",
+    "expected_answer": "Usar un sistema que no es compatible con dispositivos HART Revision 7 puede llevar a la imposibilidad de establecer comunicación adecuada entre el sistema y los dispositivos, afectando así la capacidad de monitorear y configurar el dispositivo correctamente. Es fundamental confirmar la capacidad HART del sistema que se utiliza antes de la puesta en marcha e instalación para evitar problemas de comunicación.",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g028",
+    "question": "¿Qué implicaciones tiene una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales?",
+    "expected_answer": "Una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales implica que el transmisor ha fallado en la verificación de su funcionamiento correcto. Esto puede resultar en una incorrecta medición del flujo, lo que afectaría la precisión del sistema de monitoreo. En este caso, el resultado de la prueba del medidor de flujo se consideraría como \"FALLADO\", indicando que el dispositivo no está operando conforme a las especificaciones establecidas.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g029",
+    "question": "¿Cuál es una de las funciones que permite la parametrización remota del SITRANS P420?",
+    "expected_answer": "Una de las funciones que permite la parametrización remota del SITRANS P420 es la función \"Remote Safety Handling\", que permite conectar y validar la función SIL de forma remota a través de SIMATIC PDM, lo que conlleva un ahorro de tiempo y costes al eliminar la necesidad de desplazamientos y controles in situ.",
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g030",
+    "question": "Si se detecta que la señal de fallo está fuera del rango de 3,55 a 23 mA, ¿qué implicaciones podría tener eso en el equipo?",
+    "expected_answer": "Si la señal de fallo está fuera del rango de 3,55 a 23 mA, esto indica que el sensor puede estar experimentando una condición no operativa o un mal funcionamiento. Tal situación podría llevar a lecturas erróneas y afectar la precisión de las mediciones. Es crucial tomar medidas correctivas inmediatas para evitar posibles daños al equipo o al sistema de control.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g031",
+    "question": "¿Qué puede suceder si la banda de tolerancia se establece demasiado estrechamente durante condiciones de flujo ruidoso?",
+    "expected_answer": "Si la banda de tolerancia se establece demasiado estrechamente durante condiciones de flujo ruidoso, puede ocurrir un falso fallo de la prueba del transmisor.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g032",
+    "question": "¿Qué puede indicar una temperatura ambiente fuera del rango permitido para el sensor según el manual?",
+    "expected_answer": "Una temperatura ambiente fuera del rango permitido para el sensor puede indicar un funcionamiento inadecuado del dispositivo y potenciales desviaciones en las lecturas de medición. Es crucial observar que el rango permitido de temperatura ambiente es de -20°C a +50°C para asegurar el correcto desempeño del sensor.",
+    "source": "endresshauser_promag-55_manual_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g033",
+    "question": "Si un cabezal de medición tiene un límite inferior de medición de 750 mbar, ¿qué implicaciones puede tener si la lectura cae por debajo de ese valor?",
+    "expected_answer": "Si la lectura de un cabezal de medición cae por debajo del límite inferior de medición de 750 mbar, esto indica que la medición no es válida y el cabezal no podrá registrar presiones en ese rango. Además, el cabezal de medición sigue siendo resistente al vacío hasta 30 mbar, pero cualquier lectura por debajo de 750 mbar no será confiable ni representativa de la presión actual.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g034",
+    "question": "¿Qué indican las marcaciones reducidas en la placa del equipo?",
+    "expected_answer": "Las marcaciones reducidas en la placa del equipo indican que el dispositivo puede ser una variante que no cumple con la información completa sobre el marcaje. Para obtener detalles completos del marcado del equipo, se debe consultar el Certificado correspondiente.",
+    "source": "emerson_rosemount-3051_quickstart_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g035",
+    "question": "Si al realizar una prueba se obtiene una lectura fuera de rango, ¿qué tipo de problema podrías estar enfrentando con la alimentación del lazo?",
+    "expected_answer": "Si al realizar una prueba se obtiene una lectura fuera de rango, podrías estar enfrentando problemas relacionados con fallas de corriente en quiescencia o problemas de voltaje de cumplimiento, tales como un voltaje de alimentación del lazo bajo o una mayor distancia de cableado. También podrían presentarse otras fallas no especificadas.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g036",
+    "question": "¿Qué acciones se consideran cuando la pantalla indica que el valor límite superior ha sido superado?",
+    "expected_answer": "Cuando la pantalla indica que el \"Valor límite superior sobrepasado\" (7), se trata de una indicación de estado que varía según los ajustes realizados por el cliente. Esta indicación señala que el valor de medición ha superado el umbral establecido. Es importante considerar que el significado de esta indicación dependerá de las configuraciones específicas aplicadas al dispositivo.",
+    "source": "siemens_sitrans-p300_manual_es.pdf",
+    "category": "inferencial"
+  },
+  {
+    "id": "g037",
+    "question": "¿Cuál es el primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta?",
+    "expected_answer": "El primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta es desactivar la función de seguridad y tomar las acciones apropiadas para evitar un disparo falso.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g038",
+    "question": "¿Qué pasos se deben seguir para ajustar el inicio de escala en el cabezal de medición?",
+    "expected_answer": "Para ajustar el inicio de escala en el cabezal de medición, se debe realizar el ajuste gradualmente entre los límites de medida establecidos.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g039",
+    "question": "¿Qué pasos se deben seguir para permitir la reducción de la tolerancia a fallos en aparatos complejos?",
+    "expected_answer": "Para permitir la reducción de la tolerancia a fallos en aparatos complejos, se deben seguir los siguientes pasos, según la norma IEC 61511-1, sección 11.4.4:\n\n1. Asegurar que el aparato está validado por la experiencia adquirida.\n2. Garantizar que el usuario solo puede configurar parámetros relativos al proceso, tales como el rango de ajuste, la dirección de la señal en caso de fallo y los valores límite.\n3. Bloquear el nivel de configuración del firmware contra un manejo no autorizado.\n4. Verificar que la función tenga una solicitud de SIL inferior a 4.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g040",
+    "question": "¿Qué deben hacer si no hay señales de salida y la pantalla no es visible?",
+    "expected_answer": "Si no hay señales de salida y la pantalla no es visible, se deben realizar los siguientes pasos:\n\n1. Verificar la fuente de alimentación en los terminales 1 y 2.\n2. Revisar el fusible del dispositivo (2 A lento / 250 V).\n3. Si los problemas persisten, puede ser que la electrónica de medición esté defectuosa; en este caso, se deben ordenar las piezas de repuesto.",
+    "source": "endresshauser_promag-55_manual_en.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g041",
+    "question": "¿Cómo se puede representar un carácter no soportado en la interfaz?",
+    "expected_answer": "Un carácter no soportado en la interfaz se representará como un asterisco \"*\".",
+    "source": "emerson_rosemount-2051_manual_en.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g042",
+    "question": "¿Qué proceso se debe seguir para conectar adecuadamente el cable al dispositivo en el pasacables correspondiente?",
+    "expected_answer": "Para conectar adecuadamente el cable al dispositivo en el pasacables, se deben utilizar las entradas de cable correspondientes: M20 x 1.5, ½-14 NPT, un conector fijo Han 7D/Han 8D o un conector fijo M12.",
+    "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g043",
+    "question": "¿Cuáles son los pasos a seguir para asegurar que se aplique el valor de torque correcto antes de instalar el sensor?",
+    "expected_answer": "Para asegurar que se aplique el valor de torque correcto antes de instalar el sensor, se deben seguir los siguientes pasos:\n\n1. Identificar el material de revestimiento del sensor de flujo, ya que esto permitirá asegurar que los valores de torque sugeridos se apliquen correctamente.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g044",
+    "question": "¿Qué pasos deben seguirse para la instalación adecuada del sensor según el manual?",
+    "expected_answer": "Para la instalación adecuada del sensor según el manual, se deben seguir los siguientes pasos:\n\n1. **Montaje**: Asegurarse de que el sensor esté montado de acuerdo a las especificaciones indicadas en la sección de montaje (páginas 47-48 del manual).\n\n2. **Instalación**: Seguir las directrices de instalación detalladas en la sección correspondiente (página 47 del manual).\n\n3. **Verificación de condiciones de instalación**: Asegurarse de que no haya radiación solar directa que pueda afectar el funcionamiento del sensor (página 45 del manual). \n\n4. **Revisar homologaciones**: Confirmar que el sensor cuenta con las homologaciones necesarias (página 235 del manual). \n\n5. **Instrucción del personal**: Asegurarse de que la instalación sea realizada por personal cualificado, como se indica en la sección de capacitación (página 17 del manual). \n\nEstos pasos son esenciales para garantizar un funcionamiento óptimo y seguro del sensor.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g045",
+    "question": "¿Cuál es la secuencia para apretar los pernos del manifold en el módulo del sensor?",
+    "expected_answer": "La secuencia para apretar los pernos del manifold en el módulo del sensor es la siguiente:\n\n1. Instalar el manifold integral en el módulo del sensor utilizando los cuatro pernos de manifold de 2¼ pulgadas (57 mm) para la alineación. Apretar los pernos a mano.\n2. Apretar los pernos de manera incremental en un patrón cruzado hasta alcanzar el valor de torque final. \n3. Cuando estén completamente apretados, los pernos deben extenderse a través de la parte superior de la carcasa del módulo del sensor.",
+    "source": "emerson_rosemount-3051_manual_en.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g046",
+    "question": "¿Qué pasos se deben seguir antes de realizar la instalación del aparato de medición?",
+    "expected_answer": "Antes de realizar la instalación del aparato de medición, se deben seguir los siguientes pasos:\n\n1. Leer detenidamente las instrucciones contenidas en la documentación para asegurar el correcto manejo del aparato.\n2. Familiarizarse con el modo de funcionamiento del aparato.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g047",
+    "question": "¿Cómo se ajusta la constante de tiempo (T63) en este sistema de instrumentación en el campo?",
+    "expected_answer": "La constante de tiempo (T63) en este sistema de instrumentación se ajusta en un rango de 0 a 100 s, regulable sin escalas, en incrementos de 0,1 s. El ajuste de fábrica para T63 es de 2 s.",
+    "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+    "category": "procedimental"
+  },
+  {
+    "id": "g048",
+    "question": "¿Qué pasos deben seguirse para ingresar el número de calibración de un sensor en el transmisor?",
+    "expected_answer": "Para ingresar el número de calibración de un sensor en el transmisor, se debe utilizar el número de calibración de 16 dígitos que aparece en la etiqueta de cada sensor y lo debe ingresar durante la configuración del transmisor.",
+    "source": "emerson_rosemount-8732em_manual_en.pdf",
+    "category": "procedimental"
   }
 ]

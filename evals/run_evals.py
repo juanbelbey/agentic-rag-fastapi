@@ -19,6 +19,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langsmith import Client  # Cliente para enviar feedback a LangSmith
 
 from evals.evaluators import (
+    accuracy_evaluator,
     citation_evaluator,
     convergence_evaluator,
     relevance_evaluator,
@@ -60,6 +61,7 @@ def evaluate_case(case: dict[str, str]) -> dict[str, object]:
 
     # calcular métricas usando los evaluadores reutilizables
     relevance_score = relevance_evaluator(case["question"], answer)
+    accuracy_score = accuracy_evaluator(case["question"], case["expected_answer"], answer)
     has_citation = citation_evaluator(answer)
     steps = convergence_evaluator(trace)
 
@@ -77,6 +79,7 @@ def evaluate_case(case: dict[str, str]) -> dict[str, object]:
         "category": case["category"],
         "answer": answer,
         "relevance_score": relevance_score,
+        "accuracy_score": accuracy_score,
         "has_citation": has_citation,
         "convergence_steps": steps,
         "run_id": run_id,
@@ -87,12 +90,14 @@ def build_summary(results: list[dict[str, object]]) -> dict[str, float]:
     """Calcula metricas agregadas de la corrida."""
     total = len(results)
     avg_relevance = sum(item["relevance_score"] for item in results) / total
+    avg_accuracy = sum(item["accuracy_score"] for item in results) / total
     citation_rate = sum(1 for item in results if item["has_citation"]) / total
     avg_steps = sum(item["convergence_steps"] for item in results) / total
 
     return {
         "total_cases": total,
         "avg_relevance": round(avg_relevance, 2),
+        "avg_accuracy": round(avg_accuracy, 2),
         "citation_rate": round(citation_rate, 2),
         "avg_steps": round(avg_steps, 2),
     }
@@ -151,14 +156,16 @@ def main() -> None:
 
         # enviar feedback a LangSmith si tenemos cliente y run_id disponible
         run_id = result.get("run_id")
-        score = result.get("relevance_score")
-        if client and run_id is not None and score is not None:
-            try:
-                # crear feedback simple con la clave "relevance"
-                client.create_feedback(run_id, key="relevance", score=score)
-            except Exception:
-                # No queremos que LangSmith rompa la ejecucion; falla silenciosamente
-                pass
+        if client and run_id is not None:
+            for key in ("relevance_score", "accuracy_score"):
+                score = result.get(key)
+                if score is None:
+                    continue
+                try:
+                    client.create_feedback(run_id, key=key.removesuffix("_score"), score=score)
+                except Exception:
+                    # No queremos que LangSmith rompa la ejecucion; falla silenciosamente
+                    pass
 
     summary = build_summary(results)
     output_path = save_results(summary, results)
@@ -166,6 +173,7 @@ def main() -> None:
     print("Evaluacion completada")
     print(f"Casos evaluados: {summary['total_cases']}")
     print(f"Relevancia promedio: {summary['avg_relevance']}/5")
+    print(f"Precision promedio: {summary['avg_accuracy']}/5")
     print(f"Porcentaje con cita: {summary['citation_rate'] * 100:.0f}%")
     print(f"Pasos promedio: {summary['avg_steps']}")
     print(f"Resultados guardados en: {output_path}")

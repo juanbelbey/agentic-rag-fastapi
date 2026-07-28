@@ -136,8 +136,11 @@ tests/
 └── reports/       ✅ pytest-html local + artefacto en CI
 
 evals/
-├── golden_set.json           ✅ 20 preguntas sobre LangGraph docs (eval de agente completo,
-│                                 corpus viejo — no se toca)
+├── golden_set.json           ✅ (2026-07-27) 48 preguntas sobre el corpus real de instrumentación
+│                                 (12 por categoría: factual/procedimental/inferencial/borde), con
+│                                 expected_answer generada por LLM grounded en los chunks reales —
+│                                 evals/generate_golden_set.py. Reemplaza las 20 preguntas viejas
+│                                 sobre LangGraph docs (corpus que ya no existe en Supabase).
 ├── generate_ground_truth.py  ✅ (5B.4 paso 4, 2026-07-17) genera ground truth de retrieval:
 │                                 samplea 1 anclaje cada 20 chunks por documento (equiespaciado),
 │                                 ventana de 2 chunks consecutivos por anclaje, LLM + structured
@@ -156,6 +159,16 @@ evals/
 │                                 Cada registro: question, category, chunk_ids (lista — 1 elemento
 │                                 para ventanas de 1 chunk al final de un documento, 2 en el resto),
 │                                 source. Commiteado 2026-07-18 (commit 15bf4bd).
+├── generate_golden_set.py   ✅ (2026-07-27) genera evals/golden_set.json nuevo: samplea 12
+│                                 preguntas por categoría (48 total, seed=42 fijo) de las 520 de
+│                                 ground_truth_retrieval.json, trae el contenido real de sus
+│                                 chunk_ids desde Supabase, y le pide al LLM que escriba la
+│                                 expected_answer grounded en ese texto — no inventa preguntas
+│                                 nuevas, reusa el mapeo pregunta→chunk ya verificado en 5B.4.
+│                                 Distinto de generate_ground_truth.py: aquel mide retrieval
+│                                 (hit_rate/mrr), este arma la referencia para medir generación
+│                                 (accuracy_evaluator, ver evaluators.py abajo). Script manual
+│                                 (python -m evals.generate_golden_set), no lo llama la app ni CI.
 ├── retrieval_metrics.py ✅ (5B.4 pasos 5-6, 2026-07-18) compute_relevance/hit_rate/mrr/evaluate,
 │                            patron de M4 portado y parametrizado para _vector_search/
 │                            _keyword_search/_hybrid_search de src/tools.py. Acierto definido por
@@ -169,16 +182,28 @@ evals/
 │                            vector 0.231/0.141, keyword 0.300/0.197, hybrid 0.317/0.186
 │                            (hit_rate/mrr) — hybrid ahora supera a los dos individuales en ambas
 │                            metricas, sin trade-off.
-├── evaluators.py    ✅ relevance (LLM-judge), citation (code), convergence (code)
-│                       + @traceable para LangSmith (Capa 3B)
+├── evaluators.py    ✅ relevance (LLM-judge, sin referencia — juzga la respuesta en el vacío),
+│                       accuracy (LLM-judge, nuevo 2026-07-27 — compara la respuesta del agente
+│                       contra expected_answer del golden set; complementario a relevance, no
+│                       lo reemplaza: relevance sigue siendo el único que sirve para casos sin
+│                       referencia, ej. el flujo de create_ticket en test_evals.py), citation
+│                       (code), convergence (code) + @traceable para LangSmith (Capa 3B)
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
 │                       + client.create_feedback() para LangSmith (Capa 3B). Desde 5B.3 paso 4
 │                       (2026-07-23): importa `graph_builder` y compila con `MemorySaver()` a
 │                       nivel de módulo (sin problema, a diferencia de Postgres no abre ninguna
 │                       conexión real ni depende de credenciales) — un eval es una corrida de
-│                       una sola pasada, no necesita que el checkpoint sobreviva un reinicio
+│                       una sola pasada, no necesita que el checkpoint sobreviva un reinicio.
+│                       Desde 2026-07-27: cada caso corre accuracy_evaluator además de
+│                       relevance_evaluator, el resumen agrega avg_accuracy, y el feedback a
+│                       LangSmith manda las dos keys (relevance/accuracy) en vez de solo una.
 └── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
-                        (corridas: 2026-05-29, 05-30, 06-01, 06-03)
+                        (corridas: 2026-05-29, 05-30, 06-01, 06-03, 2026-07-27 — primera corrida
+                        real contra el golden set de instrumentación nuevo: 48 casos, relevancia
+                        4.44/5, accuracy 3.88/5, 85% con cita, 4.08 pasos promedio. Hallazgo sin
+                        investigar: 5/48 preguntas respondibles con el manual terminaron en
+                        create_ticket en vez de una respuesta directa — candidato a explicar
+                        parte de la brecha relevancia/accuracy)
 
 .github/
 └── workflows/
@@ -186,9 +211,16 @@ evals/
                       + LANGCHAIN_API_KEY como secret (Capa 3B)
                       [conocido, roto a propósito: job evals falla con RuntimeError "Falta
                       DATABASE_URL" — rag_search() necesita Postgres real desde 5B.2, ese secret
-                      nunca se agregó a evals. No se arregla todavía: golden_set.json sigue siendo
-                      sobre LangGraph docs (corpus viejo, ya no existe en Supabase), conectar
-                      DATABASE_URL ahora solo cambiaría el error. Bloqueado por el paso 4 de 5B.4]
+                      nunca se agregó a evals. ACTUALIZADO 2026-07-27: el bloqueo de contenido ya
+                      no aplica (golden_set.json dejó de ser sobre LangGraph docs, ver evals/
+                      arriba) — sigue roto por dos motivos técnicos sin resolver: (1) falta
+                      agregar DATABASE_URL como secret, decidido con Juan usar un rol de
+                      Postgres de solo lectura (GRANT SELECT en chunks, sin permisos de
+                      escritura/DDL) en vez de reusar la credencial completa de producción,
+                      todavía no creado; (2) tests/test_evals.py tiene 2 preguntas
+                      hardcodeadas en el código (no en golden_set.json) del dominio viejo
+                      (reembolso, ticket de login) que también hay que reemplazar. Es el
+                      próximo paso concreto de la prioridad 1 de más abajo]
 
 ── PRÓXIMO PASO ──
 Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
@@ -442,6 +474,25 @@ commiteada/pusheada (`921ab4f`). Capa 5B y Capa 5 quedan completas. Arranca la
 prioridad 1 de arriba: CI en verde + seguridad (rotación de credenciales + limpieza de
 historial de git).
 
+Actualización (2026-07-27): al abrir la prioridad 1 (arreglar/aislar el job de evals de
+CI), apareció que el job estaba roto en dos capas distintas, no solo la técnica (falta
+DATABASE_URL): golden_set.json seguía siendo sobre LangGraph docs, corpus que ya no
+existe en Supabase — conectar DATABASE_URL sin cambiar eso solo hubiera cambiado el
+error, no arreglado el job. Se decidió resolver el bloqueo de contenido primero: nuevo
+`evals/generate_golden_set.py` (48 preguntas del corpus de instrumentación, 12 por
+categoría, con expected_answer grounded generada por LLM a partir de las 520 preguntas
+y chunk_ids ya verificados en 5B.4) + `accuracy_evaluator` nuevo en `evaluators.py`
+(compara la respuesta del agente contra esa referencia — complementa, no reemplaza, a
+`relevance_evaluator`). Wireado en `run_evals.py` y corrido contra Supabase+OpenAI
+reales: 48 casos, relevancia 4.44/5, accuracy 3.88/5, 85% con cita (resultados en
+`evals/results/2026-07-27/`). La prioridad 2 (evals del corpus real) queda así
+adelantada y parcialmente resuelta — con 48 preguntas sampleadas, no las 520 completas
+(decisión de costo/alcance, ver POSPUESTO). La prioridad 1 sigue sin cerrar: falta
+agregar DATABASE_URL como secret de CI (con un rol de Postgres de solo lectura, no la
+credencial completa — decidido con Juan, no implementado) y reemplazar las 2 preguntas
+hardcodeadas del dominio viejo en `tests/test_evals.py`. La rotación de credenciales +
+limpieza de historial de git tampoco se tocó todavía.
+
 ── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
 - Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
   anotado como mejora de performance desde 5B.2).
@@ -485,16 +536,14 @@ historial de git).
   multilingües, pero sobre-ingeniería para 11 documentos; el filtro de
   stopwords ES/EN alcanza para el tamaño actual del corpus. Reconsiderar si
   el corpus crece a más idiomas o más documentos por idioma.
-- LLM-as-judge (relevance) sobre las 520 preguntas del corpus nuevo — no se
-  hizo todavía. `evals/ground_truth_retrieval.json` (pasos 4-6 de 5B.4) solo
-  tiene question/category/chunk_ids/source, sin expected_answer, y solo se
-  evaluó retrieval (hit_rate/mrr). `evaluators.py` (relevance LLM-judge,
-  citation, convergence) sigue corriendo solo contra `golden_set.json` (20
-  preguntas del corpus viejo de LangGraph docs) vía `run_evals.py` — nunca se
-  conectó al corpus de instrumentación. Detectado 2026-07-22 al revisar qué
-  faltaba de evals de generación. Distinto del punto de RAGAS de arriba (esto
-  es más básico: ni el LLM-as-judge casero que ya existe se corrió sobre el
-  corpus nuevo).
+- ~~LLM-as-judge (relevance) sobre las 520 preguntas del corpus nuevo~~ —
+  RESUELTO PARCIALMENTE 2026-07-27: `evals/generate_golden_set.py` arma un
+  golden_set.json nuevo (48 preguntas, no las 520 — sampling estratificado
+  12 por categoría) con expected_answer grounded, y `accuracy_evaluator`
+  (nuevo en `evaluators.py`) corre junto a `relevance_evaluator` vía
+  `run_evals.py`. Corrida real: relevancia 4.44/5, accuracy 3.88/5. Sigue
+  pendiente si algún día se quiere correr sobre las 520 completas en vez de
+  la muestra de 48 (más costo, no decidido que haga falta todavía).
 - Migrar de LangSmith a OpenTelemetry puro para tracing — discutido 2026-07-22
   al revisar el handoff de M5 (Monitoring, LLM Zoomcamp). No hay señal
   concreta hoy de que LangSmith se quede corto; sería una migración motivada

@@ -30,6 +30,23 @@ Responde SOLO con un numero del 1 al 5:
 
 Numero:"""
 
+ACCURACY_PROMPT = """\
+Eres un evaluador de precision tecnica de un agente de soporte de instrumentacion.
+
+Pregunta: {question}
+Respuesta de referencia (correcta): {expected_answer}
+Respuesta del agente: {answer}
+
+Evalua si la respuesta del agente es tecnicamente correcta comparada con la
+referencia. No exijas texto identico -- alcanza con que transmita la misma
+informacion tecnica (rangos, pasos, condiciones) sin contradecirla ni inventar datos.
+Responde SOLO con un numero del 1 al 5:
+1 = incorrecta o contradice la referencia
+3 = parcialmente correcta, le falta o sobra informacion relevante
+5 = correcta, coincide en el contenido tecnico con la referencia
+
+Numero:"""
+
 
 def get_judge() -> ChatOpenAI:
     """Crea el LLM juez de forma lazy para evitar fallos al importar."""
@@ -66,6 +83,24 @@ if os.getenv("LANGCHAIN_API_KEY"):
     relevance_evaluator = traceable(_relevance_evaluator)
 else:
     relevance_evaluator = _relevance_evaluator
+
+
+def _accuracy_evaluator(question: str, expected_answer: str, answer: str) -> int:
+    """Devuelve un score 1-5 sobre la precision tecnica de una respuesta.
+
+    A diferencia de relevance_evaluator, compara contra una expected_answer de
+    referencia (golden set) en vez de juzgar la respuesta en el vacio.
+    """
+    judge = get_judge()
+    prompt = ACCURACY_PROMPT.format(question=question, expected_answer=expected_answer, answer=answer)
+    score_text = judge.invoke(prompt).content
+    return extract_score(score_text)
+
+
+if os.getenv("LANGCHAIN_API_KEY"):
+    accuracy_evaluator = traceable(_accuracy_evaluator)
+else:
+    accuracy_evaluator = _accuracy_evaluator
 
 
 def citation_evaluator(answer: str) -> bool:
