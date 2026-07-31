@@ -3,19 +3,23 @@
 
 import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 
-from src.config import Settings, load_settings
-from src.graph import graph_builder
-from src.ingestion import build_index
-from src.schemas import ChatRequest, ChatResponse
-from src.tools import set_index
+# Carga .env antes de importar src.graph (que importa src.tools): ese import
+# evalua `os.getenv("LANGCHAIN_API_KEY")` a nivel de modulo para decidir si
+# instrumentar _vector_search/_keyword_search con LangSmith. Sin este
+# load_dotenv() temprano, load_settings() (mas abajo, recien dentro de
+# lifespan) llega demasiado tarde -- el import ya paso y la instrumentacion
+# queda desactivada aunque LANGCHAIN_API_KEY este en .env.
+load_dotenv()
 
-DOCS_DIR = Path(__file__).parent.parent / "docs"
+from src.config import Settings, load_settings  # noqa: E402
+from src.graph import graph_builder  # noqa: E402
+from src.schemas import ChatRequest, ChatResponse  # noqa: E402
 
 settings: Settings | None = None
 graph = None
@@ -24,16 +28,9 @@ pool: ConnectionPool | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: valida config, construye el indice RAG y compila el grafo con checkpointer real."""
+    """Startup: valida config y compila el grafo con checkpointer real."""
     global settings, graph, pool
     settings = load_settings()
-
-    documents = [
-        (path.read_text(encoding="utf-8"), path.name)
-        for path in DOCS_DIR.glob("*.txt")
-    ]
-    if documents:
-        set_index(build_index(documents))
 
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
@@ -75,4 +72,16 @@ def chat(payload: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=500, detail=f"Error al ejecutar el agente: {exc}") from exc
 
     last_message = result["messages"][-1]
-    return ChatResponse(thread_id=payload.thread_id, response=getattr(last_message, "content", ""))
+
+    tool_calls_used: list[str] = []
+    for message in result["messages"]:
+        for tool_call in getattr(message, "tool_calls", None) or []:
+            name = tool_call["name"]
+            if name not in tool_calls_used:
+                tool_calls_used.append(name)
+
+    return ChatResponse(
+        thread_id=payload.thread_id,
+        response=getattr(last_message, "content", ""),
+        tool_calls_used=tool_calls_used,
+    )

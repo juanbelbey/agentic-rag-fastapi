@@ -12,14 +12,11 @@ import re
 import psycopg2
 from dotenv import load_dotenv
 from langchain_core.tools import tool
+from langsmith import traceable  # Decorador opcional para instrumentar funciones con LangSmith
 from pgvector.psycopg2 import register_vector
 
-from src.ingestion import InMemoryIndex, embed_texts, rrf
+from src.ingestion import embed_texts, rrf
 from src.schemas import RAGResult, TicketInput
-
-# Índice global en memoria — se construye una vez con build_index() al arrancar.
-# Arranca vacío; rag_search() lo detecta y avisa en vez de romper.
-_index: InMemoryIndex = InMemoryIndex()
 
 # Stopwords español + inglés para _keyword_search. El corpus mezcla documentos en
 # ambos idiomas y las preguntas siempre llegan en español -- sin este filtro, el
@@ -56,7 +53,7 @@ def _get_connection():
     return conn
 
 
-def _vector_search(conn, query_embedding, top_k: int) -> list[tuple[int, float]]:
+def _vector_search_impl(conn, query_embedding, top_k: int) -> list[tuple[int, float]]:
     """Devuelve [(chunk_id, distance), ...] ordenados por distancia coseno (menor = más parecido)."""
     with conn.cursor() as cur:
         cur.execute(
@@ -64,6 +61,16 @@ def _vector_search(conn, query_embedding, top_k: int) -> list[tuple[int, float]]
             (query_embedding, top_k),
         )
         return cur.fetchall()
+
+
+# Span propio en LangSmith -- sin esto, _vector_search es una llamada psycopg2 cruda
+# que no aparece en el trace (solo lo nativo de LangChain se traza automáticamente
+# con LANGCHAIN_TRACING_V2). Mismo patrón opt-in que evaluators.py: sin
+# LANGCHAIN_API_KEY, corre la función pura sin decorar.
+if os.getenv("LANGCHAIN_API_KEY"):
+    _vector_search = traceable(name="agent.rag_search.vector", run_type="retriever")(_vector_search_impl)
+else:
+    _vector_search = _vector_search_impl
 
 
 def _build_or_tsquery(query: str) -> str | None:
@@ -76,7 +83,7 @@ def _build_or_tsquery(query: str) -> str | None:
     return " | ".join(keywords) if keywords else None
 
 
-def _keyword_search(conn, query: str, top_k: int) -> list[tuple[int, float]]:
+def _keyword_search_impl(conn, query: str, top_k: int) -> list[tuple[int, float]]:
     """Devuelve [(chunk_id, rank), ...] usando Postgres full-text search (mayor rank = más relevante).
 
     Config 'simple' (sin stemming por idioma) + tsquery armado con OR ('|') entre
@@ -106,6 +113,12 @@ def _keyword_search(conn, query: str, top_k: int) -> list[tuple[int, float]]:
         return cur.fetchall()
 
 
+if os.getenv("LANGCHAIN_API_KEY"):
+    _keyword_search = traceable(name="agent.rag_search.keyword", run_type="retriever")(_keyword_search_impl)
+else:
+    _keyword_search = _keyword_search_impl
+
+
 def _hybrid_search(
     conn, query: str, query_embedding, top_k: int, candidate_k: int = 10, rrf_k: int = 1
 ) -> list[tuple[int, float]]:
@@ -118,12 +131,6 @@ def _hybrid_search(
     keyword_results = _keyword_search(conn, query, candidate_k)
     fused = rrf(vector_results, keyword_results, k=rrf_k)
     return fused[:top_k]
-
-
-def set_index(index: InMemoryIndex) -> None:
-    """Reemplaza el índice activo. Se llama desde main.py al iniciar la app."""
-    global _index
-    _index = index
 
 
 @tool(args_schema=TicketInput)

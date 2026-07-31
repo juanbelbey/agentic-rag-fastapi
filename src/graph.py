@@ -31,7 +31,7 @@ def get_bound_llm() -> ChatOpenAI:
     """Crea el modelo con tools enlazadas solo cuando hace falta invocarlo."""
     # "-> ChatOpenAI" es una anotacion de tipo de retorno (no ejecuta nada por si sola).
     # Esta funcion no recibe parametros; construye y devuelve un LLM listo para tools.
-    return ChatOpenAI(model=MODEL_NAME).bind_tools(TOOLS)
+    return ChatOpenAI(model=MODEL_NAME, max_tokens=800).bind_tools(TOOLS)
 
 
 def agent_node(state: AgentState) -> AgentState:

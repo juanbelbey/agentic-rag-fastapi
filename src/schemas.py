@@ -36,9 +36,12 @@ class TicketInput(BaseModel):
     """
     summary: str = Field(..., min_length=5, max_length=300,
                          description="Descripcion del problema o solicitud")
-    category: Literal["bug", "feature", "question", "other"] = Field(
-        ..., description="Categoria del ticket"
-    )
+    category: Literal[
+        "field_instrument_failure",
+        "biological_process_anomaly",
+        "pump_maintenance",
+        "undocumented_query",
+    ] = Field(..., description="Categoria del ticket")
     priority: Literal["low", "medium", "high"] = Field(
         default="medium", description="Prioridad del ticket"
     )
@@ -53,6 +56,7 @@ class RAGResult(BaseModel):
     content: str = Field(..., min_length=1, description="Contenido del chunk recuperado")
     source: str = Field(..., description="Nombre del documento fuente")
     score: Optional[float] = Field(
-        default=None, ge=0.0, le=1.0,
-        description="Score de similitud coseno (0.0 a 1.0)"
+        default=None, ge=0.0,
+        description="Score de fusion RRF (Reciprocal Rank Fusion) sobre el ranking de "
+                     "vector search + keyword search -- no es similitud coseno ni ts_rank"
     )
