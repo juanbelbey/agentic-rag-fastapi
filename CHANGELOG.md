@@ -6,8 +6,286 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
-## 2026-07-27 — Golden set nuevo del corpus real + accuracy_evaluator — evals de generación corridas
+## 2026-07-31 — Docker build/run probados y verificados — containerization 0→1 cerrado
 **Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- **Active recall de Docker al arrancar la sesión** (pedido explícito de Juan en la
+  entrada de ayer, antes de tocar el build): preguntas sobre Dockerfile vs imagen vs
+  container, diferencia entre `docker build` y `docker run`, y por qué el
+  `.dockerignore` excluye `.env`/`docs/pdfs/`. Las tres respuestas de Juan fueron
+  correctas — se ajustó solo un matiz chico (la imagen es agnóstica al ambiente
+  dev/QA/prod, lo que cambia entre containers de la misma imagen son las variables
+  que se le pasan en `docker run`, no la imagen en sí).
+- **`docker build -t agentic-rag-fastapi .`**: corrió sin errores (~61s, mayormente
+  `pip install` de las dependencias sobre `python:3.12-slim`). Imagen
+  `agentic-rag-fastapi:latest` creada.
+- **`docker run --env-file .env -p 8000:8000 agentic-rag-fastapi`**: container
+  levantado en background, logs confirman conexión real a Postgres (Supabase),
+  `checkpointer.setup()` corrido, uvicorn arriba en `0.0.0.0:8000`.
+- **`POST /chat` real contra el container** ("Cual es el rango de medicion de un
+  transmisor de presion Rosemount?", `thread_id=docker-build-test`): 200 OK,
+  `rag_search` encontró el chunk correcto (`siemens_sitrans-p320-p420_datasheet_es.pdf`),
+  respuesta con cita de fuente, `tool_calls_used: ["rag_search"]` poblado — confirma
+  además que el fix de `tool_calls_used` de la Sesión 2 (2026-07-29) funciona también
+  dentro del container, no solo en local.
+- Container detenido y eliminado (`docker stop` + `docker rm`) al terminar la prueba,
+  sin dejar nada corriendo.
+- **Punto 1 del plan de la entrega (containerization) queda completo — 0→1 en la
+  rúbrica.**
+- **Punto 2 del plan (README): agregada la sección "Criterios de evaluacion (LLM
+  Zoomcamp 2026)"** — regla dura del curso, el README debe mencionar explícitamente
+  los criterios para que el reviewer los ubique fácil. Tabla con los 9 criterios
+  oficiales, cada uno apuntando a dónde vive en el repo (`evals/retrieval_metrics.py`
+  para retrieval evaluation, `evals/run_evals.py` para LLM evaluation,
+  `scripts/ingest.py` para ingestion pipeline, etc.) — sin inflar: Monitoring y
+  reranking/query rewriting quedaron marcados como "Pendiente" porque todavía no
+  existen. También sumado el comando `docker run` a la sección "Como correrlo".
+- **Decidido el enfoque del punto 3 (monitoring), sin implementar todavía:** en vez
+  del endpoint de feedback solo (0→1), apuntar a 2/2 aprovechando que LangSmith ya
+  está prendido y su dashboard de proyecto ya expone varios gráficos gratis (runs,
+  latencia, tokens/costo, error rate). El endpoint de feedback va a escribir en
+  Postgres **y** mandar el feedback a LangSmith con `client.create_feedback(run_id,
+  ...)` (dependencia ya instalada) para que quede asociado a cada trace — evita
+  armar el stack Postgres+Grafana completo que seguía como stretch.
+- **Confirmado con Juan el framework para el punto de evals de generación (RAGAS,
+  ya anotado en POSPUESTO desde 2026-07-18):** se suma como upgrade condicional,
+  solo si el plan core (puntos 3-7) cierra con tiempo de sobra antes del 10/08.
+  Elegido por ser el nombre más reconocible para evaluación de RAG específicamente
+  en búsquedas laborales de AI/LLM Engineer. Estimado ~1.5-2.5h, con riesgo de
+  compatibilidad de versión entre `ragas` y `langchain==1.2.15` como principal
+  fuente de incertidumbre.
+- **Próximo paso concreto:** implementar el punto 3 del plan (endpoint de feedback +
+  `create_feedback` a LangSmith).
+- **Sesión cerrada acá por hoy**, a pedido de Juan.
+
+---
+
+## 2026-07-30 — Dockerfile (containerization 0→1), sin probar todavía
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- **Arrancado el punto 1 del plan de la entrega** (ver "Cambio de prioridad" en
+  `ROADMAP.md`, 2026-07-29): containerization. Explicado el concepto a Juan antes de
+  escribir código (Dockerfile = receta, imagen = resultado empaquetado del build,
+  container = instancia corriendo; `docker build` construye la imagen, `docker run`
+  levanta un container a partir de ella) y por qué la imagen no incluye `docs/pdfs/`
+  (la ingesta ya corrió contra Supabase, la app en runtime solo consulta la base, no
+  reingiere nada) ni `.env` (secretos se pasan en runtime con `--env-file`, nunca se
+  copian a la imagen — la misma imagen sirve para dev y prod).
+- **Creados dos archivos nuevos:**
+  - `Dockerfile`: base `python:3.12-slim` (mismo Python que local, liviana; no hace
+    falta build-essential/libpq-dev porque `psycopg[binary]`/`psycopg2-binary` ya
+    traen wheels autocontenidos). `COPY requirements.txt` + `pip install` antes de
+    `COPY src/` — cachea la capa de dependencias, no reinstala todo si solo cambia
+    código. `EXPOSE 8000` + `CMD uvicorn src.main:app --host 0.0.0.0 --port 8000`
+    (`0.0.0.0`, no `127.0.0.1`, para que sea alcanzable desde fuera del container).
+  - `.dockerignore` (no existía): excluye `.venv/`, `.git/`, `.github/`,
+    `.pytest_cache/`, `__pycache__/`, `.env`/`.env.example`, `docs/`, `tests/`,
+    `reports/`, `evals/results/`, `courses/`, `archive/`, `scripts/`, `*.md`.
+- **Sin probar esta sesión:** ni `docker build -t agentic-rag-fastapi .` ni
+  `docker run --env-file .env -p 8000:8000 agentic-rag-fastapi` se corrieron
+  todavía — queda para la próxima sesión.
+- **Próximo paso concreto:** Juan pidió explícitamente que la próxima sesión arranque
+  con preguntas de active recall sobre los conceptos de hoy (Dockerfile vs imagen vs
+  container, build vs run, por qué `.dockerignore`) **antes** de probar el build —
+  no saltar directo a `docker build`. Después de eso: probar el build/run real y
+  seguir con el resto del plan (README con criterios de evaluación, endpoint de
+  feedback, comparar system prompts, query rewriting, reproducibility, limpieza de
+  historial de git).
+
+---
+
+## 2026-07-29 (tarde) — Cierra Sesión 2 completa + entrega LLM Zoomcamp 2026 (deadline 10/08)
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- **Cerrados los 4 ítems restantes de la Sesión 2** (batch de limpieza mecánica),
+  uno por vez con explicación previa:
+  - `ChatResponse.tool_calls_used` (`src/main.py`): antes siempre devolvía `[]`
+    (deuda técnica desde Capa 5A, 2026-06-20). Ahora recorre `result["messages"]`
+    después de `graph.invoke()` y junta los `.tool_calls[].name` de los mensajes
+    que llamaron una tool, sin duplicados.
+  - `max_tokens=800` explícito en `get_bound_llm()` (`src/graph.py`) — aprendizaje
+    empírico de M3 (Zoomcamp): sin techo, resúmenes largos escalan ~2.3x en tokens
+    de output. 800 alcanza de sobra para una respuesta técnica puntual con cita de
+    fuente.
+  - Contrato de `RAGResult.score` (`src/schemas.py`) corregido: decía
+    `ge=0.0/le=1.0` y "similitud coseno", pero `rag_search()` le pasa el score de
+    **RRF** (Reciprocal Rank Fusion) — un algoritmo que fusiona por *ranking*
+    (posición en cada lista de resultados), no por los valores de similitud coseno
+    ni de `ts_rank` de cada búsqueda (esos valores viven en escalas no
+    comparables entre sí, por eso RRF los descarta y solo mira posiciones). El
+    `le=1.0` era seguro hoy solo por casualidad (con `rrf_k=1` el máximo de RRF da
+    exactamente 1.0); se sacó el `le=1.0` y se corrigió la descripción a "score de
+    fusión RRF".
+  - `TicketInput.category` (`src/schemas.py`) redominado: las 4 categorías
+    genéricas de soporte de software (`bug/feature/question/other`, herencia de la
+    Capa 1) reemplazadas por `field_instrument_failure/biological_process_anomaly/
+    pump_maintenance/undocumented_query` — tomadas del borrador ya existente en
+    `CORPUS_INSTRUMENTACION.MD` y traducidas a inglés para seguir la convención del
+    resto del `Literal` (`low/medium/high`). `tests/test_rules.py` actualizado:
+    los dos tests de `create_ticket` usaban un ejemplo del dominio viejo ("el
+    cliente no puede iniciar sesión", categoría `question`/`bug`) — reemplazados
+    por un caso real de instrumentación de campo.
+  - Verificado con `pytest tests/test_rules.py` (7/7) después de cada cambio.
+  - **Sesión 2 queda completa** (6/6 ítems: paso 6 dead code + tracing real +
+    estos 4).
+- **Cambio de prioridad, fuera de código:** Juan compartió
+  `courses/PROJECT_APPROVAL_HANDOFF.md` — este repo se entrega tal cual como
+  proyecto final del **LLM Zoomcamp 2026** (DataTalks.Club). Deadline real
+  2026-08-10, intento oportunista 2026-08-03. Se auditó el repo contra la rúbrica
+  oficial (9 criterios 0-2 pts + 3 best practices, máx 18+3): hoy ~12/21 —
+  Problem description/Retrieval flow/Retrieval evaluation/Interface en 2, LLM
+  evaluation/Ingestion pipeline/Reproducibility en 1, Monitoring/Containerization
+  en 0, best practices solo hybrid search (1/3). Se armó con Juan un plan de
+  acción priorizado por ROI (puntos de rúbrica por hora de trabajo disponible:
+  hoy 1h, lun-vier 1.5h, sábados 3h) — detalle completo del plan y el cronograma
+  día a día en la sección "Cambio de prioridad" de `ROADMAP.md`. La limpieza del
+  historial de git (POSPUESTO desde 2026-07-02) pasa a estar en alcance de esta
+  entrega — Juan confirmó que quiere el repo público y limpio para el peer review
+  del curso.
+- **Próximo paso concreto:** Dockerfile de la app (containerization 0→1,
+  ~1.5h, planeado para mañana 2026-07-30).
+
+---
+
+## 2026-07-29 — Tracing real verificado en LangSmith — cierra el ítem de la Sesión 2
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- Cerrado el único pendiente que dejaba el paso de tracing de la entrada de ayer:
+  faltaba agregar `LANGCHAIN_TRACING_V2=true` a `.env` y confirmar un trace real en
+  LangSmith. `.env` ya lo tenía al arrancar la sesión (junto con `LANGCHAIN_API_KEY`
+  y `LANGCHAIN_PROJECT`, confirmado con un chequeo de presencia sin exponer valores).
+- **Verificación end-to-end:** servidor levantado localmente (`uvicorn src.main:app`)
+  y un `POST /chat` real (`"Cual es el rango de medicion de un transmisor de presion
+  Rosemount?"`, `thread_id=test-trace-verificacion`) contra Supabase+OpenAI reales.
+  Respuesta con cita de fuente (`SITRANS P320/P420 Datasheet`), 200 OK, sin errores
+  en el log del servidor.
+- **Confirmado en el dashboard de LangSmith** (captura de Juan, proyecto
+  `agentic.rag.fastapi`): el árbol de spans es el esperado — `ChatOpenAI gpt-4o-mini`
+  trazado automático por el tracer global de LangChain (sin código propio), y dentro
+  del span de la tool `rag_search` (4.29s), anidados como hijos, `agent.rag_search.
+  vector` (0.73s) y `agent.rag_search.keyword` (1.00s) — el `@traceable` manual de
+  `_vector_search`/`_keyword_search` se integra en la misma jerarquía que el tracer
+  automático, siguiendo la pila de ejecución real (no por archivo ni por tipo de
+  objeto).
+- Servidor de prueba apagado al terminar (`taskkill /F /IM uvicorn.exe`), sin dejar
+  procesos colgados.
+- **El ítem de tracing real de la Sesión 2 queda cerrado.** Próximo paso dentro de
+  esa sesión: `ChatResponse.tool_calls_used`, `max_tokens` explícito en
+  `get_bound_llm()`, contrato de `RAGResult.score`, redominar `TicketInput`.
+
+---
+
+## 2026-07-28 (tarde) — RLS en tablas del checkpointer + rotación de credenciales + Sesión 2 arrancada
+**Commit:** pendiente (cambios sin commitear al momento de escribir esta entrada)
+
+- **Alerta real de Supabase, no simulada:** mail automático (`rls_disabled_in_public`)
+  avisando que había una tabla pública sin RLS. Investigado con
+  `SELECT schemaname, tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';`
+  en el SQL Editor: `chunks` en `true` (ya corregido en 5B.4), pero las 4 tablas del
+  checkpointer (`checkpoints`, `checkpoint_blobs`, `checkpoint_writes`,
+  `checkpoint_migrations`, creadas por `PostgresSaver.setup()` en 5B.3) en `false` —
+  nunca pasaron por el `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` manual que sí tuvo
+  `chunks`. Corregidas con el mismo patrón: RLS habilitado sin policies (el backend
+  conecta por rol directo de Postgres, no por la API REST/anon key, así que no se ve
+  afectado). Verificado con la misma query (las 5 tablas en `true`) y con
+  `pytest tests/test_rules.py` (7/7, confirma que el acceso real de la app a `chunks`
+  sigue intacto).
+- **Rotación de credenciales reales completada** (quedaba pendiente desde la entrada de
+  la mañana): `OPENAI_API_KEY` nueva generada dentro de un proyecto scopeado creado en
+  OpenAI (en vez de una key "All projects"), y password de `DATABASE_URL` reseteada en
+  Supabase. Motivo extra que aceleró esto: durante la sesión Claude expuso por error, en
+  el chat, la `OPENAI_API_KEY` nueva (un comando `sed` pensado para truncar el output no
+  truncó nada) — se tuvo que rotar de nuevo apenas se detectó. Ambas rotaciones
+  verificadas con `pytest tests/test_rules.py` en verde. El secret `DATABASE_URL` de
+  GitHub Actions (rol `ci_readonly`, password propia) no se tocó.
+- **La prioridad 1 (CI en verde + seguridad) queda completamente cerrada.** Lo único que
+  sigue pendiente es la limpieza del historial de git — ya no es una emergencia (las
+  credenciales viejas del historial quedaron inertes), es higiene antes de publicar el
+  repo como portfolio (ver POSPUESTO en `ROADMAP.md`).
+- **Arrancada la Sesión 2** (batch de limpieza mecánica, ver plan en `ROADMAP.md`):
+  - **Paso 6 completo:** sacado código muerto de la Capa 5A —
+    `InMemoryIndex`/`KeywordIndex`/`build_index()`/`set_index()`/`_index`, en
+    `src/ingestion.py`, `src/tools.py` y `src/main.py`. Sin uso real desde que
+    `rag_search()` migró a Postgres en 5B.2 (`main.py` seguía re-embebiendo
+    `docs/*.txt` con la API de OpenAI en cada arranque para un índice que nadie leía
+    después — y `docs/` ya ni tiene `.txt` desde 5B.4, solo `pdfs/`, así que el bloque
+    tampoco encontraba qué indexar). `chunk_text()`, `embed_texts()` y `rrf()` se
+    quedan — siguen en uso real (`scripts/ingest.py`, `rag_search()`,
+    `_hybrid_search()`). Verificado con `git grep` (sin referencias restantes a los
+    símbolos borrados) y `pytest tests/test_rules.py` (7/7).
+  - **Tracing real, en progreso (no cerrado):** `_vector_search`/`_keyword_search` en
+    `src/tools.py` instrumentados con `@traceable` de LangSmith (spans
+    `agent.rag_search.vector`/`agent.rag_search.keyword`, `run_type="retriever"`),
+    gateado por `LANGCHAIN_API_KEY` — mismo patrón opt-in que
+    `evals/evaluators.py`. En el camino, encontrado y arreglado un bug real: en
+    `src/main.py`, `from src.graph import graph_builder` (que dispara
+    `import src.tools`) pasaba antes de que `load_settings()` cargara `.env` dentro
+    del `lifespan()` — el gating de `LANGCHAIN_API_KEY` se evalúa a nivel de módulo,
+    así que la instrumentación quedaba desactivada en producción aunque la key
+    estuviera en `.env`. Arreglado moviendo `load_dotenv()` al principio de
+    `main.py`, antes del import. Con `LANGCHAIN_TRACING_V2=true` prendido (falta que
+    Juan lo agregue a `.env` — ya tiene `LANGCHAIN_API_KEY`/`LANGCHAIN_PROJECT`), el
+    LLM call de `agent_node` y los tool-calls `rag_search`/`create_ticket` quedan
+    auto-trazados por LangChain sin código extra (tokens/costo incluidos, LangSmith
+    los calcula solo) — patrón de M5 aplicado vía LangSmith, no OTel crudo.
+    Verificado por código que el wrapping se activa correctamente al importar
+    `src.main`; falta verificar un trace real en LangSmith antes de dar el ítem por
+    completo.
+- **Próximo paso concreto:** agregar `LANGCHAIN_TRACING_V2=true` a `.env` y confirmar un
+  trace real en LangSmith para cerrar el ítem de tracing. Después sigue el resto de la
+  Sesión 2 (`ChatResponse.tool_calls_used`, `max_tokens` explícito, contrato de
+  `RAGResult.score`, redominar `TicketInput`) y, aparte, la limpieza del historial de
+  git cuando Juan confirme el plan.
+
+---
+
+## 2026-07-28 — CI en verde: rol read-only en Supabase + preguntas del dominio actual
+**Commit:** `1945750`
+
+- Cerrados los dos pendientes técnicos que dejaba el job `evals` de CI roto (ver
+  entrada 2026-07-27 de abajo):
+  - **Rol `ci_readonly` en Supabase:** `GRANT SELECT` únicamente sobre `chunks`
+    (`CONNECT` en la base + `USAGE` en el schema, sin ningún permiso de
+    escritura/DDL) en vez de reusar la credencial completa de producción. Como
+    `chunks` tiene RLS activado sin policies desde 5B.4 paso 2, hizo falta además
+    una policy scopeada a ese rol (`CREATE POLICY ... TO ci_readonly USING (true)`)
+    — sin ella el `SELECT` hubiera devuelto 0 filas en vez de fallar, un error fácil
+    de no notar. Verificado con un script descartable (fuera del repo, borrado
+    después de usarlo): `SELECT COUNT(*) FROM chunks` → 2451 filas; `INSERT` →
+    `permission denied`; `SELECT` sobre `checkpoints` (tabla fuera de su alcance) →
+    también `permission denied`. Confirmado antes de esto que `evals/run_evals.py`
+    compila con `MemorySaver` (no `PostgresSaver`) en CI, así que el rol nunca
+    necesita ver las tablas del checkpointer.
+  - Connection string de `ci_readonly` guardado como secret `DATABASE_URL` en
+    GitHub Actions; `.github/workflows/ci.yml` actualizado para pasarlo como env
+    var del job `evals`.
+  - `tests/test_evals.py`: las 2 preguntas hardcodeadas del dominio viejo
+    (reembolso, ticket de login por credenciales) reemplazadas por preguntas reales
+    de instrumentación de campo — una factual tomada del golden set nuevo (flujo
+    `rag_search`), una de escalado a técnico de planta por transmisor descalibrado
+    (flujo `create_ticket`).
+- **Verificado en dos niveles:** local (`pytest tests/test_evals.py`, 3 tests en
+  verde contra Supabase+OpenAI reales) y en CI real — push del commit, run #17 de
+  GitHub Actions verde en ambos jobs (`rules` y `evals`). Único aviso: deprecación
+  de Node.js 20 en el runner de GitHub Actions, genérico de la plataforma, no
+  relacionado a este repo ni bloqueante.
+- **La prioridad 1 (CI en verde + seguridad) queda cerrada en su parte de CI.**
+- **Hallazgo de seguridad en el camino:** al armar el connection string de
+  `ci_readonly` se expuso sin querer, en texto plano dentro del chat de la sesión,
+  la password real de `DATABASE_URL` de producción. Juan restauró esa misma
+  password en `.env` (no generó una nueva) — la credencial de producción sigue
+  siendo la misma de antes de la sesión. Motivo de más para no seguir posponiendo
+  la rotación de credenciales (ver POSPUESTO en `ROADMAP.md`).
+- **Próximo paso concreto:** lo único que queda pendiente de la prioridad 1 es la
+  rotación de credenciales reales (`OPENAI_API_KEY`, `DATABASE_URL` de producción)
+  + limpieza del historial de git. Sesión 2 de limpieza y evals sobre las 520
+  preguntas completas (vs. las 48 del sample) siguen después, sin fecha.
+
+---
+
+## 2026-07-27 — Golden set nuevo del corpus real + accuracy_evaluator — evals de generación corridas
+**Commit:** `1945750` (commiteado el 2026-07-28, un día después de escrito, junto con el
+trabajo de esa sesión — ver entrada de arriba)
 
 - Al abrir la prioridad 1 (arreglar/aislar el job `evals` de CI, roto con `RuntimeError:
   Falta DATABASE_URL`), se encontró que el problema no era solo técnico: `golden_set.json`

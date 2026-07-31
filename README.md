@@ -37,3 +37,28 @@ uvicorn src.main:app --reload
 ```
 
 `POST /chat` con `{"message": "...", "thread_id": "..."}`.
+
+Alternativa con Docker (no reingiere nada, solo consulta la base ya poblada):
+
+```bash
+docker build -t agentic-rag-fastapi .
+docker run --env-file .env -p 8000:8000 agentic-rag-fastapi
+```
+
+## Criterios de evaluacion (LLM Zoomcamp 2026)
+
+Este repo es la entrega del proyecto final del [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) (DataTalks.Club). Mapa de los 9 criterios oficiales a donde vive cada uno en el codigo:
+
+| Criterio | Donde esta |
+|---|---|
+| Problem description | Este README, seccion "Caso de uso" |
+| Retrieval flow | Knowledge base (Supabase/pgvector) + LLM en el flujo — hybrid search (vector + full-text) fusionado con RRF, `src/tools.py` (`rag_search`) |
+| Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR comparados entre vector-only, keyword-only e hybrid sobre 520 preguntas (`evals/ground_truth_retrieval.json`), ver `ROADMAP.md` Capa 5B.4 |
+| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` sobre `evals/golden_set.json`, corrido en CI (`.github/workflows/ci.yml`, job `evals`) |
+| Interface | API REST con FastAPI — `POST /chat` (`src/main.py`) |
+| Ingestion pipeline | `scripts/ingest.py` — chunking + embeddings OpenAI + carga a Postgres/pgvector, script dedicado (no notebook manual) |
+| Monitoring | Pendiente |
+| Containerization | `Dockerfile` — build y run verificados, ver `CHANGELOG.md` 2026-07-31 |
+| Reproducibility | Seccion "Como correrlo" arriba; versiones fijas en `requirements.txt`; dataset con copyright, no redistribuible, ver seccion anterior |
+
+Best practices: hybrid search ✅ (evaluado, ver Retrieval evaluation arriba). Re-ranking y query rewriting: pendientes.

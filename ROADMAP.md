@@ -77,18 +77,37 @@ src/
 │                     compartidas con la pregunta. Medido contra las 520 preguntas de
 │                     evals/ground_truth_retrieval.json: keyword hit_rate 0.008 → 0.300 (ver
 │                     CHANGELOG 2026-07-18 para la progresión completa del debugging).
-│                     [dead code pendiente: _index/InMemoryIndex/set_index ya no los usa
-│                     rag_search(), quedan sin uso hasta el paso 6 de la Sesión 2 (limpieza,
-│                     no confundir con el paso 6 de 5B.4 abajo)]
+│                     [paso 6 de la Sesión 2, 2026-07-28: sacado el dead code _index/
+│                     InMemoryIndex/set_index — ya no los usaba rag_search() desde 5B.2]
+│                     _vector_search/_keyword_search instrumentados con @traceable
+│                     (LangSmith) — spans agent.rag_search.vector/agent.rag_search.keyword,
+│                     gateado por LANGCHAIN_API_KEY (mismo patrón opt-in que
+│                     evals/evaluators.py). Sesión 2, tracing real completo y verificado
+│                     en LangSmith (2026-07-29) — árbol de spans confirmado: ChatOpenAI
+│                     trazado automático por el tracer global, rag_search con
+│                     agent.rag_search.vector/agent.rag_search.keyword anidados adentro
+│                     como spans hijos.
 ├── graph.py       ✅ StateGraph con routing condicional — SYSTEM_PROMPT con el caso de uso real
 │                     (instrumentación de campo, agua potable/saneamiento) desde 5B.4 paso 3
 │                     (2026-07-15). Sigue inline en este archivo, no en uno propio (ver pendiente
 │                     en POSPUESTO). Desde 5B.3 paso 2 (2026-07-23) exporta `graph_builder` SIN
 │                     compilar (antes compilaba con MemorySaver a nivel de módulo) — cada
 │                     consumidor decide su propio checkpointer llamando `.compile()`
-├── main.py        ✅ FastAPI POST /chat + lifespan construye índice al arrancar
-│                     [pendiente paso 6: ese build_index() ya no lo usa rag_search(),
-│                     re-embebe docs.txt con la API de OpenAI en cada arranque para nada]
+│                     `get_bound_llm()` con `max_tokens=800` explícito (Sesión 2, 2026-07-29
+│                     — aprendizaje de M3: sin techo, resúmenes largos escalan ~2.3x en tokens
+│                     de output; 800 alcanza de sobra para una respuesta técnica con cita)
+├── main.py        ✅ FastAPI POST /chat
+│                     [paso 6 de la Sesión 2, 2026-07-28: sacado build_index()/DOCS_DIR —
+│                     el lifespan ya no re-embebe docs.txt con la API de OpenAI en cada
+│                     arranque para nada; de paso, docs/ ya ni tiene .txt desde 5B.4 (solo
+│                     pdfs/), así que el bloque tampoco encontraba qué indexar]
+│                     load_dotenv() movido al principio del archivo, antes de
+│                     `from src.graph import graph_builder` (2026-07-28, mismo paso de
+│                     tracing): ese import dispara `import src.tools`, que evalúa
+│                     `LANGCHAIN_API_KEY` a nivel de módulo — sin este orden, la
+│                     instrumentación de tools.py quedaba desactivada en producción aunque
+│                     la key estuviera en .env (load_settings() antes corría recién dentro
+│                     de lifespan, demasiado tarde)
 │                     Desde 5B.3 paso 3 (2026-07-23): el lifespan abre un `psycopg_pool.ConnectionPool`
 │                     real a Postgres (autocommit=True, prepare_threshold=0 — ver nota abajo),
 │                     corre `checkpointer.setup()` (idempotente, crea tablas de PostgresSaver) y
@@ -100,10 +119,31 @@ src/
 │                     checkpoint_migrations) y dos `graph.invoke()` con el mismo thread_id
 │                     confirman persistencia real de la conversación (script manual fuera del
 │                     repo, no vive en scripts/).
+│                     `ChatResponse.tool_calls_used` poblado de verdad (Sesión 2, 2026-07-29
+│                     — antes siempre devolvía `[]`, deuda técnica desde Capa 5A): recorre
+│                     `result["messages"]` después de `graph.invoke()` y junta los
+│                     `.tool_calls[].name` de los `AIMessage` que llamaron una tool, sin
+│                     duplicados.
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
-└── ingestion.py   ✅ chunking + embeddings OpenAI (embed_texts() batchea de a 300 textos por request,
-                      límite de la API de OpenAI: 300k tokens / 2048 items por request, tocado 5B.4
-                      paso 2) + InMemoryIndex numpy + KeywordIndex TF-IDF + rrf() (Capa 5A/5A.2).
+│                     [Sesión 2, 2026-07-29] `TicketInput.category` redominado: las 4
+│                     categorías genéricas de soporte de software (bug/feature/question/other,
+│                     herencia de la Capa 1) reemplazadas por 4 del dominio real de
+│                     instrumentación de campo (field_instrument_failure/
+│                     biological_process_anomaly/pump_maintenance/undocumented_query), tomadas
+│                     del borrador ya existente en CORPUS_INSTRUMENTACION.MD y traducidas a
+│                     inglés para seguir la convención del resto del Literal (low/medium/high).
+│                     `RAGResult.score`: sacado el `le=1.0` y corregida la descripción a "score
+│                     de fusión RRF" — decía "similitud coseno" pero `rag_search()` le pasa el
+│                     score de RRF (Reciprocal Rank Fusion), que no tiene el mismo techo fijo;
+│                     con `rrf_k=1` el máximo daba 1.0 "por casualidad", frágil ante un cambio
+│                     futuro de `rrf_k`.
+└── ingestion.py   ✅ chunking (chunk_text) + embeddings OpenAI (embed_texts() batchea de a 300
+                      textos por request, límite de la API de OpenAI: 300k tokens / 2048 items por
+                      request, tocado 5B.4 paso 2) + rrf() (fusión RRF, Capa 5A.2 — el algoritmo
+                      quedó, no depende de dónde viven los datos). InMemoryIndex/KeywordIndex/
+                      build_index() (Capa 5A, búsqueda en memoria) sacados en el paso 6 de la
+                      Sesión 2 (2026-07-28) — código muerto desde que rag_search() migró a
+                      Postgres en 5B.2, verificado con git grep que no quedaban referencias.
                       Cliente de OpenAI (_client) se crea recién en embed_texts(), no al importar el
                       módulo (fix 2026-07-15) — antes exigía OPENAI_API_KEY solo con importar
                       src.graph/src.tools, tumbaba el job rules de CI
@@ -208,19 +248,38 @@ evals/
 .github/
 └── workflows/
     └── ci.yml     ✅ rules en cada push, evals solo en main (MAX_EVAL_CASES=1)
-                      + LANGCHAIN_API_KEY como secret (Capa 3B)
-                      [conocido, roto a propósito: job evals falla con RuntimeError "Falta
-                      DATABASE_URL" — rag_search() necesita Postgres real desde 5B.2, ese secret
-                      nunca se agregó a evals. ACTUALIZADO 2026-07-27: el bloqueo de contenido ya
-                      no aplica (golden_set.json dejó de ser sobre LangGraph docs, ver evals/
-                      arriba) — sigue roto por dos motivos técnicos sin resolver: (1) falta
-                      agregar DATABASE_URL como secret, decidido con Juan usar un rol de
-                      Postgres de solo lectura (GRANT SELECT en chunks, sin permisos de
-                      escritura/DDL) en vez de reusar la credencial completa de producción,
-                      todavía no creado; (2) tests/test_evals.py tiene 2 preguntas
-                      hardcodeadas en el código (no en golden_set.json) del dominio viejo
-                      (reembolso, ticket de login) que también hay que reemplazar. Es el
-                      próximo paso concreto de la prioridad 1 de más abajo]
+                      + LANGCHAIN_API_KEY como secret (Capa 3B). ARREGLADO 2026-07-28: job
+                      evals ya no falla con RuntimeError "Falta DATABASE_URL". Se creó en
+                      Supabase un rol `ci_readonly` (GRANT SELECT únicamente sobre `chunks`,
+                      + policy de RLS scopeada a ese rol — la tabla tiene RLS activado sin
+                      policies desde 5B.4 paso 2, así que sin la policy el SELECT hubiera
+                      devuelto 0 filas en vez de error) y se agregó como secret `DATABASE_URL`
+                      en GitHub Actions. Verificado con un script descartable (fuera del repo):
+                      SELECT sobre chunks funciona (2451 filas), INSERT bloqueado
+                      (permission denied), SELECT sobre checkpoints (tabla fuera de su
+                      alcance) también bloqueado. `evals/run_evals.py` compila con
+                      MemorySaver (no PostgresSaver) en CI, así que el rol nunca necesita
+                      tocar las tablas del checkpointer. Las 2 preguntas hardcodeadas del
+                      dominio viejo en tests/test_evals.py (reembolso, ticket de login)
+                      reemplazadas por preguntas reales de instrumentación de campo (una
+                      factual del golden set para el flujo de rag_search, una de escalado a
+                      técnico de planta para el flujo de create_ticket). CI run #17 verde en
+                      ambos jobs (commit 1945750) — único warning es la deprecación de
+                      Node.js 20 en el runner de GitHub Actions, ajena a este repo.
+
+Dockerfile          ✅ (2026-07-30) nuevo — python:3.12-slim, COPY requirements.txt +
+                      pip install antes de COPY src/ (cachea la capa de dependencias),
+                      EXPOSE 8000, CMD uvicorn src.main:app --host 0.0.0.0 --port 8000.
+                      No copia docs/pdfs/ ni .env (secretos van por --env-file en
+                      docker run). Probado 2026-07-31: docker build (~61s, sin errores) +
+                      docker run --env-file .env -p 8000:8000 (conectó a Postgres real,
+                      checkpointer.setup() corrió, uvicorn arriba) + POST /chat real
+                      (pregunta sobre transmisor Rosemount, rag_search encontró el chunk
+                      correcto, respuesta con cita de fuente, tool_calls_used poblado).
+                      Container detenido y borrado al terminar. Containerization 0→1
+                      en la rúbrica.
+.dockerignore        ✅ (2026-07-30) nuevo — excluye .venv/, .git/, docs/, tests/,
+                      .env, reports/, courses/, scripts/, *.md del contexto de build.
 
 ── PRÓXIMO PASO ──
 Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
@@ -415,33 +474,60 @@ Sesión 1 — 5B.3 (Postgres checkpointer). ✅ COMPLETA (2026-07-24). Cierra Ca
 
 Sesión 2 — batch de limpieza y mejoras chicas (todo mecánico, sin conceptos nuevos,
 15-45 min cada uno):
-- Paso 6: sacar build_index()/set_index()/_index/InMemoryIndex muerto de
-  src/main.py y src/tools.py (ya no alimentan a rag_search() desde 5B.2).
-- Prender tracing real del agente (LANGCHAIN_TRACING_V2 para el runtime de /chat,
-  no solo para evals/ — gap encontrado en la auditoría de M3, reconfirmado en la
-  auditoría de M5). Actualización (2026-07-22, ver
-  courses/POST_COURSE_ZOOMCAMP_M5.md): al prender esto, sumar en el mismo cambio
-  el patrón de M5 — nombrar spans por paso interno (rag_search, vector/keyword,
-  create_ticket) y tokens/costo como atributos de span, aplicado vía LangSmith
-  (no vía OTel crudo, ver POSPUESTO).
-- Poblar ChatResponse.tool_calls_used en main.py (deuda técnica desde Capa 5A,
-  2026-06-20, campo siempre devuelve []).
-- max_tokens explícito en get_bound_llm() (aprendizaje empírico de M3: resúmenes
-  largos escalan ~2.3x tokens de output).
+- ✅ (2026-07-28) Paso 6: sacado build_index()/set_index()/_index/InMemoryIndex/
+  KeywordIndex muerto de src/main.py, src/tools.py y src/ingestion.py (ya no
+  alimentaban a rag_search() desde 5B.2). Verificado con git grep (sin referencias
+  restantes) y pytest tests/test_rules.py (7/7).
+- ✅ (2026-07-28 código, 2026-07-29 verificado) Prender tracing real del agente
+  (LANGCHAIN_TRACING_V2 para el runtime de /chat, no solo para evals/ — gap
+  encontrado en la auditoría de M3, reconfirmado en la auditoría de M5). Aplicado
+  el patrón de M5 — nombrar spans por paso interno (rag_search, vector/keyword) y
+  tokens/costo como atributos de span, vía LangSmith (no vía OTel crudo, ver
+  POSPUESTO). `_vector_search`/`_keyword_search` instrumentados con `@traceable`
+  (spans `agent.rag_search.vector`/`agent.rag_search.keyword`, `run_type="retriever"`,
+  gateado por `LANGCHAIN_API_KEY` igual que evaluators.py) + fix de orden de imports
+  en main.py (`load_dotenv()` antes de `import src.graph`, si no la instrumentación
+  quedaba desactivada en producción). El LLM call de `agent_node` y los tool-calls
+  `rag_search`/`create_ticket` quedan auto-trazados por LangChain una vez prendido
+  `LANGCHAIN_TRACING_V2`, sin código extra (incluye tokens/costo, LangSmith los
+  calcula solo). **Verificado 2026-07-29:** con `LANGCHAIN_TRACING_V2=true` ya en
+  `.env`, servidor local levantado y un request real a `/chat` (pregunta sobre rango
+  de medición de un transmisor Rosemount) generó un trace real en LangSmith con el
+  árbol esperado — `ChatOpenAI` trazado automático, `rag_search` con
+  `agent.rag_search.vector` (0.73s) y `agent.rag_search.keyword` (1.00s) anidados
+  adentro como spans hijos. Confirmado por Juan con captura del dashboard.
+- ✅ (2026-07-29) Poblado `ChatResponse.tool_calls_used` en main.py (deuda técnica desde
+  Capa 5A, 2026-06-20, campo siempre devolvía `[]`): recorre `result["messages"]` tras
+  `graph.invoke()` y junta los `.tool_calls[].name` de los mensajes que llamaron una
+  tool, sin duplicados. Verificado con `pytest tests/test_rules.py` (7/7).
+- ✅ (2026-07-29) `max_tokens=800` explícito en `get_bound_llm()` (aprendizaje empírico
+  de M3: resúmenes largos escalan ~2.3x tokens de output). 800 alcanza de sobra para
+  una respuesta técnica puntual con cita de fuente, y pone un techo real a un caso que
+  se desborde.
 - ~~Actualizar el SYSTEM_PROMPT de graph.py~~ — hecho en 5B.4 paso 3 (2026-07-15),
   ya no es parte de esta sesión.
-- Arreglar el contrato de RAGResult.score (src/schemas.py): dice ge=0.0/le=1.0 y se
-  describe como "similitud coseno", pero rag_search() le pasa el score de RRF (no
-  coseno). Safe hoy SOLO por casualidad — con k=1 el máximo de RRF es exactamente 1.0
-  (un chunk en rank 0 de ambas listas: 0.5+0.5); si cambiara k, score>1.0 tiraría
-  ValidationError dentro de rag_search() en producción. Sacar/subir el le=1.0 y
-  corregir la descripción a "score de fusión RRF" (detectado 2026-07-24).
-- Redominar el schema de create_ticket (src/schemas.py:TicketInput): las categorías
-  bug/feature/question son vocabulario prestado del curso DeepLearning (soporte de
-  software) y no encajan en instrumentación de campo. Reformular como orden de
-  trabajo / aviso de mantenimiento con campos del dominio (equipo/modelo, planta,
-  síntoma, código de error, prioridad). Cambio de schema barato, sin persistencia
-  (ver POSPUESTO para la persistencia real). Detectado 2026-07-24.
+- ✅ (2026-07-29) Arreglado el contrato de `RAGResult.score` (src/schemas.py): decía
+  `ge=0.0/le=1.0` y se describía como "similitud coseno", pero `rag_search()` le pasa
+  el score de RRF (no coseno). Era safe hoy SOLO por casualidad — con `rrf_k=1` el
+  máximo de RRF da exactamente 1.0 (un chunk en rank 0 de ambas listas: 0.5+0.5); si
+  cambiara `rrf_k`, un score>1.0 hubiera tirado `ValidationError` dentro de
+  `rag_search()` en producción. Sacado el `le=1.0`, corregida la descripción a "score
+  de fusión RRF" (detectado 2026-07-24, corregido 2026-07-29).
+- ✅ (2026-07-29) Redominado el schema de `create_ticket` (src/schemas.py:TicketInput):
+  las categorías `bug/feature/question/other` eran vocabulario prestado del curso
+  DeepLearning (soporte de software) y no encajaban en instrumentación de campo.
+  Reemplazadas por `field_instrument_failure/biological_process_anomaly/
+  pump_maintenance/undocumented_query` — tomadas del borrador ya existente en
+  CORPUS_INSTRUMENTACION.MD ("Categorías sugeridas para create_ticket") y traducidas a
+  inglés para seguir la convención del resto del `Literal` (`low/medium/high`).
+  `tests/test_rules.py` actualizado (summary + categorías de ejemplo del dominio real
+  en vez de "el cliente no puede iniciar sesión"). Cambio de schema barato, sin
+  persistencia (ver POSPUESTO para la persistencia real). Detectado 2026-07-24,
+  corregido 2026-07-29.
+
+**Sesión 2 completa (2026-07-29).** Los 6 ítems del batch de limpieza (paso 6 dead
+code, tracing real, tool_calls_used, max_tokens, contrato de RAGResult.score,
+TicketInput redominado) están cerrados.
 
 Nota (2026-07-11): este plan asumía "Sesión 2 → recién ahí arrancar M4". En la
 práctica M4 se cursó en paralelo, sin esperar a la Sesión 2, y ya terminó (videos +
@@ -493,18 +579,140 @@ credencial completa — decidido con Juan, no implementado) y reemplazar las 2 p
 hardcodeadas del dominio viejo en `tests/test_evals.py`. La rotación de credenciales +
 limpieza de historial de git tampoco se tocó todavía.
 
+Actualización (2026-07-28): cerrados los dos pendientes técnicos que quedaban de la
+prioridad 1. Creado en Supabase el rol `ci_readonly` (GRANT SELECT solo sobre `chunks`
++ policy de RLS scopeada a ese rol, ver detalle en `ci.yml` arriba) y agregado como
+secret `DATABASE_URL` en GitHub Actions. Reemplazadas las 2 preguntas hardcodeadas del
+dominio viejo en `tests/test_evals.py` por preguntas reales de instrumentación de campo.
+Verificado en dos niveles: local (3 tests de `test_evals.py` en verde contra
+Supabase+OpenAI reales) y en CI real — push del commit `1945750`, run #17 verde en
+ambos jobs (`rules` y `evals`). **La prioridad 1 (CI en verde + seguridad) queda
+cerrada en su parte de CI.** Lo único que sigue pendiente de esa prioridad es la
+rotación de credenciales reales + limpieza de historial de git (ver POSPUESTO abajo) —
+no se tocó hoy: al probar la conexión de `ci_readonly` se expuso sin querer la
+password real de `DATABASE_URL` en el chat de la sesión; Juan restauró esa misma
+password en `.env` (no generó una nueva), así que la credencial de producción sigue
+siendo la misma de antes — la rotación real todavía no pasó.
+
+Actualización (2026-07-28, sesión tarde): resuelto el resto de la prioridad 1.
+Mail automático de Supabase (`rls_disabled_in_public`) detectó que las 4 tablas del
+checkpointer (`checkpoints`/`checkpoint_blobs`/`checkpoint_writes`/
+`checkpoint_migrations`, creadas en 5B.3) nunca pasaron por el
+`ALTER TABLE ... ENABLE ROW LEVEL SECURITY` que sí tenía `chunks` desde julio —
+corregido con el mismo patrón (RLS sin policies; el rol de la app conecta directo
+por Postgres, no por la API REST, así que no se ve afectado). Verificado con
+`SELECT rowsecurity FROM pg_tables` (las 5 tablas en `true`) + `pytest
+tests/test_rules.py` (7/7). En el camino se rotaron las dos credenciales reales:
+`OPENAI_API_KEY` (proyecto nuevo scopeado creado en OpenAI, key vieja para revocar)
+y la password de `DATABASE_URL` (reset en Supabase) — motivo extra: durante esta
+sesión se expuso por error, en el chat, la `OPENAI_API_KEY` nueva (un comando
+`sed` que no truncó como se esperaba), sumado a la exposición de `DATABASE_URL` de
+la sesión de la mañana (ver arriba). Ambas rotaciones verificadas con pytest en
+verde. **La prioridad 1 queda completamente cerrada**, salvo la limpieza del
+historial de git (ver POSPUESTO) — ya no es urgente en el sentido de "credencial
+viva expuesta" (las viejas quedaron inertes), es higiene pendiente antes de
+publicar el repo como portfolio.
+
+Arrancada también la Sesión 2 (limpieza mecánica, ver plan arriba): paso 6 (dead
+code) completo, tracing real en progreso — detalle en la sección de Sesión 2.
+
+Actualización (2026-07-29): cerrado el ítem de tracing real de la Sesión 2 — ver
+detalle de verificación en la sección de Sesión 2 arriba.
+
+Actualización (2026-07-29, tarde): cerrados los 3 ítems restantes de la Sesión 2
+(`ChatResponse.tool_calls_used`, `max_tokens` explícito, contrato de
+`RAGResult.score`, redominar `TicketInput`) — **Sesión 2 completa**, ver detalle en
+su sección arriba.
+
+**Cambio de prioridad:** Juan entrega este repo tal cual como proyecto final del
+**LLM Zoomcamp 2026** (DataTalks.Club) — deadline 2026-08-10 (intento oportunista
+2026-08-03). Detalle completo del handoff del curso en
+`courses/PROJECT_APPROVAL_HANDOFF.md`. Auditoría del repo contra la rúbrica oficial
+(9 criterios 0-2 pts + 3 best practices) hecha 2026-07-29: hoy ~12/21. Plan de acción
+acordado con Juan, en orden de ROI (puntos de rúbrica por hora), objetivo ~19/21 antes
+del deadline:
+1. Dockerfile de la app (containerization 0→1)
+2. README: mencionar explícitamente los criterios de evaluación (regla dura del curso)
+3. Endpoint de feedback de usuario (monitoring 0→1, revisado 2026-07-31: apuntando a
+   0→2 — ver detalle en la actualización del 2026-07-31 más abajo)
+4. Comparar 2 system prompts con evals/run_evals.py (LLM evaluation 1→2)
+5. Query rewriting (best practice)
+6. Ajustar instrucciones de reproducibility (dataset con copyright, techo incierto)
+7. Limpieza del historial de git (`.env` viejo — ver POSPUESTO abajo, ahora SÍ en
+   alcance de esta entrega) + repo privado→público
+Deploy a cloud (bonus +2) y el 2do punto de containerization/monitoring (docker-compose
+completo, dashboard) quedan como stretch post-19/21, a decidir según cómo vaya la
+semana — no están en el plan fijo. Capa 6 (deploy) del mapa de capas más abajo sigue
+`PENDIENTE` en el sentido de "no hay código", pero el bonus de deploy es justamente
+parte de esa capa.
+
+Actualización (2026-07-30): arrancado el punto 1 (Dockerfile). Creados `Dockerfile`
+(`python:3.12-slim`, copia `requirements.txt` primero para cachear la capa de
+`pip install`, después `src/`, `EXPOSE 8000`, `CMD uvicorn src.main:app --host
+0.0.0.0 --port 8000`) y `.dockerignore` nuevo (excluye `.venv/`, `.git/`, `docs/`,
+`tests/`, `.env`, etc. — sin esto `docker build` copiaría el `.venv/` completo al
+contexto). Decisión explicada a Juan: la imagen no incluye `docs/pdfs/` (la ingesta
+ya corrió contra Supabase, la app en runtime solo consulta la base) ni `.env`
+(secretos van con `--env-file .env` en `docker run`, nunca en la imagen). Sin
+probar esa sesión — próximo paso pedido explícitamente por Juan: active recall
+sobre Docker antes de tocar el build.
+
+Actualización (2026-07-31): active recall de Docker hecho al arrancar la sesión
+(Dockerfile/imagen/container, build vs run, por qué `.dockerignore` — las tres
+respuestas de Juan correctas). **Build y run probados y verificados:**
+`docker build -t agentic-rag-fastapi .` (~61s, sin errores) y
+`docker run --env-file .env -p 8000:8000 agentic-rag-fastapi` levantaron un
+container real que conectó a Postgres, corrió `checkpointer.setup()` y respondió
+un `POST /chat` real con `rag_search` funcionando (cita de fuente correcta,
+`tool_calls_used` poblado). Container detenido y eliminado al terminar la prueba.
+**Punto 1 del plan (containerization) completo, 0→1 en la rúbrica.**
+
+**Punto 2 del plan (README) completo:** agregada la sección "Criterios de evaluacion
+(LLM Zoomcamp 2026)" en `README.md` — tabla con los 9 criterios oficiales, cada uno
+apuntando a dónde vive en el repo (regla dura del curso: el README debe mencionar
+los criterios explícitamente). Sin inflar: Monitoring y las 2 best practices que
+faltan (reranking, query rewriting) están marcadas como "Pendiente", no se reportan
+como hechas. Sumado también el comando `docker run` a "Como correrlo". Próximo paso:
+punto 3 del plan, endpoint de feedback de usuario (monitoring 0→1).
+
+**Decisión 2026-07-31 sobre el punto 3 (monitoring):** en vez del endpoint de
+feedback solo (0→1), se decidió con Juan un enfoque más barato para llegar a 2/2 —
+el criterio pide feedback de usuario **y** dashboard con ≥5 gráficos. LangSmith ya
+está prendido desde la Sesión 2 (2026-07-29) y su dashboard de proyecto ya expone
+varios gráficos gratis (cantidad de runs, latencia, tokens/costo, error rate) sin
+armar nada nuevo — no es "el dashboard" que uno construye, pero cumple la letra del
+criterio. Plan: el endpoint de feedback escribe en Postgres (tabla chica) **y**
+además manda el feedback a LangSmith con `client.create_feedback(run_id, ...)`
+(dependencia `langsmith` ya instalada, no suma librería nueva) para que quede
+asociado a cada trace real y aparezca en el dashboard. Evita armar el stack
+Postgres+Grafana completo (que seguía como stretch post-19/21) para llegar al mismo
+puntaje. Pendiente de implementar — no arrancado todavía.
+
+**Decisión 2026-07-31 sobre RAGAS (ver POSPUESTO abajo):** confirmado con Juan que
+se suma como upgrade **condicional** — solo si el plan core (puntos 3-7) cierra con
+tiempo de sobra antes del 10/08. Framework elegido: **RAGAS** (ya estaba anotado
+desde el 18/07; coincide con las métricas de generación que faltan — faithfulness,
+answer relevancy, context precision/recall — y es el nombre más reconocible para
+evaluación de RAG específicamente en búsquedas laborales de AI/LLM Engineer, más
+que alternativas más genéricas como DeepEval). Estimado ~1.5-2.5h — el riesgo que
+puede estirarlo es compatibilidad de versión entre `ragas` y `langchain==1.2.15`/
+`langchain-core==1.3.2` (RAGAS suele ir atrás soportando versiones nuevas de
+LangChain), no la lógica del script en sí.
+
 ── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
 - Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
   anotado como mejora de performance desde 5B.2).
-- Rotar credenciales reales (OPENAI_API_KEY, DATABASE_URL) + limpiar historial de
-  git (pendiente de seguridad desde 2026-07-02, no bloquea desarrollo local).
-  Confirmado 2026-07-15: el repo en GitHub es privado hoy, así que no es urgente
-  por exposición pública inmediata — pero es condición explícita antes de pasarlo
-  a público. ACTUALIZADO 2026-07-24: adelantado — deja de ser "antes de público" y
-  pasa a ser la prioridad #1 después de 5B.3 (junto con CI en verde). Motivo:
-  reescribir historial de git se vuelve más difícil cuanto más crece, y es fácil que
-  el repo se haga público por impulso/accidente con las keys adentro. Ver nota de la
-  revisión estratégica 2026-07-24 en el plan de cierre de Capa 5B, arriba.
+- Limpiar el historial de git (`.env` trackeado en commits viejos hasta `834e71a`,
+  pendiente desde 2026-07-02). Las credenciales reales ya fueron rotadas
+  (2026-07-28, ver arriba) — lo que queda en el historial son keys inertes, así que
+  esto ya no es una emergencia de seguridad, es prolijidad antes de publicar el
+  repo como portfolio. Operación destructiva e irreversible (`git filter-repo` +
+  force-push) — confirmar plan explícito con Juan antes de tocar el historial,
+  no ejecutar de forma autónoma. Actualización (2026-07-29): ahora SÍ entra en el
+  alcance de la entrega del LLM Zoomcamp (ver "Cambio de prioridad" arriba) — Juan
+  confirmó que quiere el historial limpio antes de pasar el repo a público. Sigue
+  necesitando confirmación explícita del plan puntual (commits, backup, momento del
+  force-push) antes de ejecutar.
 - Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
   en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
 - .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el
@@ -522,7 +730,7 @@ limpieza de historial de git tampoco se tocó todavía.
   encare el deploy (Capa 6) — no antes, no es prioridad con el objetivo actual.
 - Framework de evals de generación (RAGAS u otro) como capa adicional sobre las
   métricas propias, no reemplazo — discutido 2026-07-18. Orden decidido:
-  primero terminar hit_rate/mrr propios (pasos 5-6 de 5B.4, en curso) porque
+  primero terminar hit_rate/mrr propios (pasos 5-6 de 5B.4, ya cerrado) porque
   programarlos a mano es la señal de conocimiento real; recién después sumar
   RAGAS (o similar) para métricas de generación end-to-end (faithfulness,
   answer relevancy, context precision/recall) que son tediosas de replicar
