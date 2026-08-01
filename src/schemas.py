@@ -25,6 +25,19 @@ class ChatResponse(BaseModel):
         default_factory=list,
         description="Nombres de las tools invocadas en esta respuesta"
     )
+    run_id: str = Field(
+        ...,
+        description="UUID del trace de LangSmith de esta invocacion -- se usa despues "
+                     "para asociar feedback de usuario a esta conversacion puntual"
+    )
+
+
+class FeedbackInput(BaseModel):
+    """Payload de entrada del endpoint /feedback."""
+    run_id: str = Field(..., description="run_id devuelto por /chat para esta conversacion")
+    thread_id: str = Field(..., min_length=1, description="ID de conversacion")
+    score: float = Field(..., ge=0.0, le=1.0, description="1.0 = pulgar arriba, 0.0 = pulgar abajo")
+    comment: Optional[str] = Field(default=None, description="Comentario opcional del usuario")
 
 
 class TicketInput(BaseModel):
