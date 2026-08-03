@@ -23,16 +23,23 @@ from evals.evaluators import (
     citation_evaluator,
     convergence_evaluator,
     relevance_evaluator,
+    tool_call_evaluator,
 )
-from src.graph import graph_builder
-
-# MemorySaver: los evals corren en una sola pasada de principio a fin, no
-# necesitan que el estado sobreviva un reinicio. No depende de Postgres.
-graph = graph_builder.compile(checkpointer=MemorySaver())
-
+from src.graph import MODEL_NAME, SYSTEM_PROMPT, build_graph
 
 GOLDEN_SET_PATH = ROOT_DIR / "evals" / "golden_set.json"
 RESULTS_DIR = ROOT_DIR / "evals" / "results"
+
+
+def build_eval_graph(system_prompt: str = SYSTEM_PROMPT, model_name: str = MODEL_NAME, temperature: float = 1.0):
+    """Compila un grafo para evals con MemorySaver -- no depende de Postgres,
+    a diferencia del graph de main.py (no necesita sobrevivir un reinicio)."""
+    return build_graph(system_prompt, model_name, temperature).compile(checkpointer=MemorySaver())
+
+
+# Grafo default usado por main()/CI: prompt y modelo de produccion, sin cambios
+# de comportamiento respecto a antes de parametrizar build_graph() en src/graph.py.
+graph = build_eval_graph()
 
 
 def load_golden_set(limit: int | None = None) -> list[dict[str, str]]:
@@ -43,72 +50,108 @@ def load_golden_set(limit: int | None = None) -> list[dict[str, str]]:
     return cases[:limit]
 
 
-def invoke_agent(question: str) -> dict:
-    """Invoca el grafo con un thread_id aislado para cada pregunta."""
-    config = {"configurable": {"thread_id": f"eval-{uuid.uuid4()}"}}
-    return graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+def invoke_agent(graph, question: str) -> tuple[dict, uuid.UUID]:
+    """Invoca el grafo dado con un thread_id y run_id aislados para cada pregunta.
 
-
-def evaluate_case(case: dict[str, str]) -> dict[str, object]:
-    """Ejecuta el agente para un caso y devuelve las metricas calculadas.
-
-    Además, devuelve `run_id` si el resultado del agente lo incluye, para
-    poder enviar feedback externo (LangSmith) más tarde.
+    El run_id se genera ANTES del invoke y se pasa por config["run_id"] -- mismo
+    patron que /chat en main.py -- para poder asociarle feedback despues. AgentState
+    no trae "run_id" de vuelta en el resultado, por eso no se puede leer del trace.
     """
-    trace = invoke_agent(case["question"])
+    run_id = uuid.uuid4()
+    config = {"configurable": {"thread_id": f"eval-{run_id}"}, "run_id": run_id}
+    trace = graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    return trace, run_id
+
+
+def evaluate_case(graph, case: dict[str, str]) -> dict[str, object]:
+    """Ejecuta el agente para un caso y devuelve las metricas calculadas, junto
+    con el run_id generado para poder enviarle feedback despues a LangSmith.
+
+    Dos tipos de caso conviven en el golden set:
+    - Q&A con expected_answer (el flujo original): se juzga con accuracy_evaluator
+      contra la referencia.
+    - Escalamiento con expected_tool (ej. create_ticket): no hay respuesta de
+      referencia con la que comparar texto -- lo que importa es si el agente
+      decidio llamar la tool correcta, asi que se verifica con tool_call_evaluator
+      (code-based, sobre la traza) en vez de un LLM-judge.
+    """
+    trace, run_id = invoke_agent(graph, case["question"])
     # obtenemos la respuesta final asumiendo que el ultimo mensaje es la respuesta del agente
     answer = trace["messages"][-1].content
 
     # calcular métricas usando los evaluadores reutilizables
     relevance_score = relevance_evaluator(case["question"], answer)
-    accuracy_score = accuracy_evaluator(case["question"], case["expected_answer"], answer)
     has_citation = citation_evaluator(answer)
     steps = convergence_evaluator(trace)
 
-    # extraer run_id si el grafo lo devolvió (puede variar según implementation)
-    run_id = None
-    if isinstance(trace, dict):
-        # intento seguro de obtener run_id sin fallar si no está presente
-        run_id = trace.get("run_id")
-
-    return {
+    result: dict[str, object] = {
         "id": case["id"],
         "question": case["question"],
-        "expected_answer": case["expected_answer"],
-        "source": case["source"],
+        "source": case.get("source"),
         "category": case["category"],
         "answer": answer,
         "relevance_score": relevance_score,
-        "accuracy_score": accuracy_score,
         "has_citation": has_citation,
         "convergence_steps": steps,
-        "run_id": run_id,
+        "run_id": str(run_id),
     }
+
+    if "expected_tool" in case:
+        result["expected_tool"] = case["expected_tool"]
+        result["tool_call_correct"] = tool_call_evaluator(trace, case["expected_tool"])
+    else:
+        result["expected_answer"] = case["expected_answer"]
+        result["accuracy_score"] = accuracy_evaluator(case["question"], case["expected_answer"], answer)
+
+    return result
 
 
 def build_summary(results: list[dict[str, object]]) -> dict[str, float]:
-    """Calcula metricas agregadas de la corrida."""
+    """Calcula metricas agregadas de la corrida.
+
+    avg_accuracy y tool_call_rate se calculan solo sobre el subconjunto de
+    resultados que trae esa metrica (Q&A vs. escalamiento, ver evaluate_case) --
+    quedan ausentes del summary si ningun caso de ese tipo entro en la corrida
+    (ej. un MAX_EVAL_CASES chico que solo tomo casos de un tipo).
+    """
     total = len(results)
     avg_relevance = sum(item["relevance_score"] for item in results) / total
-    avg_accuracy = sum(item["accuracy_score"] for item in results) / total
     citation_rate = sum(1 for item in results if item["has_citation"]) / total
     avg_steps = sum(item["convergence_steps"] for item in results) / total
 
-    return {
+    summary = {
         "total_cases": total,
         "avg_relevance": round(avg_relevance, 2),
-        "avg_accuracy": round(avg_accuracy, 2),
         "citation_rate": round(citation_rate, 2),
         "avg_steps": round(avg_steps, 2),
     }
 
+    accuracy_results = [item for item in results if "accuracy_score" in item]
+    if accuracy_results:
+        summary["avg_accuracy"] = round(
+            sum(item["accuracy_score"] for item in accuracy_results) / len(accuracy_results), 2
+        )
+        summary["accuracy_cases"] = len(accuracy_results)
 
-def save_results(summary: dict[str, float], results: list[dict[str, object]]) -> Path:
-    """Guarda la corrida en evals/results/YYYY-MM-DD/HH-MM-SS.json."""
+    tool_results = [item for item in results if "tool_call_correct" in item]
+    if tool_results:
+        summary["tool_call_rate"] = round(
+            sum(1 for item in tool_results if item["tool_call_correct"]) / len(tool_results), 2
+        )
+        summary["tool_call_cases"] = len(tool_results)
+
+    return summary
+
+
+def save_results(
+    summary: dict[str, float], results: list[dict[str, object]], variant_label: str | None = None
+) -> Path:
+    """Guarda la corrida en evals/results/YYYY-MM-DD/HH-MM-SS[_variante].json."""
     timestamp = datetime.now()
     day_dir = RESULTS_DIR / timestamp.date().isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
-    output_path = day_dir / f"{timestamp.strftime('%H-%M-%S')}.json"
+    suffix = f"_{variant_label}" if variant_label else ""
+    output_path = day_dir / f"{timestamp.strftime('%H-%M-%S')}{suffix}.json"
 
     payload = {
         "generated_at": timestamp.isoformat(),
@@ -127,8 +170,49 @@ def get_case_limit() -> int | None:
     return int(raw_value)
 
 
+def send_feedback(client: Client | None, result: dict[str, object]) -> None:
+    """Manda relevance/accuracy/tool_call a LangSmith para un caso ya evaluado.
+    Best-effort: si no hay cliente, no hay run_id, o falla la llamada, no rompe
+    la ejecucion. tool_call_correct es bool -- se manda como score 0.0/1.0, mismo
+    rango que relevance/accuracy normalizados que ya recibe LangSmith."""
+    run_id = result.get("run_id")
+    if not client or run_id is None:
+        return
+    for key, feedback_key in (
+        ("relevance_score", "relevance"),
+        ("accuracy_score", "accuracy"),
+        ("tool_call_correct", "tool_call"),
+    ):
+        if key not in result:
+            continue
+        value = result[key]
+        score = float(value) if isinstance(value, bool) else value
+        try:
+            client.create_feedback(run_id, key=feedback_key, score=score)
+        except Exception:
+            pass
+
+
+def run_eval_pass(
+    graph, cases: list[dict[str, str]], client: Client | None, variant_label: str | None = None
+) -> tuple[dict[str, float], Path]:
+    """Corre el golden set completo contra un grafo dado, envia feedback caso a
+    caso (no al final -- si el script se corta a mitad de camino, no se pierde
+    el feedback ya mandado) y guarda los resultados."""
+    results: list[dict[str, object]] = []
+    for case in cases:
+        result = evaluate_case(graph, case)
+        results.append(result)
+        send_feedback(client, result)
+
+    summary = build_summary(results)
+    output_path = save_results(summary, results, variant_label=variant_label)
+    return summary, output_path
+
+
 def main() -> None:
-    """Corre una ronda completa de evaluacion y muestra un resumen.
+    """Corre una ronda completa de evaluacion (prompt/modelo de produccion) y
+    muestra un resumen.
 
     Si `LANGCHAIN_API_KEY` está presente en el entorno, crea un cliente de
     LangSmith y envía feedback por cada caso evaluado. Si no está, la parte
@@ -140,40 +224,21 @@ def main() -> None:
         raise RuntimeError("OPENAI_API_KEY no configurada. Carga el .env antes de correr evals.")
 
     # Crear cliente de LangSmith solo si hay clave de LangChain (opcional)
-    client = None
-    if os.getenv("LANGCHAIN_API_KEY"):
-        # el constructor usa la variable de entorno para autenticarse
-        client = Client()
+    client = Client() if os.getenv("LANGCHAIN_API_KEY") else None
 
-    case_limit = get_case_limit()
-    cases = load_golden_set(limit=case_limit)
-
-    results: list[dict[str, object]] = []
-    # iteramos caso por caso para poder enviar feedback inmediatamente
-    for case in cases:
-        result = evaluate_case(case)
-        results.append(result)
-
-        # enviar feedback a LangSmith si tenemos cliente y run_id disponible
-        run_id = result.get("run_id")
-        if client and run_id is not None:
-            for key in ("relevance_score", "accuracy_score"):
-                score = result.get(key)
-                if score is None:
-                    continue
-                try:
-                    client.create_feedback(run_id, key=key.removesuffix("_score"), score=score)
-                except Exception:
-                    # No queremos que LangSmith rompa la ejecucion; falla silenciosamente
-                    pass
-
-    summary = build_summary(results)
-    output_path = save_results(summary, results)
+    cases = load_golden_set(limit=get_case_limit())
+    summary, output_path = run_eval_pass(graph, cases, client)
 
     print("Evaluacion completada")
     print(f"Casos evaluados: {summary['total_cases']}")
     print(f"Relevancia promedio: {summary['avg_relevance']}/5")
-    print(f"Precision promedio: {summary['avg_accuracy']}/5")
+    if "avg_accuracy" in summary:
+        print(f"Precision promedio: {summary['avg_accuracy']}/5 ({summary['accuracy_cases']} casos Q&A)")
+    if "tool_call_rate" in summary:
+        print(
+            f"Tool-call rate (escalamiento): {summary['tool_call_rate'] * 100:.0f}% "
+            f"({summary['tool_call_cases']} casos)"
+        )
     print(f"Porcentaje con cita: {summary['citation_rate'] * 100:.0f}%")
     print(f"Pasos promedio: {summary['avg_steps']}")
     print(f"Resultados guardados en: {output_path}")

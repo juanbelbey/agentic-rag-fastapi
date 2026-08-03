@@ -1,5 +1,6 @@
 """Grafo minimo del agente con LLM, tools y persistencia en memoria."""
 
+from pathlib import Path
 from typing import Literal
 
 from langchain_core.messages import SystemMessage
@@ -11,38 +12,37 @@ from src.state import AgentState
 from src.tools import TOOLS
 
 
+PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+
+def load_prompt(filename: str) -> str:
+    """Lee un system prompt versionado desde prompts/."""
+    return (PROMPTS_DIR / filename).read_text(encoding="utf-8").strip()
+
+
 MODEL_NAME = "gpt-4o-mini"
-SYSTEM_PROMPT = (
-    "Sos un asistente de soporte tecnico para operadores y tecnicos de sistemas "
-    "municipales de agua potable y saneamiento (plantas potabilizadoras, redes de "
-    "distribucion, plantas de tratamiento cloacal). Respondes consultas sobre "
-    "instrumentacion de campo (transmisores de presion, caudal y temperatura de "
-    "Emerson/Rosemount, Siemens Sitrans y Endress+Hauser): calibracion, codigos de "
-    "error, rangos de medicion y procedimientos de mantenimiento.\n\n"
-    "Usa rag_search para buscar en los manuales tecnicos antes de responder — no "
-    "inventes datos de calibracion, rangos ni procedimientos que no esten en la "
-    "documentacion recuperada. Cita la fuente del chunk cuando respondas.\n\n"
-    "Si la consulta no esta cubierta por los manuales, o el problema requiere "
-    "intervencion fisica o escalar a soporte humano, usa create_ticket."
-)
+TEMPERATURE = 0.3
+SYSTEM_PROMPT = load_prompt("system_prompt_direct_answer.txt")
 
 
-def get_bound_llm() -> ChatOpenAI:
+def get_bound_llm(model_name: str = MODEL_NAME, temperature: float = TEMPERATURE) -> ChatOpenAI:
     """Crea el modelo con tools enlazadas solo cuando hace falta invocarlo."""
-    # "-> ChatOpenAI" es una anotacion de tipo de retorno (no ejecuta nada por si sola).
-    # Esta funcion no recibe parametros; construye y devuelve un LLM listo para tools.
-    return ChatOpenAI(model=MODEL_NAME, max_tokens=800).bind_tools(TOOLS)
+    return ChatOpenAI(model=model_name, max_tokens=800, temperature=temperature).bind_tools(TOOLS)
 
 
-def agent_node(state: AgentState) -> AgentState:
-    """Llama al modelo y devuelve el siguiente mensaje del agente."""
-    llm = get_bound_llm()
-    # El * desempaqueta la lista: [a, *[b, c]] -> [a, b, c].
-    # Asi evitamos enviar una lista anidada de mensajes al modelo.
-    response = llm.invoke([SystemMessage(content=SYSTEM_PROMPT), *state["messages"]])
-    # El nodo devuelve SOLO el parche de estado que produce.
-    # Con add_messages en AgentState, LangGraph anexa este mensaje al historial.
-    return {"messages": [response]}
+def build_agent_node(system_prompt: str = SYSTEM_PROMPT, model_name: str = MODEL_NAME, temperature: float = TEMPERATURE):
+    """Devuelve un agent_node cerrado sobre un prompt, modelo y temperatura dados (para comparar variantes en evals)."""
+
+    def agent_node(state: AgentState) -> AgentState:
+        llm = get_bound_llm(model_name, temperature)
+        # El * desempaqueta la lista: [a, *[b, c]] -> [a, b, c].
+        # Asi evitamos enviar una lista anidada de mensajes al modelo.
+        response = llm.invoke([SystemMessage(content=system_prompt), *state["messages"]])
+        # El nodo devuelve SOLO el parche de estado que produce.
+        # Con add_messages en AgentState, LangGraph anexa este mensaje al historial.
+        return {"messages": [response]}
+
+    return agent_node
 
 
 def route_after_agent(state: AgentState) -> Literal["tools", "__end__"]:
@@ -57,12 +57,16 @@ def route_after_agent(state: AgentState) -> Literal["tools", "__end__"]:
     return END
 
 
-tool_node = ToolNode(TOOLS)
+def build_graph(system_prompt: str = SYSTEM_PROMPT, model_name: str = MODEL_NAME, temperature: float = TEMPERATURE) -> StateGraph:
+    """Arma el StateGraph sin compilar, con el prompt, modelo y temperatura dados."""
+    builder = StateGraph(AgentState)
+    builder.add_node("agent", build_agent_node(system_prompt, model_name, temperature))
+    builder.add_node("tools", ToolNode(TOOLS))
 
-graph_builder = StateGraph(AgentState)
-graph_builder.add_node("agent", agent_node)
-graph_builder.add_node("tools", tool_node)
+    builder.add_edge(START, "agent")
+    builder.add_conditional_edges("agent", route_after_agent)
+    builder.add_edge("tools", "agent")
+    return builder
 
-graph_builder.add_edge(START, "agent")
-graph_builder.add_conditional_edges("agent", route_after_agent)
-graph_builder.add_edge("tools", "agent")
+
+graph_builder = build_graph()

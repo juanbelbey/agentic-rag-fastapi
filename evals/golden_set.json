@@ -334,5 +334,69 @@
     "expected_answer": "Para ingresar el número de calibración de un sensor en el transmisor, se debe utilizar el número de calibración de 16 dígitos que aparece en la etiqueta de cada sensor y lo debe ingresar durante la configuración del transmisor.",
     "source": "emerson_rosemount-8732em_manual_en.pdf",
     "category": "procedimental"
+  },
+  {
+    "id": "g049",
+    "question": "El transmisor de presion Rosemount 3051 dejo de mostrar lecturas en la pantalla local y no responde al protocolo HART. Necesito que envien un tecnico a revisarlo en planta.",
+    "category": "escalamiento",
+    "ticket_category": "field_instrument_failure",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g050",
+    "question": "Hace dos dias que el caudalimetro Siemens Sitrans da lecturas erraticas que saltan entre cero y el maximo de escala sin ningun patron. Sospechamos una falla del sensor, generen una orden de trabajo.",
+    "category": "escalamiento",
+    "ticket_category": "field_instrument_failure",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g051",
+    "question": "En el reactor biologico de la planta aparecio espuma excesiva de color marron oscuro y un olor muy fuerte a huevo podrido desde ayer. Que debemos hacer?",
+    "category": "escalamiento",
+    "ticket_category": "biological_process_anomaly",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g052",
+    "question": "El oxigeno disuelto del proceso biologico bajo bruscamente y los microorganismos parecen estar muriendo, la planta huele distinto a lo normal. Necesitamos que alguien lo evalue con urgencia.",
+    "category": "escalamiento",
+    "ticket_category": "biological_process_anomaly",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g053",
+    "question": "La bomba dosificadora de cloro empezo a hacer un ruido metalico distinto al habitual y vibra mas de lo normal. Pueden mandar a mantenimiento a revisarla?",
+    "category": "escalamiento",
+    "ticket_category": "pump_maintenance",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g054",
+    "question": "La bomba centrifuga de impulsion perdio presion de salida y tiene una fuga visible en el sello mecanico. Necesito que se registre para mantenimiento.",
+    "category": "escalamiento",
+    "ticket_category": "pump_maintenance",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g055",
+    "question": "Cual es el rango de medicion del transmisor de presion Yokogawa EJA110E? No tenemos ese fabricante en nuestros manuales disponibles.",
+    "category": "escalamiento",
+    "ticket_category": "undocumented_query",
+    "source": null,
+    "expected_tool": "create_ticket"
+  },
+  {
+    "id": "g056",
+    "question": "Necesito el procedimiento de calibracion de un caudalimetro que no esta en nuestro catalogo de documentacion, es una marca generica sin ficha tecnica cargada en el sistema. Como procedo?",
+    "category": "escalamiento",
+    "ticket_category": "undocumented_query",
+    "source": null,
+    "expected_tool": "create_ticket"
   }
 ]

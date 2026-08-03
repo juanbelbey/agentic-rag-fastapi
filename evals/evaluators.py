@@ -124,6 +124,23 @@ def citation_evaluator(answer: str) -> bool:
     return any(marker in normalized for marker in citation_markers)
 
 
+def tool_call_evaluator(trace: Any, expected_tool: str) -> bool:
+    """Code-based: True si expected_tool aparece entre las tools invocadas en la traza.
+
+    Mismo patron que el calculo de tool_calls_used en src/main.py -- recorre
+    los mensajes buscando AIMessage.tool_calls. A diferencia de accuracy_evaluator,
+    no depende de un LLM-judge: es una verificacion estructural (se llamo la tool
+    correcta si o no), pensada para casos donde lo que importa es la decision de
+    escalar (create_ticket), no el contenido de una respuesta grounded en el manual.
+    """
+    messages = trace["messages"] if isinstance(trace, dict) else trace
+    for message in messages:
+        for tool_call in getattr(message, "tool_calls", None) or []:
+            if tool_call["name"] == expected_tool:
+                return True
+    return False
+
+
 def convergence_evaluator(trace: Any) -> int:
     """Cuenta cuantos pasos tomo el agente hasta llegar a una respuesta final.
 

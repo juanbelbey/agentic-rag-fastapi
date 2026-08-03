@@ -23,14 +23,19 @@ El corpus son 11 manuales oficiales de Emerson/Rosemount, Siemens Sitrans y Endr
 
 ## Como correrlo
 
+**Requisitos para reproducir el pipeline completo:**
+- Python 3.12, dependencias fijadas en `requirements.txt` (`pip install -r requirements.txt` instala versiones exactas, no rangos)
+- Cuenta de OpenAI con API key (de pago — la ingesta completa embebe ~2451 chunks)
+- Postgres con la extension `vector` habilitada (Supabase free tier alcanza, ver `ROADMAP.md` Capa 5B.0)
+- Los 11 PDFs del corpus — no estan en el repo por copyright, pero son **descargables gratis y sin login** desde los dominios oficiales de cada fabricante: los 11 links directos (verificados HTTP 200) y el nombre de archivo exacto que espera cada uno estan en `CORPUS_INSTRUMENTACION.MD`. Se descargan a mano y se guardan en `docs/pdfs/` con esos nombres antes de ingerir.
+
 ```bash
 python -m venv .venv
 .venv/Scripts/activate  # source .venv/bin/activate en Linux/Mac
 pip install -r requirements.txt
 cp .env.example .env  # completar OPENAI_API_KEY y DATABASE_URL
+python -m scripts.ingest  # requiere docs/pdfs/ poblado, ver arriba
 ```
-
-Requiere una tabla `chunks` en Postgres/Supabase con la extension `vector` habilitada (ver `ROADMAP.md`, Capa 5B.0). La ingesta (`python -m scripts.ingest`) necesita los manuales en `docs/pdfs/` — no estan en el repo por copyright, ver seccion anterior.
 
 ```bash
 uvicorn src.main:app --reload
@@ -44,6 +49,8 @@ Alternativa con Docker (no reingiere nada, solo consulta la base ya poblada):
 docker build -t agentic-rag-fastapi .
 docker run --env-file .env -p 8000:8000 agentic-rag-fastapi
 ```
+
+**Reproducir los evals sin pagar de nuevo la ingesta:** `evals/ground_truth_retrieval.json` (520 preguntas de retrieval) y `evals/golden_set.json` (56 casos de generacion, incluye 8 de escalamiento a `create_ticket`) ya estan commiteados — no hace falta regenerarlos. Con una tabla `chunks` ya poblada (propia o restaurada de un dump), `python -m evals.retrieval_metrics` y `python -m evals.run_evals` corren directo sobre esos datasets. Los resultados de corridas ya hechas quedan en `evals/results/YYYY-MM-DD/` para inspeccionar sin correr nada.
 
 ## Criterios de evaluacion (LLM Zoomcamp 2026)
 
@@ -59,6 +66,6 @@ Este repo es la entrega del proyecto final del [LLM Zoomcamp](https://github.com
 | Ingestion pipeline | `scripts/ingest.py` — chunking + embeddings OpenAI + carga a Postgres/pgvector, script dedicado (no notebook manual) |
 | Monitoring | Pendiente |
 | Containerization | `Dockerfile` — build y run verificados, ver `CHANGELOG.md` 2026-07-31 |
-| Reproducibility | Seccion "Como correrlo" arriba; versiones fijas en `requirements.txt`; dataset con copyright, no redistribuible, ver seccion anterior |
+| Reproducibility | Seccion "Como correrlo" arriba; versiones fijas en `requirements.txt`; dataset con copyright pero accesible: 11 links directos verificados HTTP 200 en `CORPUS_INSTRUMENTACION.MD`; evals reproducibles sin re-ingerir (datasets ya commiteados) |
 
 Best practices: hybrid search ✅ (evaluado, ver Retrieval evaluation arriba). Re-ranking y query rewriting: pendientes.
