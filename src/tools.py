@@ -8,11 +8,14 @@ args_schema conecta cada tool con su modelo de validación:
 import json
 import os
 import re
+from functools import lru_cache
+from pathlib import Path
 
 import psycopg2
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langsmith import traceable  # Decorador opcional para instrumentar funciones con LangSmith
+from openai import OpenAI
 from pgvector.psycopg2 import register_vector
 
 from src.ingestion import embed_texts, rrf
@@ -73,6 +76,64 @@ else:
     _vector_search = _vector_search_impl
 
 
+PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+
+def _load_prompt(filename: str) -> str:
+    """Lee un prompt versionado desde prompts/.
+
+    Duplicado de src/graph.py:load_prompt -- no se importa de ahi porque
+    graph.py ya importa TOOLS desde este modulo (crearia un import circular).
+    """
+    return (PROMPTS_DIR / filename).read_text(encoding="utf-8").strip()
+
+
+QUERY_REWRITE_PROMPT = _load_prompt("query_rewrite.txt")
+REWRITE_MODEL = "gpt-4o-mini"
+
+_client: OpenAI | None = None
+
+
+def _get_client() -> OpenAI:
+    """Crea el cliente de OpenAI recien la primera vez que hace falta (mismo patron que src/ingestion.py)."""
+    global _client
+    if _client is None:
+        _client = OpenAI()
+    return _client
+
+
+@lru_cache(maxsize=1024)
+def _rewrite_query_impl(query: str) -> str:
+    """Reescribe la query en ingles tecnico para mejorar el matching de _keyword_search.
+
+    No se aplica a _vector_search: el embedding ya es multilingue (una pregunta
+    en espanol y su traduccion caen cerca en el espacio semantico), la brecha
+    ES/EN solo golpea al matching lexical exacto del full-text search.
+
+    Cacheada (misma query -> mismo resultado, temperature=0 es determinista):
+    sin esto, cada pasada de evals/retrieval_metrics.py que toca keyword search
+    reescribe las mismas 520 preguntas de nuevo. maxsize=1024 acota el cache en
+    un proceso de FastAPI de larga duracion, en vez de crecer sin limite.
+    """
+    client = _get_client()
+    response = client.chat.completions.create(
+        model=REWRITE_MODEL,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": QUERY_REWRITE_PROMPT},
+            {"role": "user", "content": query},
+        ],
+    )
+    rewritten = response.choices[0].message.content.strip()
+    return rewritten if rewritten else query
+
+
+if os.getenv("LANGCHAIN_API_KEY"):
+    _rewrite_query = traceable(name="agent.rag_search.rewrite", run_type="llm")(_rewrite_query_impl)
+else:
+    _rewrite_query = _rewrite_query_impl
+
+
 def _build_or_tsquery(query: str) -> str | None:
     """Tokeniza la query, saca stopwords (_STOPWORDS) y arma 'palabra1 | palabra2 | ...'.
 
@@ -95,7 +156,7 @@ def _keyword_search_impl(conn, query: str, top_k: int) -> list[tuple[int, float]
     español (inflado por stopwords) vs 0.0101 en documentos en inglés. Ver
     evals/retrieval_metrics.py (paso 5 de 5B.4).
     """
-    tsquery_text = _build_or_tsquery(query)
+    tsquery_text = _build_or_tsquery(_rewrite_query(query))
     if tsquery_text is None:
         return []
 

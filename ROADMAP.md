@@ -87,15 +87,52 @@ src/
 │                     trazado automático por el tracer global, rag_search con
 │                     agent.rag_search.vector/agent.rag_search.keyword anidados adentro
 │                     como spans hijos.
+│                     [2026-08-03, punto 5 del plan de entrega] `_rewrite_query_impl()`
+│                     nueva — reescribe la query a ingles tecnico antes de
+│                     `_build_or_tsquery`, dentro de `_keyword_search_impl` (no en
+│                     `_hybrid_search`: asi `evals/retrieval_metrics.py` mide el impacto
+│                     tanto en la fila "keyword" standalone como en "hybrid", que la usa
+│                     por dentro). Ataca la brecha ES/EN documentada arriba — el vector
+│                     search no la necesita (embedding ya multilingue). LLM `gpt-4o-mini`
+│                     `temperature=0` + `prompts/query_rewrite.txt` nuevo (traduce
+│                     vocabulario tecnico, no nombres de marca/modelo). `@lru_cache(
+│                     maxsize=1024)` — deterministico, evita recomputar las mismas 520
+│                     preguntas en cada pasada de retrieval_metrics.py. Mismo patron
+│                     `@traceable` opcional que _vector_search/_keyword_search (span
+│                     `agent.rag_search.rewrite`). Validado contra las 520 preguntas de
+│                     ground_truth_retrieval.json (sin re-correr el barrido de k, ya
+│                     cerrado en 5B.4 — rrf() fusiona solo por ranking, no depende del
+│                     texto de la query): hit_rate/mrr keyword 0.300/0.197 → 0.3288/0.2368;
+│                     hybrid (el que usa rag_search() real) 0.317/0.186 → 0.4154/0.2197
+│                     (+31% hit_rate) — mejora sustancial, no marginal. Pendiente de
+│                     commitear.
 ├── graph.py       ✅ StateGraph con routing condicional — SYSTEM_PROMPT con el caso de uso real
 │                     (instrumentación de campo, agua potable/saneamiento) desde 5B.4 paso 3
-│                     (2026-07-15). Sigue inline en este archivo, no en uno propio (ver pendiente
-│                     en POSPUESTO). Desde 5B.3 paso 2 (2026-07-23) exporta `graph_builder` SIN
+│                     (2026-07-15). Desde 5B.3 paso 2 (2026-07-23) exporta `graph_builder` SIN
 │                     compilar (antes compilaba con MemorySaver a nivel de módulo) — cada
 │                     consumidor decide su propio checkpointer llamando `.compile()`
 │                     `get_bound_llm()` con `max_tokens=800` explícito (Sesión 2, 2026-07-29
 │                     — aprendizaje de M3: sin techo, resúmenes largos escalan ~2.3x en tokens
 │                     de output; 800 alcanza de sobra para una respuesta técnica con cita)
+│                     [2026-08-01, punto 4] Refactorizado para comparar prompts/modelos sin
+│                     romper nada que ya importa `graph_builder`: `SYSTEM_PROMPT` ya NO vive
+│                     inline (resuelve el pendiente de POSPUESTO del 2026-07-15) — se lee con
+│                     `load_prompt("system_prompt.txt")` nuevo desde `prompts/` (directorio
+│                     nuevo en la raíz). `build_agent_node(system_prompt, model_name)` (closure
+│                     factory) y `build_graph(system_prompt=SYSTEM_PROMPT, model_name=MODEL_NAME)`
+│                     nuevos — `graph_builder = build_graph()` al final mantiene exactamente el
+│                     mismo objeto/comportamiento que antes para `main.py`/`conftest.py`.
+│                     [2026-08-01, noche] `temperature` explicito nuevo en `get_bound_llm()`/
+│                     `build_agent_node()`/`build_graph()` (default `1.0` — el default implicito
+│                     de OpenAI que ya regia sin fijarse en ningun lado, asi que no cambia
+│                     comportamiento existente). Motivado por una duda real de Juan: dos corridas
+│                     identicas de compare_prompts.py dieron accuracy distinta solo por la
+│                     aleatoriedad del muestreo (temperatura nunca fijada). [2026-08-03]
+│                     Decision final de produccion APLICADA: `TEMPERATURE = 0.3` (constante
+│                     nueva, mismo patron que `MODEL_NAME`) y `SYSTEM_PROMPT = load_prompt(
+│                     "system_prompt_direct_answer.txt")` (antes `system_prompt.txt`).
+│                     `graph_builder = build_graph()` ya usa los defaults nuevos. Tests
+│                     verificados en verde (7/7) antes de commitear. Commit `8fabcf6`.
 ├── main.py        ✅ FastAPI POST /chat
 │                     [paso 6 de la Sesión 2, 2026-07-28: sacado build_index()/DOCS_DIR —
 │                     el lifespan ya no re-embebe docs.txt con la API de OpenAI en cada
@@ -124,7 +161,29 @@ src/
 │                     `result["messages"]` después de `graph.invoke()` y junta los
 │                     `.tool_calls[].name` de los `AIMessage` que llamaron una tool, sin
 │                     duplicados.
+│                     [punto 3 del plan de entrega, 2026-07-31 noche] `run_id` generado con
+│                     `uuid.uuid4()` ANTES de `graph.invoke()` y pasado por `config["run_id"]`
+│                     (LangSmith usa ese UUID para el trace en vez de generar el suyo),
+│                     devuelto en `ChatResponse.run_id` — necesario para asociar feedback a
+│                     una conversación puntual con `client.create_feedback()`. `lifespan`
+│                     también crea la tabla `feedback` (idempotente, mismo patrón que
+│                     `checkpointer.setup()`) sobre el mismo pool `psycopg_pool` del
+│                     checkpointer — verificado contra Supabase real.
+│                     [2026-08-01, cierra punto 3] Ruta `POST /feedback` nueva: valida con
+│                     `FeedbackInput`, hace `INSERT` a la tabla `feedback` sobre el pool
+│                     existente, y manda `client.create_feedback(run_id, key="user_score",
+│                     score, comment)` a LangSmith si `langsmith_client` está seteado (mismo
+│                     patrón opt-in por `LANGCHAIN_API_KEY` que `tools.py`, fail-silent con
+│                     try/except si LangSmith falla). Verificado end-to-end: `POST /chat` real
+│                     → `run_id` real → `POST /feedback` con ese `run_id` → confirmado en
+│                     Postgres (`SELECT`) y en LangSmith (`client.list_feedback(run_ids=...)`
+│                     devuelve `key="user_score"` con el score/comment correctos). Commit
+│                     `2810fb4`.
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
+│                     [2026-07-31 noche] `ChatResponse.run_id: str` nuevo — ver detalle en
+│                     main.py abajo (punto 3 del plan de entrega, feedback de usuario)
+│                     [2026-08-01] `FeedbackInput` nuevo: `run_id`, `thread_id`, `score`
+│                     (float 0.0-1.0, 1.0=pulgar arriba), `comment` opcional. Commit `2810fb4`.
 │                     [Sesión 2, 2026-07-29] `TicketInput.category` redominado: las 4
 │                     categorías genéricas de soporte de software (bug/feature/question/other,
 │                     herencia de la Capa 1) reemplazadas por 4 del dominio real de
@@ -181,6 +240,15 @@ evals/
 │                                 expected_answer generada por LLM grounded en los chunks reales —
 │                                 evals/generate_golden_set.py. Reemplaza las 20 preguntas viejas
 │                                 sobre LangGraph docs (corpus que ya no existe en Supabase).
+│                                 [2026-08-01, noche] +8 casos hand-crafted (g049-g056, total 56) —
+│                                 categoria nueva "escalamiento", 2 por cada categoria de
+│                                 TicketInput (field_instrument_failure/biological_process_anomaly/
+│                                 pump_maintenance/undocumented_query). A diferencia de los 48
+│                                 originales (sampleados de ground_truth_retrieval.json + expected_
+│                                 answer generada por LLM), estos son escritos a mano y usan
+│                                 expected_tool="create_ticket" en vez de expected_answer — no hay
+│                                 texto de referencia con el que comparar, lo que importa es si el
+│                                 agente decide escalar (ver tool_call_evaluator en evaluators.py).
 ├── generate_ground_truth.py  ✅ (5B.4 paso 4, 2026-07-17) genera ground truth de retrieval:
 │                                 samplea 1 anclaje cada 20 chunks por documento (equiespaciado),
 │                                 ventana de 2 chunks consecutivos por anclaje, LLM + structured
@@ -228,6 +296,11 @@ evals/
 │                       lo reemplaza: relevance sigue siendo el único que sirve para casos sin
 │                       referencia, ej. el flujo de create_ticket en test_evals.py), citation
 │                       (code), convergence (code) + @traceable para LangSmith (Capa 3B)
+│                       [2026-08-01, noche] `tool_call_evaluator(trace, expected_tool)` nuevo —
+│                       code-based (no LLM-judge), verifica si la tool esperada aparece en la
+│                       traza. Distinto de accuracy_evaluator: no compara texto contra una
+│                       referencia, verifica una decision estructural (¿escalo o no?), pensado
+│                       para los casos de escalamiento nuevos de golden_set.json (ver abajo).
 ├── run_evals.py     ✅ corre evals, guarda resultados por fecha/hora
 │                       + client.create_feedback() para LangSmith (Capa 3B). Desde 5B.3 paso 4
 │                       (2026-07-23): importa `graph_builder` y compila con `MemorySaver()` a
@@ -237,6 +310,50 @@ evals/
 │                       Desde 2026-07-27: cada caso corre accuracy_evaluator además de
 │                       relevance_evaluator, el resumen agrega avg_accuracy, y el feedback a
 │                       LangSmith manda las dos keys (relevance/accuracy) en vez de solo una.
+│                       [2026-08-01, punto 4] Refactorizado para reusar en comparaciones:
+│                       `build_eval_graph(system_prompt, model_name)` nuevo (llama a
+│                       `build_graph()` de `src/graph.py`); `invoke_agent`/`evaluate_case` ahora
+│                       reciben el `graph` como parámetro en vez de un global fijo;
+│                       `run_eval_pass()`/`send_feedback()` extraídos para reusarlos desde
+│                       `compare_prompts.py`. `main()` (el que corre CI) sigue con el mismo
+│                       comportamiento exacto de antes. **Bug real encontrado y arreglado en el
+│                       camino:** `run_id` en `evaluate_case()` siempre daba `None` — intentaba
+│                       leerlo de `trace.get("run_id")`, pero `AgentState` nunca tuvo ese campo
+│                       (a diferencia de `main.py`, que lo genera antes del invoke). Efecto real:
+│                       desde que se armó el envío de feedback a LangSmith (2026-07-27), nunca se
+│                       mandó nada — `if ... run_id is None: return` cortaba siempre. Fix:
+│                       `invoke_agent()` ahora genera el `run_id` ANTES de invocar (mismo patrón
+│                       que `main.py`) y lo devuelve junto al trace. Verificado con
+│                       `client.list_feedback(run_ids=[...])`: feedback llega de verdad ahora.
+│                       [2026-08-01, noche] `evaluate_case()` ramifica segun el caso: con
+│                       `expected_answer` sigue el flujo viejo (accuracy_evaluator contra
+│                       referencia); con `expected_tool` usa `tool_call_evaluator` en vez de
+│                       comparar texto. `build_summary()` calcula `avg_accuracy`/`tool_call_rate`
+│                       por separado (ausentes del summary si no hay casos de ese tipo en la
+│                       corrida). `send_feedback()` manda tambien `tool_call` a LangSmith.
+│                       `build_eval_graph()` acepta `temperature` explicito (ver src/graph.py).
+├── compare_prompts.py ✅ (2026-08-01, punto 4) corre 4 combinaciones prompt x modelo, aisladas
+│                       de a una variable por vez: baseline/direct_answer x gpt-4o-mini/
+│                       gpt-4.1-nano. Reusa `build_eval_graph`/`run_eval_pass` de `run_evals.py`.
+│                       Script manual (`python -m evals.compare_prompts`), no lo llama CI.
+│                       Corrida dos veces (2026-08-01): 48 casos primero, 56 casos (con los de
+│                       escalamiento nuevos) despues — ver "Actualizacion (2026-08-01, noche)"
+│                       mas abajo para el resultado que decide el punto 4.
+├── compare_temperature.py ✅ (2026-08-01, noche) sweep de temperatura (0.0/0.3/0.6/1.0, 2
+│                       corridas cada una) sobre la combinacion prompt x modelo ganadora, fijada
+│                       en el script (`direct_answer` + `gpt-4o-mini`). Reusa
+│                       `build_eval_graph`/`run_eval_pass`. Script manual
+│                       (`python -m evals.compare_temperature`), no lo llama CI. Primera corrida
+│                       en background se cortó sola a los 5/8 (status `killed`, causa
+│                       desconocida — no hay nada en el codigo que explique el corte); las 3
+│                       corridas faltantes se relanzaron aparte reusando las mismas funciones,
+│                       sin repetir las 5 ya guardadas (cada corrida escribe su JSON apenas
+│                       termina, nada se perdió).
+├── cost_report.py   ✅ (2026-08-01) calcula costo/tokens reales por variante leyendo los traces
+│                       de LangSmith asociados a los `run_id` guardados en cada JSON de
+│                       resultados (`client.list_runs(run_ids=...)` — `read_run()` uno a uno pega
+│                       el rate limit de LangSmith con 48 corridas seguidas). Script manual
+│                       (`python -m evals.cost_report <json...>`), no lo llama CI.
 └── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
                         (corridas: 2026-05-29, 05-30, 06-01, 06-03, 2026-07-27 — primera corrida
                         real contra el golden set de instrumentación nuevo: 48 casos, relevancia
@@ -244,6 +361,15 @@ evals/
                         investigar: 5/48 preguntas respondibles con el manual terminaron en
                         create_ticket en vez de una respuesta directa — candidato a explicar
                         parte de la brecha relevancia/accuracy)
+                        [2026-08-01] Corrida real de `compare_prompts.py` (48 casos x 4
+                        variantes) + `cost_report.py`: ver detalle completo en la actualización
+                        del 2026-08-01 más abajo (punto 4) — decisión de qué combinación pasa a
+                        producción sigue pendiente de confirmar con Juan.
+                        [2026-08-01, noche] Segunda corrida de `compare_prompts.py` (56 casos x 4
+                        variantes, con los 8 de escalamiento nuevos) + sweep completo de
+                        `compare_temperature.py` (4 valores x 2 corridas sobre el ganador) — 15
+                        JSONs nuevos en `evals/results/2026-08-01/`. Decisión final tomada, ver
+                        "Actualización (2026-08-01, noche)" más abajo.
 
 .github/
 └── workflows/
@@ -625,8 +751,8 @@ Actualización (2026-07-29, tarde): cerrados los 3 ítems restantes de la Sesió
 su sección arriba.
 
 **Cambio de prioridad:** Juan entrega este repo tal cual como proyecto final del
-**LLM Zoomcamp 2026** (DataTalks.Club) — deadline 2026-08-10 (intento oportunista
-2026-08-03). Detalle completo del handoff del curso en
+**LLM Zoomcamp 2026** (DataTalks.Club) — deadline 2026-08-10. Detalle completo del
+handoff del curso en
 `courses/PROJECT_APPROVAL_HANDOFF.md`. Auditoría del repo contra la rúbrica oficial
 (9 criterios 0-2 pts + 3 best practices) hecha 2026-07-29: hoy ~12/21. Plan de acción
 acordado con Juan, en orden de ROI (puntos de rúbrica por hora), objetivo ~19/21 antes
@@ -686,7 +812,24 @@ además manda el feedback a LangSmith con `client.create_feedback(run_id, ...)`
 (dependencia `langsmith` ya instalada, no suma librería nueva) para que quede
 asociado a cada trace real y aparezca en el dashboard. Evita armar el stack
 Postgres+Grafana completo (que seguía como stretch post-19/21) para llegar al mismo
-puntaje. Pendiente de implementar — no arrancado todavía.
+puntaje.
+
+**Arrancado 2026-07-31 (noche), a paso a paso con active recall:**
+1. ✅ `ChatResponse.run_id` (`src/schemas.py`) + generado con `uuid.uuid4()` en
+   `main.py` antes de `graph.invoke()`, pasado por `config["run_id"]` (fuerza a
+   LangSmith a usar ese UUID en vez de generar el suyo) y devuelto en la respuesta
+   de `/chat`. Necesario para poder asociar feedback a una conversación puntual
+   después con `client.create_feedback(run_id=...)`.
+2. ✅ Tabla `feedback` (`id`, `run_id uuid`, `thread_id`, `score real`, `comment`,
+   `created_at`) creada en el `lifespan` de `main.py`, mismo patrón idempotente que
+   `checkpointer.setup()` (`CREATE TABLE IF NOT EXISTS` + RLS sin policies). Decisión:
+   reusa el pool `psycopg_pool` que ya abre el checkpointer (evita el lag de
+   conexión nueva por request que tiene `rag_search()`, ver POSPUESTO). Verificado
+   contra Supabase real: tabla existe, columnas correctas, `rowsecurity = true`.
+   `src/main.py` y `src/schemas.py` todavía sin commit al cierre de esta sesión.
+3. ✅ (2026-08-01) `FeedbackInput` (schema) + ruta `POST /feedback` (INSERT a la tabla +
+   `client.create_feedback()` a LangSmith) — ver detalle en `src/main.py`/`src/schemas.py`
+   arriba. Commit `2810fb4`. **Punto 3 del plan de entrega completo — monitoring 0→2.**
 
 **Decisión 2026-07-31 sobre RAGAS (ver POSPUESTO abajo):** confirmado con Juan que
 se suma como upgrade **condicional** — solo si el plan core (puntos 3-7) cierra con
@@ -698,6 +841,190 @@ que alternativas más genéricas como DeepEval). Estimado ~1.5-2.5h — el riesg
 puede estirarlo es compatibilidad de versión entre `ragas` y `langchain==1.2.15`/
 `langchain-core==1.3.2` (RAGAS suele ir atrás soportando versiones nuevas de
 LangChain), no la lógica del script en sí.
+
+**Actualización (2026-08-01):** cierra el punto 3 (feedback de usuario, ver arriba,
+commit `2810fb4`) y arranca el punto 4 (comparar prompts/modelos, LLM evaluation 1→2).
+
+**Punto 4, en progreso — código completo, decisión de producción pendiente:**
+`src/graph.py` y `evals/run_evals.py` refactorizados (ver detalle en "Estado actual
+del repo" arriba) para poder comparar variantes sin tocar el comportamiento de
+producción/CI. Se sumó comparar tambien **modelo**, no solo prompt — decisión de
+Juan de aprovechar el mismo mecanismo (closure factory) para probar `gpt-4.1-nano`
+contra el `gpt-4o-mini` de siempre, ya que salía barato una vez parametrizado el
+prompt. Metodología acordada con Juan: un solo cambio de variable por corrida (4
+combinaciones aisladas: baseline/direct_answer x mini/nano), nunca dos cambios
+mezclados en una misma comparación.
+
+- `prompts/system_prompt.txt` (el de producción, movido tal cual desde `graph.py`) y
+  `prompts/system_prompt_direct_answer.txt` (Variante B) nuevos. La Variante B ataca
+  un hallazgo real sin investigar del 2026-07-27 (ver arriba): 5/48 preguntas
+  respondibles con el manual terminaban en `create_ticket` en vez de una respuesta
+  directa. Se agregó una instrucción explícita de prioridad: responder directo con
+  `rag_search` si el manual cubre la consulta, reservar `create_ticket` para lo que
+  el manual no cubre o requiere intervención física.
+- **Bug real encontrado y arreglado en el camino:** el feedback de `run_evals.py` a
+  LangSmith nunca se mandó desde que se implementó (2026-07-27) — `run_id` siempre
+  daba `None` (ver detalle en la entrada de `run_evals.py` arriba). Fix aplicado y
+  verificado con `client.list_feedback()`.
+- `evals/compare_prompts.py` y `evals/cost_report.py` nuevos (ver "Estado actual del
+  repo" arriba).
+- **Corrida real completa (48 preguntas x 4 variantes, 2026-08-01), calidad + costo
+  (costo real vía `cost_report.py`, sumando el árbol completo de cada trace en
+  LangSmith):**
+
+  | Variante | Relevancia | Accuracy | Citas | `create_ticket` | Costo total (48) | Costo x caso |
+  |---|---|---|---|---|---|---|
+  | baseline_mini (producción actual) | 4.40/5 | 3.60/5 | 81% | 9/48 | $0.0214 | $0.00045 |
+  | baseline_nano | 4.90/5 | 4.27/5 | 92% | 0/48 | $0.0150 | $0.00031 |
+  | direct_answer_mini | 4.62/5 | 3.94/5 | 94% | 2/48 | $0.0229 | $0.00048 |
+  | direct_answer_nano | 4.75/5 | 4.08/5 | 94% | 0/48 | $0.0156 | $0.00033 |
+
+  (conteo de `create_ticket` sacado de los logs del stub, no del JSON de métricas —
+  no se persiste ese dato en `evaluate_case()` hoy).
+
+  **Lectura:** el prompt nuevo funciona como se hipotetizó, pero solo se nota con
+  `gpt-4o-mini` (9→2 tickets, mejora las 4 métricas). Con `gpt-4.1-nano`, el prompt
+  VIEJO ya elimina el problema solo (0/48 tickets) y da las mejores métricas de las
+  cuatro variantes, siendo ~30% más barato que `gpt-4o-mini` con cualquiera de los
+  dos prompts. **Decisión pendiente de confirmar con Juan** entre `baseline_nano`
+  (mejor en las 3 dimensiones, pero `gpt-4.1-nano` sin kilometraje previo en el
+  resto del pipeline) y `direct_answer_mini` (se queda con el modelo ya probado en
+  todo el proyecto, mejora 100% atribuible al prompt — historia más prolija para
+  contar en una entrevista).
+- **Sin commitear:** `src/graph.py`, `evals/run_evals.py` (modificados),
+  `evals/compare_prompts.py`, `evals/cost_report.py`, `prompts/` (nuevos) — se
+  commitean juntos cuando se confirme y aplique la decisión de arriba (cuál
+  combinación queda como default de producción).
+
+**Actualización (2026-08-01, noche) — el punto 4 se cierra con decisión final, y se abre
+una duda de Juan que termina siendo su propia mini-investigación (temperatura):**
+
+Antes de decidir entre `baseline_nano` y `direct_answer_mini` con los 48 casos de
+arriba, Juan planteó una objeción válida: "si me quedo con el modelo que mide peor
+solo porque ya lo probamos, no es un criterio, es sesgo". Se armó un criterio más
+duro en 3 pasos, cada uno con evidencia concreta:
+
+1. **Extender el golden set con casos de escalamiento reales** (ver `golden_set.json`
+   arriba, 48→56) — la comparación de 48 preguntas solo medía accuracy en preguntas
+   *contestables*, dejando afuera la decisión de mayor riesgo para este dominio: si
+   el agente escala con `create_ticket` en vez de inventar, cuando la consulta cae
+   fuera del corpus. `tool_call_evaluator` nuevo en `evaluators.py` (ver arriba) mide
+   esto de forma code-based, no con LLM-judge.
+2. **Segunda corrida completa de `compare_prompts.py` (56 casos x 4 variantes):**
+
+   | Variante | Relevancia | Accuracy | Citas | Tool-call (escalamiento) |
+   |---|---|---|---|---|
+   | baseline_mini | 4.43/5 | 3.69/5 | 77% | 8/8 (100%) |
+   | baseline_nano | 4.68/5 | 4.12/5 | 84% | 7/8 (88%) |
+   | direct_answer_mini | 4.77/5 | 4.17/5 | 84% | 8/8 (100%) |
+   | direct_answer_nano | 4.80/5 | 4.23/5 | 88% | 6/8 (75%) |
+
+   **Hallazgo que decide la comparación:** nano falló los *mismos* 2 casos de
+   escalamiento (transmisor Yokogawa fuera del corpus, caudalímetro de marca
+   genérica) en ambas variantes de prompt — no es ruido, es sistemático. En vez de
+   escalar, inventó un rango de medición genérico (`baseline_nano`) y fabricó un
+   procedimiento de calibración citando "la documentación consultada" para un
+   equipo que el corpus no cubre (`direct_answer_nano`) — exactamente lo que el
+   `SYSTEM_PROMPT` prohíbe explícitamente. Mini no falló ni un caso (16/16 entre las
+   dos variantes de prompt). **Decisión final: `direct_answer_mini`.** No es "nos
+   quedamos con el conocido por costumbre" — es una ventaja medible y reproducible
+   en la dimensión que más importa para este dominio (no inventar en zona gris),
+   sumada a que el prompt nuevo ya corrige el problema original de mini (exceso de
+   tickets, ver corrida de 48 casos arriba).
+3. **Duda de Juan, ya con el ganador elegido:** "¿no deberíamos fijar la temperatura
+   para que invente menos?" — válida: `get_bound_llm()` nunca fijaba `temperature`
+   (corría al default implícito de OpenAI, 1.0). `temperature` ahora es parámetro
+   explícito en `src/graph.py`/`run_evals.py` (ver arriba). `evals/
+   compare_temperature.py` nuevo: sweep de 4 valores (0.0/0.3/0.6/1.0) x 2 corridas
+   sobre `direct_answer_mini`:
+
+   | Temp | Accuracy avg | Spread (estabilidad) | Tool-call |
+   |---|---|---|---|
+   | 0.0 | 4.00 | 0.04 | 100% |
+   | 0.3 | 4.07 | 0.10 | 100% |
+   | 0.6 | 4.12 | 0.05 | 100% |
+   | 1.0 (default actual) | 4.03 | **0.18** | 100% |
+
+   Verificado que no hay bug (se leyó `llm.temperature` directo del objeto
+   `ChatOpenAI` para confirmar que el valor pedido llega de verdad). La aparente
+   tendencia "más temperatura = más accuracy" no se sostiene con test pareado
+   (comparación cruzada temp 0.0 vs 0.6: 3-6/6-6/4-5/2-5, sin significancia) ni con
+   temp=1.0 rompiendo el patrón (cae de vuelta a 4.03, con el doble de spread que
+   cualquier otro valor) — es ruido de muestreo del LLM-judge sobre 48 preguntas, no
+   una tendencia causal. Lo único que sí es señal limpia: **temp=1.0 es la más
+   inestable de las cuatro**, confirmando la sospecha original de Juan de que no
+   fijarla agrega ruido innecesario (tanto a las mediciones como, potencialmente, al
+   comportamiento real en producción). **Decisión final: `temperature=0.3`** — punto
+   medio entre estabilidad (spread 0.10, muy por debajo del 0.18 de referencia) y
+   tasa de citas (86% vs 78% a temp=0.0, con hipótesis de que sea un efecto de
+   estilo — respuestas más tersas a temp 0 que omiten mencionar la fuente aunque
+   hayan usado `rag_search` igual — más que un problema real de grounding).
+   - Corrida en background: se cortó sola a los 5/8 (`status: killed`, sin causa
+     visible en el código ni en los logs — nada indica timeout de la app ni error de
+     OpenAI). Las 3 corridas faltantes (`temp0.6_run2`, `temp1.0_run1`,
+     `temp1.0_run2`) se relanzaron aparte reusando `build_eval_graph`/
+     `run_eval_pass` — cada corrida guarda su JSON apenas termina, así que no se
+     perdió ninguna de las 5 ya hechas.
+   - **Queda anotado, no bloqueante:** correr un sweep chico de `gpt-4.1-nano` a
+     temperatura baja (0.0/0.3) para confirmar si eso corrige su falla de
+     escalamiento — curiosidad de Juan sobre si el problema era más de muestreo que
+     de conocimiento del modelo. No cambia la decisión ya tomada salvo que el
+     resultado sea sorprendente.
+- **Punto 6 del plan (reproducibility) cerrado en la misma sesión:** `README.md` —
+  "Como correrlo" reforzado con checklist explícito de requisitos (API key de
+  OpenAI, Postgres con `pgvector`, los 11 PDFs) y mención directa de que los links
+  del corpus (`CORPUS_INSTRUMENTACION.MD`) son gratuitos y verificados HTTP 200, no
+  solo un "ver sección anterior" pasivo. Agregado el camino de reproducir evals sin
+  re-ingerir (los datasets ya están commiteados). Fila "Reproducibility" de la tabla
+  de criterios actualizada. El techo real (¿alcanza 2/2 sin el dataset físicamente
+  adentro del repo?) queda a criterio del revisor humano — no es algo que más
+  documentación pueda resolver, ya se discutió con Juan.
+- **Actualización (2026-08-03): punto 4 aplicado y commiteado.** `graph_builder =
+  build_graph()` en `src/graph.py` ya usa los defaults nuevos (`TEMPERATURE = 0.3`,
+  `SYSTEM_PROMPT` desde `system_prompt_direct_answer.txt`) — tests verificados en
+  verde (7/7) antes de commitear. Commit `8fabcf6` agrupa esto con el resto del
+  trabajo del punto 4 que venía sin commitear (framework de comparación, evals
+  corridos, `README.md`) — pusheado a `origin/main`.
+- **Punto 5 (query rewriting) implementado y validado el mismo día — ver detalle en
+  `src/tools.py` arriba y en `CHANGELOG.md` 2026-08-03.** Mejora sustancial y medible
+  en hybrid search: hit_rate 0.317 → 0.4154 (+31%), mrr 0.186 → 0.2197, sobre las 520
+  preguntas completas de `ground_truth_retrieval.json`. Pendiente de commitear
+  (`src/tools.py`, `prompts/query_rewrite.txt`).
+- **Punto 6 reconfirmado cerrado (2026-08-03):** revisado a pedido de Juan si hacía
+  falta agregar algo más sobre copyright del dataset — ya estaba completo desde el
+  2026-08-01 (`README.md` + `CORPUS_INSTRUMENTACION.MD`, con cita explícita de los
+  Términos de Uso de Emerson). Sin cambios.
+- **Próximo paso concreto:** commitear `src/tools.py` + `prompts/query_rewrite.txt`
+  (query rewriting, punto 5), y seguir con el punto 7 (limpieza de historial de git +
+  repo público) — requiere confirmar con Juan el plan explícito antes de ejecutar
+  (operación destructiva, ver POSPUESTO).
+- Sesión cerrada acá por hoy (2026-08-03).
+
+**Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
+contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
+
+| # | Tarea | Estimado |
+|---|---|---|
+| 4 | Cerrar comparación de prompts/modelos (elegir ganador, aplicar, commit) | 0.5–1h |
+| 5 | Query rewriting (best practice) | 1.5–2.5h |
+| 6 | Reproducibility (instrucciones, nota de copyright del dataset) | 0.5–1h |
+| 7 | Limpieza historial de git + repo público | 1–2h |
+| — | Cierre de docs (ROADMAP/CHANGELOG/README final) | 0.5h |
+
+**Actualización (2026-08-03):** puntos 4, 5 y 6 completos (ver detalle arriba y en
+`CHANGELOG.md`). Quedan el punto 7 (limpieza de historial de git, necesita plan
+explícito confirmado con Juan antes de ejecutar) y el cierre de docs final.
+
+Core estimado ~5.5h — con el ritmo de trabajo confirmado (Juan: "a veces incluso
+demoro menos de lo que estimamos"), terminaría el jueves 6/8, dejando viernes 7/8 +
+sábado 8/8 (~4.5h) de margen antes del deadline, sin tocar el lunes 10/8 (reservado
+como buffer de entrega, no para tareas nuevas). **Orden de stretch confirmado con
+Juan, si el core cierra con margen:** RAGAS → Streamlit (front de chat simple con
+pulgar arriba/abajo, consumiendo `/chat` y `/feedback` — no suma puntos de rúbrica,
+Interface ya está en 2/2, pero es barato dado lo que ya existe y da visibilidad de
+portfolio) → deploy a cloud (bonus +2) → Grafana (el más lejano: LangSmith ya cubre
+Monitoring, armar Grafana sería infraestructura nueva sin ROI de rúbrica, compite
+por el mismo tiempo que RAGAS/deploy en vez de sumar gratis).
 
 ── POSPUESTO (registrado, no bloquea nada de lo de arriba) ──
 - Connection pool para Postgres (hoy conexión nueva por request en rag_search(),
@@ -718,9 +1045,12 @@ LangChain), no la lógica del script en sí.
 - .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el
   2026-07-01) — detectado 2026-07-15 al escribir el README, no se tocó para no
   desviarse del paso 3.
-- Separar los prompts a archivo(s) propio(s) en vez de vivir inline en graph.py
+- ~~Separar los prompts a archivo(s) propio(s) en vez de vivir inline en graph.py~~
+  — RESUELTO 2026-08-01: `prompts/system_prompt.txt` + `prompts/
+  system_prompt_direct_answer.txt`, cargados con `load_prompt()` en `src/graph.py`
   (pedido de Juan, 2026-07-15, al corregir que ROADMAP.md listaba un
-  src/prompts.py que nunca existió).
+  src/prompts.py que nunca existió — se resolvió al necesitar una segunda
+  variante para el punto 4 del plan de entrega, ver arriba).
 - Persistencia real de create_ticket en Postgres (capa futura explícita opcional,
   no deuda escondida — discutido 2026-07-24). El concepto de escalar SÍ encaja en el
   dominio (orden de trabajo cuando el manual no cubre la consulta o requiere técnico
