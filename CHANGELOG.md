@@ -6,11 +6,95 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-04 — Cierra el punto 5 (commit) + limpieza del historial de git (punto 7, local) + arranca RAGAS
+**Commits:** `2eed98a` (query rewriting del punto 5, pusheado — hash reescrito a `d47031b`
+por la limpieza de historial de más abajo) + resto de esta entrada sin commitear, ver
+"Próximo paso concreto"
+
+- **Arranca el punto 7 del plan de entrega:** sacar `.env` del historial de git. Quedó
+  trackeado desde el commit inicial (`65d1bc2`, 28/04) hasta que se sacó del tracking en
+  `834e71a` (02/07) — credenciales reales (`OPENAI_API_KEY`, `DATABASE_URL` de Supabase)
+  visibles en esos commits viejos. Ya rotadas desde el 2026-07-28 (ver entrada de ese día),
+  así que esto es higiene antes de pasar el repo a público para el peer review del curso,
+  no una emergencia de credencial viva.
+- **Backup previo:** `git bundle create --all` del estado íntegro del repo antes de tocar
+  nada (43 commits, `HEAD` en `2eed98a`), guardado fuera del repo
+  (`projects/agentic-rag-fastapi-backup-2026-08-04.bundle`) y verificado con
+  `git bundle verify`. En el camino apareció un error propio: un primer intento con
+  `git -C agentic-rag-fastapi bundle create <ruta relativa>` resolvió la ruta relativa
+  *adentro* del repo en vez de al lado — quedó una copia duplicada del bundle sin
+  trackear dentro del working tree (se hubiera colado en un commit con un `git add -A`
+  descuidado, re-metiendo el historial viejo con `.env` adentro de un blob del historial
+  nuevo). Detectado con `git status`/`diff -rq` contra un clon de prueba y borrado antes
+  de comitear nada.
+- **Ensayo primero, no directo sobre el repo real:** clonado el bundle a una carpeta
+  descartable, corrido ahí `git-filter-repo --path .env --invert-paths --force`
+  (`git-filter-repo` instalado vía pip, no viene con git). Reescribió los 43 commits
+  (esperable — el primero afectado es el commit inicial, así que cualquier hijo cambia
+  de hash) en ~1.3s. Verificado en la copia de prueba: `.env` ya no aparece en
+  `git log --all --full-history`, y el contenido trackeado es idéntico al repo real
+  (diff completo, ignorando fin de línea CRLF/LF) — las únicas diferencias son los
+  archivos ya gitignored de siempre (`.env`, `docs/pdfs`, `reports/`,
+  `evals/results` viejos).
+- **Aplicado al repo real (local):** mismo comando sobre el working directory real.
+  `git-filter-repo` saca el remote `origin` por seguridad — re-agregado a mano después.
+  Verificado de nuevo ahí: `.env` fuera del historial, `git status` limpio,
+  `pytest tests/test_rules.py` → **7/7 en verde** con el historial reescrito.
+- **Repaso a fondo antes del push** (pedido explícito de Juan, sin apurar el force-push):
+  reflog local vacío y repo sin objetos sueltos (`git count-objects -v` → todo empacado
+  en 1 pack, `garbage: 0`) — `git-filter-repo` ya había limpiado los restos del historial
+  viejo. Escaneo de **todo** el historial reescrito (no solo por nombre de archivo, por
+  contenido) buscando patrones de credenciales reales (`sk-...`, `AKIA...`, connection
+  strings de Postgres con user:pass, claves privadas) → nada encontrado. Confirmado que
+  ningún otro nombre de archivo tipo `.env` existió nunca en el historial salvo
+  `.env.example` (solo placeholders). `origin/main` confirmado todavía en el historial
+  viejo (`2eed98a`) — nada tocó GitHub todavía, el force-push sigue siendo el único paso
+  pendiente.
+- **Sin pushear:** son las 09:09 ART (martes) al terminar la reescritura — cae dentro de
+  la ventana 9-18hs lun-vie que no debe quedar como timestamp de push en este repo. El
+  repo local ya está listo; falta el `git push origin --force --all` (irreversible en
+  GitHub, requiere confirmación puntual de Juan inmediatamente antes) y, después,
+  pasar el repo de privado a público.
+- **Arrancado el stretch #1 (RAGAS), mientras se espera la ventana de horario para el
+  push** — condicional a que el core (puntos 1-7) cierre con margen, confirmado con
+  Juan que el punto 7 ya está resuelto salvo el push, así que hay lugar:
+  - Concepto explicado con active recall antes de instalar nada: las 4 métricas de
+    RAGAS (`faithfulness`, `answer_relevancy`, `context_precision`, `context_recall`)
+    y su relación con `evals/evaluators.py` ya existente — `answer_relevancy` es
+    reference-free como `relevance_evaluator`; `context_recall` es la que sí necesita
+    `ground_truth` (no `context_precision`, que tiene variante reference-free),
+    equivalente a `accuracy_evaluator`.
+  - **Compatibilidad de versiones verificada** (el riesgo que ya estaba anotado en
+    POSPUESTO desde el 18/07): `ragas==0.4.3` instala e importa sin conflicto junto a
+    `langchain==1.2.15`/`langchain-core==1.3.2`/`langchain-openai==1.2.1`/
+    `openai==2.33.0`, probado en un venv aislado (no se tocó `requirements.txt` ni el
+    `.venv` del proyecto). Único hallazgo: el import `from ragas.metrics import ...`
+    está deprecado a favor de `ragas.metrics.collections` — se usa la ruta nueva al
+    escribir el script, y se pinea `ragas==0.4.3` en `requirements.txt` cuando se
+    integre (mismo patrón que el resto de las dependencias — la deprecación es
+    justamente la razón para pinear, no para dejar sin fijar).
+  - **Decisión de diseño de `contexts`:** se toman de una corrida real del agente
+    (capturando el output de la tool call `rag_search` vía
+    `run_evals.py`/`build_eval_graph`), no de una llamada directa a `_hybrid_search()`
+    — más fiel a qué contexto tuvo el LLM al generar cada respuesta, evita juzgar
+    `faithfulness` contra chunks que el agente ni vio. `ground_truth` = `expected_answer`
+    de los 48 casos de `evals/golden_set.json` que lo tienen (quedan afuera los 8 de
+    escalamiento, que usan `expected_tool`).
+  - Sin código escrito todavía — el venv de prueba no toca el repo real.
+- **Próximo paso concreto:** fuera de la ventana horaria (después de las 18hs de hoy o
+  el fin de semana) — force-push, confirmar CI en verde con el historial nuevo, pasar
+  el repo a público, y comitear esta misma entrada de CHANGELOG (aclarando que los
+  hashes citados en entradas anteriores a esta fecha ya no son resolubles en GitHub).
+  En paralelo o después: escribir `evals/ragas_eval.py` con el diseño ya acordado.
+- Sesión cerrada acá por hoy, a pedido de Juan.
+
+---
+
 ## 2026-08-03 — Aplica la decisión final del punto 4 + implementa query rewriting (punto 5)
 **Commits:** `8fabcf6` (aplica la decisión final — prompt `direct_answer` + `temperature=0.3`
 en `src/graph.py` — junto con el resto del punto 4 que venía sin commitear desde el
-2026-08-01) + query rewriting (`src/tools.py`, `prompts/query_rewrite.txt`) sin commitear
-todavía.
+2026-08-01) + query rewriting (`src/tools.py`, `prompts/query_rewrite.txt`), commiteado
+el 2026-08-04 como `2eed98a` (ver entrada de ese día).
 
 - **Punto 4 cerrado del todo:** `graph_builder = build_graph()` en `src/graph.py` ya no usa
   los defaults viejos — `TEMPERATURE = 0.3` (constante nueva, mismo patrón que `MODEL_NAME`)

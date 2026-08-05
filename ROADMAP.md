@@ -1000,6 +1000,42 @@ duro en 3 pasos, cada uno con evidencia concreta:
   (operación destructiva, ver POSPUESTO).
 - Sesión cerrada acá por hoy (2026-08-03).
 
+**Actualización (2026-08-04):** commiteado y pusheado el punto 5 (`src/tools.py` +
+`prompts/query_rewrite.txt`, commit `2eed98a` — reescrito a `d47031b` por la limpieza
+de historial, ver abajo). **Arranca el punto 7 (limpieza de historial de git):** plan
+explícito confirmado con Juan antes de ejecutar (backup primero, ensayo en copia
+descartable, recién después el repo real). Backup completo (`git bundle --all`,
+verificado) hecho antes de tocar nada. `git-filter-repo` instalado y corrido
+(`--path .env --invert-paths`) primero contra una copia de prueba, verificado ahí
+(`.env` fuera del historial, contenido idéntico al repo real), y recién después
+aplicado al repo real local — verificado también: `.env` fuera de los 43 commits,
+`pytest tests/test_rules.py` 7/7 en verde, escaneo de todo el historial sin patrones
+de credenciales reales, reflog y objetos sueltos limpios. **Falta solo el
+`git push origin --force --all`** — no ejecutado hoy por la regla de horario del
+repo (nunca commit/push 9-18hs ARG lun-vie); queda para después de las 18hs o el fin
+de semana, junto con pasar el repo de privado a público.
+
+**Arrancado también el stretch #1 (RAGAS, condicional a que el core cierre con
+margen — ver más abajo):** confirmada la compatibilidad de `ragas==0.4.3` con las
+versiones pineadas del proyecto (`langchain==1.2.15`/`langchain-core==1.3.2`/
+`langchain-openai==1.2.1`/`openai==2.33.0`) en un venv aislado, sin tocar
+`requirements.txt` todavía — el riesgo de versión que este mismo archivo tenía
+anotado no se materializó. Import viejo (`from ragas.metrics import ...`) deprecado
+a favor de `ragas.metrics.collections` — se va a usar la ruta nueva cuando se
+escriba el script. **Decisión de diseño tomada:** los `contexts` que RAGAS va a
+juzgar (`faithfulness`/`context_precision`/`context_recall`) se toman de lo que el
+agente realmente vio en una corrida real (capturando el output de la tool call
+`rag_search` vía `run_evals.py`/`build_eval_graph`), no de una llamada directa a
+`_hybrid_search()` — más fiel a qué contexto tuvo el LLM cuando generó cada
+respuesta puntual, evita evaluar `faithfulness` contra chunks que el agente ni vio.
+`ground_truth` = `expected_answer` de los 48 casos de `evals/golden_set.json` que lo
+tienen (quedan afuera los 8 de escalamiento, que usan `expected_tool`). Sin código
+escrito todavía — el venv de prueba no toca el repo.
+- **Próximo paso concreto:** force-push del punto 7 + pasar el repo a público
+  (fuera de la ventana horaria); en paralelo/después, escribir `evals/ragas_eval.py`
+  con el diseño ya acordado arriba.
+- Sesión cerrada acá por hoy (2026-08-04).
+
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
 
@@ -1037,9 +1073,12 @@ por el mismo tiempo que RAGAS/deploy en vez de sumar gratis).
   force-push) — confirmar plan explícito con Juan antes de tocar el historial,
   no ejecutar de forma autónoma. Actualización (2026-07-29): ahora SÍ entra en el
   alcance de la entrega del LLM Zoomcamp (ver "Cambio de prioridad" arriba) — Juan
-  confirmó que quiere el historial limpio antes de pasar el repo a público. Sigue
-  necesitando confirmación explícita del plan puntual (commits, backup, momento del
-  force-push) antes de ejecutar.
+  confirmó que quiere el historial limpio antes de pasar el repo a público.
+  **Actualización (2026-08-04): plan confirmado y ejecutado hasta el force-push —
+  ver detalle completo en la "Actualización (2026-08-04)" de arriba.** Backup +
+  ensayo + reescritura local + verificación, todo hecho. Solo falta el
+  `git push origin --force --all` y pasar el repo a público, ambos bloqueados por
+  la regla de horario del repo, no por falta de confirmación.
 - Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
   en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
 - .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el
