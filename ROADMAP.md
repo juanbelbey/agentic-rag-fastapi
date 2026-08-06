@@ -354,6 +354,25 @@ evals/
 │                       resultados (`client.list_runs(run_ids=...)` — `read_run()` uno a uno pega
 │                       el rate limit de LangSmith con 48 corridas seguidas). Script manual
 │                       (`python -m evals.cost_report <json...>`), no lo llama CI.
+├── ragas_eval.py    ✅ (2026-08-05, stretch #1) 4 metricas de RAGAS (`ragas.metrics.collections`:
+│                       `Faithfulness`/`AnswerRelevancy`/`ContextPrecision`/`ContextRecall`) sobre
+│                       los 48 casos con `expected_answer` de `golden_set.json` (quedan afuera los 8
+│                       de escalamiento). `contexts` = contenido real de los chunks que devolvio la
+│                       tool call a `rag_search` en la traza (`extract_contexts()`), no una llamada
+│                       aparte a `_hybrid_search()` — juzga contra lo que el LLM realmente vio.
+│                       Juez `gpt-4o-mini` (`llm_factory`) + `OpenAIEmbeddings` default
+│                       (`text-embedding-3-small`, mismo modelo que `embed_texts()` de
+│                       `src/ingestion.py`). Script manual (`python -m evals.ragas_eval`), no lo
+│                       llama CI. Tres bugs reales encontrados y arreglados corriendolo de punta a
+│                       punta: (1) el `.score()` sync de cada metrica llama internamente a
+│                       `agenerate()`, que exige cliente async — `AsyncOpenAI`, no `OpenAI`; (2) sin
+│                       `max_tokens` explicito, la salida estructurada de `faithfulness` se trunco
+│                       (`instructor.v2.core.errors.IncompleteOutputException`) — fijado a 2048; (3)
+│                       el primer `try/except` de `evaluate_case()` solo envolvia el scoring de
+│                       RAGAS, no el `invoke_agent()` del agente — un `server closed the connection
+│                       unexpectedly` real de Postgres a mitad de una tool call tiro abajo toda la
+│                       corrida completa (mismo riesgo que dejo `compare_temperature.py` a medio
+│                       terminar el 2026-08-01). Ampliado el `try/except` a todo el cuerpo del caso.
 └── results/         ✅ JSONs organizados por YYYY-MM-DD/HH-MM-SS
                         (corridas: 2026-05-29, 05-30, 06-01, 06-03, 2026-07-27 — primera corrida
                         real contra el golden set de instrumentación nuevo: 48 casos, relevancia
@@ -370,6 +389,12 @@ evals/
                         `compare_temperature.py` (4 valores x 2 corridas sobre el ganador) — 15
                         JSONs nuevos en `evals/results/2026-08-01/`. Decisión final tomada, ver
                         "Actualización (2026-08-01, noche)" más abajo.
+                        [2026-08-05] Primera corrida real de `ragas_eval.py` sobre los 48 casos de
+                        `golden_set.json` (`direct_answer_mini` en producción): 46/48 puntuados (2
+                        sin contexts recuperados — `g026`/`g039`, `rag_search` no devolvió
+                        resultados para esas preguntas, hallazgo de retrieval, no bug del script).
+                        `evals/results/2026-08-05/11-46-58_ragas.json`: faithfulness 0.783,
+                        answer_relevancy 0.708, context_precision 0.571, context_recall 0.679.
 
 .github/
 └── workflows/
@@ -1036,6 +1061,39 @@ escrito todavía — el venv de prueba no toca el repo.
   con el diseño ya acordado arriba.
 - Sesión cerrada acá por hoy (2026-08-04).
 
+**Actualización (2026-08-05):** commit `e885f2d` (cierre de la entrada de arriba,
+CHANGELOG/ROADMAP) + **`git push origin --force --all` ejecutado** (confirmado
+explícitamente por Juan antes de correrlo) — `origin/main` ya tiene el historial
+reescrito sin `.env` (verificado con `git fetch` + `git log origin/main`). El punto 7
+queda cerrado del lado de código/git; solo falta que Juan pase el repo de privado a
+público en GitHub, a su criterio, más adelante.
+
+**Stretch #1 (RAGAS) completado.** Al instalar de verdad en el venv del proyecto
+(no en el venv aislado del 2026-08-04) apareció un hallazgo real que contradice lo
+"verificado" ese día: `ragas==0.4.3` no fija versión de `langchain-community`, y la
+última (`0.4.2`) borró `langchain_community/chat_models/vertexai.py` — módulo que
+`ragas/llms/base.py` importa sin condición al cargar el paquete (`import ragas`
+fallaba de entrada, ni siquiera llegaba a usarse). El test aislado del 04/08 no lo
+detectó (probablemente resolvió una `langchain-community` distinta en ese momento).
+Fix: `langchain-community==0.4.1` pineado explícito en `requirements.txt` (ahí el
+módulo todavía existe, y solo pide `langchain-core>=1.0.1`) — de paso subió
+`langchain-core` de `1.3.2` a `1.5.3` (piso real de `langchain-classic`, dependencia
+transitiva de `langchain-community`). `pip check` limpio y `pytest tests/test_rules.py`
+7/7 en verde con las versiones nuevas.
+
+`evals/ragas_eval.py` escrito con el diseño ya acordado (ver detalle completo en
+"Estado actual del repo" arriba: 3 bugs reales encontrados y arreglados corriendo el
+script de punta a punta, no solo leyendo docs) y corrido contra los 48 casos completos
+de `golden_set.json`: 46/48 puntuados, faithfulness 0.783, answer_relevancy 0.708,
+context_precision 0.571, context_recall 0.679 (`evals/results/2026-08-05/
+11-46-58_ragas.json`). De paso, se creó (fuera de este repo) la skill de usuario
+`esquema-de-tarea` en `~/.claude/skills/` — no es parte del código de
+`agentic-rag-fastapi`, no se documenta más acá.
+- **Próximo paso concreto:** pasar el repo a público (Juan, cuando pueda). Según el
+  timeline de abajo, si queda margen antes del 10/08 sigue el stretch #2 (Streamlit).
+  Nada de lo de hoy se commiteó (sesión dentro de la ventana 9-18hs ARG lun-vie).
+- Sesión cerrada acá por hoy (2026-08-05).
+
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
 
@@ -1074,11 +1132,10 @@ por el mismo tiempo que RAGAS/deploy en vez de sumar gratis).
   no ejecutar de forma autónoma. Actualización (2026-07-29): ahora SÍ entra en el
   alcance de la entrega del LLM Zoomcamp (ver "Cambio de prioridad" arriba) — Juan
   confirmó que quiere el historial limpio antes de pasar el repo a público.
-  **Actualización (2026-08-04): plan confirmado y ejecutado hasta el force-push —
-  ver detalle completo en la "Actualización (2026-08-04)" de arriba.** Backup +
-  ensayo + reescritura local + verificación, todo hecho. Solo falta el
-  `git push origin --force --all` y pasar el repo a público, ambos bloqueados por
-  la regla de horario del repo, no por falta de confirmación.
+  **Actualización (2026-08-05): force-push ejecutado y verificado — `origin/main`
+  ya tiene el historial reescrito, sin `.env`.** Ver "Actualización (2026-08-05)"
+  arriba. Solo falta pasar el repo de privado a público en GitHub, a criterio de
+  Juan, sin fecha fija.
 - Supervisor multi-agente / create_react_agent prebuilt — descartados por ahora
   en el handoff de M3 (repo monolítico resuelve bien el dominio actual).
 - .env.example volvió a guardarse en UTF-16 (se había corregido a UTF-8 el

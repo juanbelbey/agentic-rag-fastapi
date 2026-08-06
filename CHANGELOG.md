@@ -6,6 +6,68 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-05 — Force-push del historial (cierra punto 7) + RAGAS completo (stretch #1)
+**Commits:** `e885f2d` (docs — cierre de la entrada 2026-08-04, ya pusheado junto con el
+force-push de abajo). Todo lo de código de hoy (`requirements.txt`, `evals/ragas_eval.py`)
+sigue sin commitear — sesión corrida entera dentro de la ventana 9-18hs ARG lun-vie.
+
+- **Cierra el punto 7 del plan de entrega:** `git push origin --force --all` ejecutado
+  (confirmación explícita de Juan inmediatamente antes, dado lo irreversible del lado
+  GitHub). Verificado con `git fetch` + `git log origin/main`: el remoto ya tiene el
+  historial reescrito del 2026-08-04 (sin `.env`), `HEAD` en `e885f2d`. Solo falta que
+  Juan pase el repo de privado a público, a su criterio, sin fecha fija.
+- **Stretch #1 (RAGAS) completado — con un hallazgo real que contradice lo "verificado"
+  el 2026-08-04:** al instalar `ragas==0.4.3` en el venv real del proyecto (no en el venv
+  aislado usado para el test de compatibilidad), `import ragas` falló de entrada —
+  `ragas/llms/base.py` importa sin condición `langchain_community.chat_models.vertexai.
+  ChatVertexAI`, módulo que la última `langchain-community` (`0.4.2`, no pineada por
+  `ragas`) ya no tiene. El test aislado del 04/08 no lo detectó, probablemente porque
+  resolvió una versión distinta de `langchain-community` en ese momento. Investigado
+  descargando wheels de varias versiones sin instalar (`pip download --no-deps`) para
+  ubicar dónde se sacó el módulo: sigue presente en `0.4.1`, que además solo pide
+  `langchain-core>=1.0.1` (compatible con el resto del stack). Fix aplicado a
+  `requirements.txt`: `langchain-community==0.4.1` pineado explícito (con comentario del
+  porqué) + `langchain-core` subido de `1.3.2` a `1.5.3` (piso real que exige
+  `langchain-classic`, dependencia transitiva de `langchain-community`, no elección
+  propia). `pip check` limpio, `pytest tests/test_rules.py` 7/7 en verde con las
+  versiones nuevas.
+- **`evals/ragas_eval.py` nuevo** — diseño ya acordado el 04/08 (`ragas.metrics.collections`:
+  `Faithfulness`/`AnswerRelevancy`/`ContextPrecision`/`ContextRecall`; `contexts` tomados
+  del `ToolMessage` real de la tool call a `rag_search` en la traza, no de
+  `_hybrid_search()` aparte; juez `gpt-4o-mini` vía `llm_factory` + `OpenAIEmbeddings`
+  default `text-embedding-3-small`, igual que `src/ingestion.py`). Tres bugs reales
+  encontrados y arreglados corriendo el script de punta a punta (no solo leyendo la API):
+  1. El `.score()` sync de cada métrica llama internamente a `agenerate()`, que exige un
+     cliente async — con `OpenAI()` normal tira `TypeError: Cannot use agenerate() with a
+     synchronous client`. Fix: `AsyncOpenAI()`.
+  2. Sin `max_tokens` explícito, la salida estructurada de `faithfulness` se truncó a
+     mitad de camino en la primera corrida completa
+     (`instructor.v2.core.errors.IncompleteOutputException`). Fix: `max_tokens=2048` en
+     `llm_factory`.
+  3. El primer `try/except` de `evaluate_case()` solo envolvía el scoring de RAGAS, no el
+     `invoke_agent()` del agente — un `psycopg2.OperationalError: server closed the
+     connection unexpectedly` real (Postgres/Supabase, transitorio) a mitad de una tool
+     call tiró abajo la corrida completa por segunda vez, mismo patrón de riesgo que dejó
+     `compare_temperature.py` a medio terminar el 2026-08-01 (una corrida larga sin aislar
+     el punto de falla pierde todo el trabajo previo, no solo el caso que falló). Fix:
+     `try/except` ampliado a todo el cuerpo de `evaluate_case()`.
+  - **Corrida real completa (48 casos de `golden_set.json` con `expected_answer`,
+    `direct_answer_mini` en producción):** 46/48 puntuados (2 sin contexts recuperados —
+    `g026`/`g039`, `rag_search` no devolvió resultados para esas preguntas; hallazgo de
+    retrieval, no bug del script). **faithfulness 0.783, answer_relevancy 0.708,
+    context_precision 0.571, context_recall 0.679** —
+    `evals/results/2026-08-05/11-46-58_ragas.json`.
+- De paso, creada (fuera de este repo) la skill de usuario `esquema-de-tarea` en
+  `~/.claude/skills/` — tooling personal de Claude Code, no forma parte del código de
+  `agentic-rag-fastapi`.
+- **Próximo paso concreto:** pasar el repo a público en GitHub (Juan, sin fecha fija).
+  Commitear `requirements.txt` + `evals/ragas_eval.py` + esta entrada de CHANGELOG fuera
+  de la ventana 9-18hs. Si queda margen antes del 10/08, seguir con el stretch #2
+  (Streamlit) según el timeline del 2026-08-01.
+- Sesión cerrada acá por hoy, a pedido de Juan — sin commits (regla de horario).
+
+---
+
 ## 2026-08-04 — Cierra el punto 5 (commit) + limpieza del historial de git (punto 7, local) + arranca RAGAS
 **Commits:** `2eed98a` (query rewriting del punto 5, pusheado — hash reescrito a `d47031b`
 por la limpieza de historial de más abajo) + resto de esta entrada sin commitear, ver
