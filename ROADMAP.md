@@ -104,7 +104,18 @@ src/
 │                     cerrado en 5B.4 — rrf() fusiona solo por ranking, no depende del
 │                     texto de la query): hit_rate/mrr keyword 0.300/0.197 → 0.3288/0.2368;
 │                     hybrid (el que usa rag_search() real) 0.317/0.186 → 0.4154/0.2197
-│                     (+31% hit_rate) — mejora sustancial, no marginal. Pendiente de
+│                     (+31% hit_rate) — mejora sustancial, no marginal. Commiteado
+│                     `d47031b` (corrige nota vieja: esto ya estaba pusheado, no
+│                     "pendiente de commitear" como decía acá).
+│                     [2026-08-06] `rag_search(top_k: int = 3)` → `top_k = 5`. Hallazgo al
+│                     revisar resultados de RAGAS (ver evals/ragas_eval.py abajo): producción
+│                     usaba top_k=3, pero hit_rate/mrr siempre se midieron con top_k=5 — o sea
+│                     producción recuperaba menos contexto que el retrieval ya limitado que se
+│                     estaba midiendo. Confirmado con una re-corrida completa de RAGAS
+│                     (top_k=3 vs top_k=5, ver detalle y tabla en EXPERIMENTS.md):
+│                     context_recall 0.679 → 0.773 (+0.094, la mejora real), context_precision
+│                     0.571 → 0.563 (dentro de ruido), faithfulness/answer_relevancy
+│                     practicamente planas. Neto positivo, top_k=5 queda de default. Sin
 │                     commitear.
 ├── graph.py       ✅ StateGraph con routing condicional — SYSTEM_PROMPT con el caso de uso real
 │                     (instrumentación de campo, agua potable/saneamiento) desde 5B.4 paso 3
@@ -395,6 +406,18 @@ evals/
                         resultados para esas preguntas, hallazgo de retrieval, no bug del script).
                         `evals/results/2026-08-05/11-46-58_ragas.json`: faithfulness 0.783,
                         answer_relevancy 0.708, context_precision 0.571, context_recall 0.679.
+                        [2026-08-06] Re-corrida con `top_k=5` (ver `src/tools.py` arriba):
+                        `evals/results/2026-08-06/09-37-33_ragas.json` — faithfulness 0.776,
+                        answer_relevancy 0.718, context_precision 0.563, context_recall 0.773
+                        (+0.094, la mejora real del cambio). Tabla comparativa completa en
+                        `EXPERIMENTS.md`. Sin commitear.
+├── experiments_log.csv ✅ (2026-08-06) nuevo — historial de experimentos de retrieval y
+│                        generación en formato largo (fecha, área, experimento, variante,
+│                        métrica, valor), pensado para alimentar un dashboard/gráfico más
+│                        adelante sin reparsear ROADMAP/CHANGELOG. Cubre retroactivamente el
+│                        bug de keyword search, el barrido de RRF, query rewriting, la
+│                        comparación prompt×modelo×temperatura y los dos runs de RAGAS. Sin
+│                        commitear.
 
 .github/
 └── workflows/
@@ -431,6 +454,14 @@ Dockerfile          ✅ (2026-07-30) nuevo — python:3.12-slim, COPY requiremen
                       en la rúbrica.
 .dockerignore        ✅ (2026-07-30) nuevo — excluye .venv/, .git/, docs/, tests/,
                       .env, reports/, courses/, scripts/, *.md del contexto de build.
+
+EXPERIMENTS.md      ✅ (2026-08-06) nuevo — doc narrativo de decisiones basadas en datos:
+                      cada experimento de retrieval (bug de keyword search, barrido de RRF,
+                      query rewriting, top_k) y de generación (comparación prompt/modelo,
+                      temperatura, RAGAS) con qué se probó, qué se encontró y por qué se
+                      decidió lo que se decidió. Complementa el detalle técnico de este
+                      ROADMAP con una versión "para portfolio/entrevista" — los datos crudos
+                      viven en `evals/results/experiments_log.csv`. Sin commitear.
 
 ── PRÓXIMO PASO ──
 Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
@@ -1093,6 +1124,53 @@ context_precision 0.571, context_recall 0.679 (`evals/results/2026-08-05/
   timeline de abajo, si queda margen antes del 10/08 sigue el stretch #2 (Streamlit).
   Nada de lo de hoy se commiteó (sesión dentro de la ventana 9-18hs ARG lun-vie).
 - Sesión cerrada acá por hoy (2026-08-05).
+
+**Actualización (2026-08-06) — cierra stretch #1 (RAGAS), esquema confirmado para
+stretch #2/#3 (Streamlit + deploy):**
+
+`rag_search(top_k=3→5)` — hallazgo real al revisar los resultados de RAGAS del
+2026-08-05: producción usaba `top_k=3` pero hit_rate/mrr siempre se habían medido
+con `top_k=5`. Re-corrida completa de `ragas_eval.py` confirmó mejora neta:
+`context_recall` 0.679 → 0.773 (+0.094), `context_precision` 0.571 → 0.563 (ruido),
+faithfulness/answer_relevancy planas. `top_k=5` queda de default (`src/tools.py`,
+sin commitear). **Stretch #1 (RAGAS) completo.**
+
+Creados `EXPERIMENTS.md` (raíz) y `evals/results/experiments_log.csv` — a pedido
+de Juan, para dejar registro "prolijo" de las decisiones basadas en datos
+(retrieval y generación) más allá del detalle técnico disperso en este ROADMAP,
+pensado para eventualmente armar un dashboard/gráfico de portfolio. Ver detalle
+de ambos archivos en "Estado actual del repo" arriba.
+
+**Esquema de tareas confirmado (`/esquema-de-tarea`) para stretch #2/#3:**
+Streamlit (frontend chat + pulgar arriba/abajo, consume `/chat`/`/feedback`
+existentes) + backend FastAPI en Render (Dockerfile ya probado; Render elegido
+sobre Fly.io) + frontend en Streamlit Community Cloud. Incluye rate limiting
+(`slowapi`) en `/chat`/`/feedback` + límite de gasto en el dashboard de OpenAI —
+decisión explícita de Juan de no dejar su API key personal expuesta sin
+protección de abuso en un link público (se descartó cambiar a un modelo gratuito
+para el demo: `gpt-4o-mini` ya está validado con evidencia real, costo por
+request ínfimo).
+
+| # | Fase | Horas |
+|---|---|---|
+| 1 | Frontend Streamlit | 1.5–2h |
+| 2 | Deploy backend Render + rate limiting | 1.5–2h |
+| 3 | Deploy frontend Streamlit Cloud | 0.5–1h |
+| 4 | Cierre y docs | 0.5h |
+
+Total ~4h–5.5h. Plan de sesiones: hoy 2026-08-06 tarde + viernes 07/08 + sábado
+08/08 (~6h disponibles con la cadencia habitual — entra con margen). Sin código
+escrito todavía.
+
+- **Próximo paso concreto:** arrancar Fase 1 (frontend Streamlit) — sin código
+  todavía. Aparte, corregida una nota vieja del ROADMAP (`src/tools.py`, query
+  rewriting): decía "pendiente de commitear" pero ya estaba pusheado desde
+  `d47031b` (2026-08-04) — desincronización de documentación, no de código.
+  Sigue pendiente que Juan pase el repo a público, a su criterio.
+- **Sin commitear** (sesión dentro de la ventana 9-18hs ARG lun-vie):
+  `src/tools.py`, `EXPERIMENTS.md`, `evals/results/experiments_log.csv`,
+  `evals/results/2026-08-06/`, más esta entrada de ROADMAP/CHANGELOG.
+- Sesión cerrada acá por hoy (2026-08-06).
 
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):

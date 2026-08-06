@@ -1,0 +1,73 @@
+date,area,experiment,variant,metric,value,unit,notes
+2026-07-18,retrieval,baseline_top_k5,vector,hit_rate,0.231,ratio,520 preguntas ground_truth_retrieval.json
+2026-07-18,retrieval,baseline_top_k5,vector,mrr,0.141,ratio,520 preguntas ground_truth_retrieval.json
+2026-07-18,retrieval,baseline_top_k5,keyword,hit_rate,0.300,ratio,post-fix (ver keyword_search_bugfix)
+2026-07-18,retrieval,baseline_top_k5,keyword,mrr,0.197,ratio,post-fix (ver keyword_search_bugfix)
+2026-07-18,retrieval,baseline_top_k5,hybrid,hit_rate,0.312,ratio,RRF default k=60 (pre-sweep)
+2026-07-18,retrieval,baseline_top_k5,hybrid,mrr,0.180,ratio,RRF default k=60 (pre-sweep)
+2026-07-18,retrieval,keyword_search_bugfix,before,hit_rate,0.008,ratio,plainto_tsquery: AND de 15-20 palabras de preguntas parafraseadas
+2026-07-18,retrieval,keyword_search_bugfix,after,hit_rate,0.300,ratio,OR armado a mano (_build_or_tsquery) + stopwords ES/EN
+2026-07-18,retrieval,keyword_search_bugfix,after,mrr,0.197,ratio,OR armado a mano (_build_or_tsquery) + stopwords ES/EN
+2026-07-18,retrieval,rrf_k_sweep,k1,hit_rate,0.3173,ratio,candidate_k=10 -- ganador en hit_rate y mrr a la vez
+2026-07-18,retrieval,rrf_k_sweep,k1,mrr,0.1858,ratio,candidate_k=10 -- ganador en hit_rate y mrr a la vez
+2026-07-18,retrieval,rrf_k_sweep,k60,hit_rate,0.3115,ratio,k=50/60/100/200 dan resultado identico entre si
+2026-07-18,retrieval,rrf_k_sweep,k60,mrr,0.1797,ratio,k=50/60/100/200 dan resultado identico entre si
+2026-08-03,retrieval,query_rewriting,keyword_before,hit_rate,0.300,ratio,sin rewrite -- brecha ES/EN (8/11 PDFs en ingles)
+2026-08-03,retrieval,query_rewriting,keyword_before,mrr,0.197,ratio,sin rewrite
+2026-08-03,retrieval,query_rewriting,keyword_after,hit_rate,0.3288,ratio,gpt-4o-mini reescribe query a ingles tecnico antes del OR tsquery
+2026-08-03,retrieval,query_rewriting,keyword_after,mrr,0.2368,ratio,gpt-4o-mini reescribe query a ingles tecnico antes del OR tsquery
+2026-08-03,retrieval,query_rewriting,hybrid_before,hit_rate,0.317,ratio,rag_search() real en produccion
+2026-08-03,retrieval,query_rewriting,hybrid_before,mrr,0.186,ratio,rag_search() real en produccion
+2026-08-03,retrieval,query_rewriting,hybrid_after,hit_rate,0.4154,ratio,+31% hit_rate -- rag_search() real en produccion
+2026-08-03,retrieval,query_rewriting,hybrid_after,mrr,0.2197,ratio,rag_search() real en produccion
+2026-07-27,generation,golden_set_baseline,baseline_mini,relevance,4.44,/5,primera corrida real sobre corpus de instrumentacion (48 casos)
+2026-07-27,generation,golden_set_baseline,baseline_mini,accuracy,3.88,/5,primera corrida real sobre corpus de instrumentacion (48 casos)
+2026-07-27,generation,golden_set_baseline,baseline_mini,citation_rate,0.85,ratio,primera corrida real sobre corpus de instrumentacion (48 casos)
+2026-08-01,generation,compare_prompts_48,baseline_mini,relevance,4.40,/5,produccion vigente en ese momento
+2026-08-01,generation,compare_prompts_48,baseline_mini,accuracy,3.60,/5,produccion vigente en ese momento
+2026-08-01,generation,compare_prompts_48,baseline_mini,citation_rate,0.81,ratio,produccion vigente en ese momento
+2026-08-01,generation,compare_prompts_48,baseline_mini,ticket_rate,0.1875,ratio,9/48 -- exceso de escalamiento en preguntas contestables
+2026-08-01,generation,compare_prompts_48,baseline_nano,relevance,4.90,/5,gpt-4.1-nano + prompt viejo
+2026-08-01,generation,compare_prompts_48,baseline_nano,accuracy,4.27,/5,gpt-4.1-nano + prompt viejo
+2026-08-01,generation,compare_prompts_48,baseline_nano,citation_rate,0.92,ratio,gpt-4.1-nano + prompt viejo
+2026-08-01,generation,compare_prompts_48,baseline_nano,ticket_rate,0.0,ratio,0/48
+2026-08-01,generation,compare_prompts_48,direct_answer_mini,relevance,4.62,/5,gpt-4o-mini + prompt nuevo (prioriza respuesta directa)
+2026-08-01,generation,compare_prompts_48,direct_answer_mini,accuracy,3.94,/5,gpt-4o-mini + prompt nuevo (prioriza respuesta directa)
+2026-08-01,generation,compare_prompts_48,direct_answer_mini,citation_rate,0.94,ratio,gpt-4o-mini + prompt nuevo (prioriza respuesta directa)
+2026-08-01,generation,compare_prompts_48,direct_answer_mini,ticket_rate,0.0417,ratio,2/48
+2026-08-01,generation,compare_prompts_48,direct_answer_nano,relevance,4.75,/5,gpt-4.1-nano + prompt nuevo
+2026-08-01,generation,compare_prompts_48,direct_answer_nano,accuracy,4.08,/5,gpt-4.1-nano + prompt nuevo
+2026-08-01,generation,compare_prompts_48,direct_answer_nano,citation_rate,0.94,ratio,gpt-4.1-nano + prompt nuevo
+2026-08-01,generation,compare_prompts_48,direct_answer_nano,ticket_rate,0.0,ratio,0/48
+2026-08-01,generation,compare_prompts_56,baseline_mini,relevance,4.43,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_mini,accuracy,3.69,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_mini,citation_rate,0.77,ratio,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_mini,tool_call_rate,1.0,ratio,8/8 -- escalo en todos los casos que debia
+2026-08-01,generation,compare_prompts_56,baseline_nano,relevance,4.68,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_nano,accuracy,4.12,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_nano,citation_rate,0.84,ratio,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,baseline_nano,tool_call_rate,0.875,ratio,7/8 -- fallo 1 caso de escalamiento
+2026-08-01,generation,compare_prompts_56,direct_answer_mini,relevance,4.77,/5,+8 casos de escalamiento (total 56) -- GANADOR
+2026-08-01,generation,compare_prompts_56,direct_answer_mini,accuracy,4.17,/5,+8 casos de escalamiento (total 56) -- GANADOR
+2026-08-01,generation,compare_prompts_56,direct_answer_mini,citation_rate,0.84,ratio,+8 casos de escalamiento (total 56) -- GANADOR
+2026-08-01,generation,compare_prompts_56,direct_answer_mini,tool_call_rate,1.0,ratio,8/8 -- GANADOR, no fallo ningun caso de escalamiento
+2026-08-01,generation,compare_prompts_56,direct_answer_nano,relevance,4.80,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,direct_answer_nano,accuracy,4.23,/5,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,direct_answer_nano,citation_rate,0.88,ratio,+8 casos de escalamiento (total 56)
+2026-08-01,generation,compare_prompts_56,direct_answer_nano,tool_call_rate,0.75,ratio,6/8 -- fallo 2 casos de escalamiento, mismos que baseline_nano
+2026-08-01,generation,temperature_sweep,temp0.0,accuracy,4.00,/5,sobre direct_answer_mini
+2026-08-01,generation,temperature_sweep,temp0.0,spread,0.04,stddev,mas estable, pero menor citation_rate (efecto de estilo)
+2026-08-01,generation,temperature_sweep,temp0.3,accuracy,4.07,/5,sobre direct_answer_mini -- GANADOR (default de produccion)
+2026-08-01,generation,temperature_sweep,temp0.3,spread,0.10,stddev,punto medio estabilidad/citation_rate -- GANADOR
+2026-08-01,generation,temperature_sweep,temp0.6,accuracy,4.12,/5,sobre direct_answer_mini
+2026-08-01,generation,temperature_sweep,temp0.6,spread,0.05,stddev,sobre direct_answer_mini
+2026-08-01,generation,temperature_sweep,temp1.0,accuracy,4.03,/5,default implicito anterior (nunca fijado)
+2026-08-01,generation,temperature_sweep,temp1.0,spread,0.18,stddev,el mas inestable de los 4 -- confirma la sospecha de fijar temperatura
+2026-08-05,generation,ragas_topk,topk3,faithfulness,0.783,ratio,direct_answer_mini T=0.3 en produccion -- 46/48 puntuados
+2026-08-05,generation,ragas_topk,topk3,answer_relevancy,0.708,ratio,direct_answer_mini T=0.3 en produccion -- 46/48 puntuados
+2026-08-05,generation,ragas_topk,topk3,context_precision,0.571,ratio,direct_answer_mini T=0.3 en produccion -- 46/48 puntuados
+2026-08-05,generation,ragas_topk,topk3,context_recall,0.679,ratio,direct_answer_mini T=0.3 en produccion -- 46/48 puntuados
+2026-08-06,generation,ragas_topk,topk5,faithfulness,0.776,ratio,rag_search top_k 3->5 -- 46/48 puntuados
+2026-08-06,generation,ragas_topk,topk5,answer_relevancy,0.718,ratio,rag_search top_k 3->5 -- 46/48 puntuados
+2026-08-06,generation,ragas_topk,topk5,context_precision,0.563,ratio,rag_search top_k 3->5 -- 46/48 puntuados
+2026-08-06,generation,ragas_topk,topk5,context_recall,0.773,ratio,rag_search top_k 3->5 -- +0.094 vs topk3, mayor mejora del experimento

@@ -205,7 +205,7 @@ def create_ticket(summary: str, category: str, priority: str = "medium") -> str:
 
 
 @tool
-def rag_search(query: str, top_k: int = 3) -> str:
+def rag_search(query: str, top_k: int = 5) -> str:
     """Busca chunks relevantes combinando vector search + keyword search + RRF (Postgres)."""
     conn = _get_connection()
     try:

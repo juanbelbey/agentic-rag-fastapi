@@ -6,6 +6,53 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-06 — Cierra stretch #1 (top_k 3→5) + registro de experimentos + esquema Streamlit/Render
+**Commits:** `70c41a2` (RAGAS de ayer, commiteado hoy a las 08:56 ART — fuera de la ventana
+9-18hs). El resto de esta entrada (`src/tools.py`, `EXPERIMENTS.md`,
+`evals/results/experiments_log.csv`, `evals/results/2026-08-06/`) sigue sin commitear —
+sesión corrida dentro de la ventana 9-18hs ARG lun-vie.
+
+- **`rag_search(top_k)` de 3 a 5** (`src/tools.py`) — hallazgo real al revisar los
+  resultados de RAGAS del 2026-08-05: producción usaba `top_k=3`, pero hit_rate/mrr
+  siempre se habían medido con `top_k=5` (producción recuperaba menos contexto que el
+  retrieval ya limitado que se estaba midiendo). Tres casos del golden set (`g002`,
+  `g016`, `g029`) tenían `context_precision`/`context_recall` en 0.0 — ninguno de los 3
+  chunks recuperados era relevante.
+- **Re-corrida completa de `ragas_eval.py` con `top_k=5`:**
+  `evals/results/2026-08-06/09-37-33_ragas.json` — faithfulness 0.776 (-0.007),
+  answer_relevancy 0.718 (+0.010), context_precision 0.563 (-0.008, dentro de ruido),
+  **context_recall 0.773 (+0.094, la mejora real del experimento)**. Trade-off esperable
+  (más contexto sube la chance de incluir el chunk correcto, diluye un poco la
+  proporción de chunks relevantes) — neto positivo, `top_k=5` queda de default de
+  producción. **Cierra el stretch #1 (RAGAS).**
+- **`EXPERIMENTS.md` (raíz) y `evals/results/experiments_log.csv` nuevos** — pedido
+  explícito de Juan de dejar registro "prolijo" de las decisiones basadas en datos
+  (retrieval: bug de keyword search, barrido de RRF, query rewriting, `top_k`;
+  generación: comparación prompt×modelo, temperatura, RAGAS), pensado para portfolio y
+  para eventualmente armar un dashboard/gráfico sin tener que releer ROADMAP/CHANGELOG.
+  `EXPERIMENTS.md` es la narrativa (qué se probó, qué se encontró, qué se decidió);
+  `experiments_log.csv` son los mismos números en formato largo (fecha, área,
+  experimento, variante, métrica, valor).
+- **Corregida una nota vieja del ROADMAP:** la entrada de query rewriting
+  (`src/tools.py`) decía "pendiente de commitear" pero ya estaba pusheado desde
+  `d47031b` (2026-08-04) — desincronización de documentación detectada al pasar la
+  skill `actualizar-roadmap-changelog`, no de código.
+- **Esquema de tareas confirmado (`/esquema-de-tarea`) para el stretch #2/#3
+  (Streamlit + deploy):** Streamlit (chat + pulgar arriba/abajo, consume
+  `/chat`/`/feedback` existentes) + backend FastAPI en Render (Dockerfile ya probado;
+  Render elegido sobre Fly.io) + frontend en Streamlit Community Cloud + rate limiting
+  (`slowapi`) en `/chat`/`/feedback` + límite de gasto en el dashboard de OpenAI
+  (decisión de Juan de no dejar la API key personal expuesta sin protección de abuso en
+  un link público; se descartó un modelo gratuito para el demo — `gpt-4o-mini` ya está
+  validado con evidencia real, costo por request ínfimo). 4 fases, ~4h-5.5h total. Plan
+  de sesiones: hoy a la tarde + viernes 07/08 + sábado 08/08. Ver tabla completa en
+  ROADMAP.md.
+- **Próximo paso concreto:** arrancar Fase 1 del esquema (frontend Streamlit) — sin
+  código todavía. Commitear lo de hoy fuera de la ventana 9-18hs.
+- Sesión cerrada acá por hoy.
+
+---
+
 ## 2026-08-05 — Force-push del historial (cierra punto 7) + RAGAS completo (stretch #1)
 **Commits:** `e885f2d` (docs — cierre de la entrada 2026-08-04, ya pusheado junto con el
 force-push de abajo). Todo lo de código de hoy (`requirements.txt`, `evals/ragas_eval.py`)
