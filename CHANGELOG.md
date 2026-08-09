@@ -6,9 +6,94 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-09 — Fase 2 del esquema Streamlit/Render: deploy del backend en Render + rate limiting
+**Commits:** `b89c393` (Fase 1 atrasada — `streamlit_app/` completo + doc, ver entrada
+2026-08-07), `4a77ba5` (rate limiting + `render.yaml` + fix de errores en Streamlit),
+`4757f53` (fix `Dockerfile` no copiaba `prompts/`).
+
+- **No hubo sesión el sábado 08/08 como estaba planeado** — la Fase 1 quedó sin
+  commitear varios días de más. Se commiteó recién hoy, junto con el arranque de
+  la Fase 2.
+- **Rate limiting con `slowapi`** en `/chat` (10/minute) y `/feedback` (20/minute),
+  `src/main.py`. `key_func=get_ipaddr` (no `get_remote_address`): en Render la app
+  corre detrás de un proxy, así que `request.client.host` daría la IP interna del
+  proxy, no la del caller real — `get_ipaddr` lee `X-Forwarded-For`. Decisión
+  explícita de Juan de no dejar la key personal de OpenAI expuesta sin protección
+  de abuso en un link público. Nota de diseño real: el flujo público es `usuario →
+  Streamlit Cloud (server-side) → Render`, así que todo el tráfico de la app
+  comparte la misma IP de origen — el límite funciona como presupuesto compartido
+  entre todos los usuarios del demo, no un límite por persona (juega a favor del
+  objetivo real: capar el gasto total). Verificado real contra `/feedback`: 20
+  requests seguidos en 201, el 21 y 22 en 429 (filas de prueba borradas de
+  Postgres después).
+- **`render.yaml` nuevo** — Blueprint de Render: `runtime: docker` sobre el
+  `Dockerfile` ya probado, `plan: free`, `region: oregon`. 4 env vars con
+  `sync: false` (`OPENAI_API_KEY`, `DATABASE_URL`, `LANGCHAIN_API_KEY`,
+  `LANGCHAIN_TRACING_V2`) cargadas a mano en el dashboard de Render, nunca
+  committeadas. `DATABASE_URL` es la credencial completa de `.env` (rol dueño),
+  no la de `ci_readonly` de GitHub Actions — esa solo puede `SELECT` sobre
+  `chunks` y el backend rompería al intentar `checkpointer.setup()`/`INSERT` con
+  ella. Sin `healthCheckPath` a propósito — la API no tiene ningún endpoint `GET`
+  todavía, queda anotado como mejora pendiente.
+- **Dos bugs reales encontrados desplegando** (no del diseño, del deploy real):
+  1. `Dockerfile` no tenía `COPY prompts/ prompts/` — nunca se actualizó desde el
+     2026-07-31 pese a que `prompts/` se creó el 2026-08-01 y creció el
+     2026-08-03 (`query_rewrite.txt`). Local nunca lo notó (se corre desde la
+     raíz del repo, con `prompts/` al lado). Efecto real: el primer deploy a
+     Render murió con `FileNotFoundError: /app/prompts/query_rewrite.txt` al
+     importar `src.tools`. Fix aplicado y verificado con `docker build` +
+     `docker run` real antes de repushear.
+  2. `streamlit_app/app.py`: `/chat` no atrapaba errores HTTP —
+     `response.raise_for_status()` sin `try/except` significaba que un 429 del
+     rate limiting nuevo mostraría un stack trace crudo al usuario final en vez
+     de un mensaje entendible. Fix: `try/except` con mensaje distinto si es 429
+     ("mucha demanda, esperá un minuto") vs error genérico, `st.stop()` en vez de
+     romper. `send_feedback()` ahora devuelve `bool` — antes un fallo quedaba
+     silencioso (ni error ni confirmación al usuario).
+  - De paso, aprovechado para arreglar `CMD` del `Dockerfile`: pasa de puerto fijo
+    (`--port 8000`) a forma shell con `${PORT:-8000}` — Render inyecta su propio
+    `$PORT` en runtime, no siempre 8000. `exec` reemplaza el proceso de `sh` por
+    `uvicorn` para que reciba `SIGTERM` de Render directo. Verificado local con
+    `docker run -e PORT=10000`: escuchó en 10000, no en 8000.
+- **Deploy real verificado en `https://agentic-rag-fastapi.onrender.com`:**
+  `POST /chat` (200, pregunta real sobre calibración de un Siemens Sitrans P320,
+  respuesta con cita del manual correcto, `rag_search` usado) y `POST /feedback`
+  (201, confirmado con `SELECT` en Postgres real y borrado después).
+  **Fase 2 completa.**
+- **Hallazgo sin investigar, no bloqueante:** una corrida de `/chat` contra Docker
+  local (antes del deploy) devolvió una respuesta con una URL de fuente corrupta
+  — un fragmento de fecha (`-2024-11-08`) repetido decenas de veces al final de
+  la cita. No se reprodujo en la corrida siguiente contra Render (misma pregunta
+  tipo, URL limpia) — posible caso aislado de repetición del LLM al generar el
+  link. Queda anotado para revisar si vuelve a aparecer.
+- **Cambio de timeline:** el deadline del LLM Zoomcamp se corrió del 10/08 al
+  17/08 — objetivo personal de Juan: listo el sábado 15/08.
+- **Esquema de cierre confirmado (`/esquema-de-tarea`, con auditoría honesta del
+  repo contra la rúbrica — hoy ~15/18 objetivo + 2 best practices + bonus cloud):**
+  6 fases, ~10.5-13.5h: (1) frontend a Streamlit Cloud, (4a) sync honesto del
+  README el mismo lunes — hoy esconde puntos ya ganados: query rewriting y
+  Monitoring figuran "pendientes" estando hechos —, (2) dashboard de monitoring
+  en Streamlit con ≥5 gráficos (asegura Monitoring 2/2 sin depender de que el
+  reviewer acepte LangSmith), (3) docker-compose backend+frontend
+  (Containerization 1→2), (4b) README pulido + traducción completa a inglés
+  (idioma del curso), (5) repo a público + verificación, (6) re-ranking evaluado
+  (best practice +1, se cae si algo se estira). Criterio explícito: cada fase
+  cierra sola — tras el lunes el repo queda entregable en cualquier momento.
+  Descartados: Prefect para ingesta y Grafana (herramientas nuevas enteras con
+  poco ROI de rúbrica vs. las horas).
+- **Próximo paso concreto:** lunes 10/08 — Fase 1 (deploy del frontend a
+  Streamlit Community Cloud, `BACKEND_URL` apuntando a Render) + Fase 4a
+  (sync honesto del README).
+- Sesión cerrada acá por hoy (2026-08-09).
+
+---
+
 ## 2026-08-07 — Fase 1 del esquema Streamlit/Render: frontend Streamlit completo
-**Commits:** ninguno — sesión corrida dentro de la ventana 9-18hs ARG lun-vie
-(viernes). `streamlit_app/` (nuevo), `CHANGELOG.md`, `ROADMAP.md` sin commitear.
+**Commits:** ninguno al momento de esta entrada — sesión corrida dentro de la
+ventana 9-18hs ARG lun-vie (viernes). `streamlit_app/` (nuevo), `CHANGELOG.md`,
+`ROADMAP.md` quedaron sin commitear varios días más de lo esperado (no hubo
+sesión el sábado 08/08 como estaba planeado) — commiteados recién el 2026-08-09
+como `b89c393`, ver esa entrada.
 
 - **`streamlit_app/app.py` nuevo** — frontend Streamlit, Fase 1 del esquema
   confirmado el 2026-08-06 (stretch #2, Streamlit + deploy). Chat con

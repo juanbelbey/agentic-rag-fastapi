@@ -190,6 +190,20 @@ src/
 │                     Postgres (`SELECT`) y en LangSmith (`client.list_feedback(run_ids=...)`
 │                     devuelve `key="user_score"` con el score/comment correctos). Commit
 │                     `2810fb4`.
+│                     [2026-08-09, Fase 2 stretch #2/#3] Rate limiting con `slowapi` en
+│                     `/chat` (10/minute) y `/feedback` (20/minute) — protege la key personal
+│                     de OpenAI de abuso una vez que el link de Streamlit sea público (decisión
+│                     de Juan, ver tabla de fases en la actualización de abajo). `key_func=
+│                     get_ipaddr` (no `get_remote_address`): en Render la app corre detrás de
+│                     un proxy/load balancer, así que `request.client.host` daría la IP interna
+│                     del proxy, no la del caller real — `get_ipaddr` lee `X-Forwarded-For`
+│                     primero. Nota de diseño real: el flujo público es `usuario → Streamlit
+│                     Cloud (server-side) → Render`, así que todo el tráfico que viene de la
+│                     app de Streamlit comparte la misma IP de origen — el límite funciona como
+│                     presupuesto compartido entre todos los usuarios del demo, no un límite
+│                     por persona (jugando a favor del objetivo real: capar el gasto total).
+│                     Verificado real: 20 requests seguidos a `/feedback` → primeros 20 en 201,
+│                     el 21 y 22 en 429 (filas de prueba borradas de Postgres después).
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 │                     [2026-07-31 noche] `ChatResponse.run_id: str` nuevo — ver detalle en
 │                     main.py abajo (punto 3 del plan de entrega, feedback de usuario)
@@ -452,8 +466,43 @@ Dockerfile          ✅ (2026-07-30) nuevo — python:3.12-slim, COPY requiremen
                       correcto, respuesta con cita de fuente, tool_calls_used poblado).
                       Container detenido y borrado al terminar. Containerization 0→1
                       en la rúbrica.
+                      [2026-08-09, Fase 2 deploy Render] `CMD` pasa de array fijo a forma
+                      shell con `exec uvicorn ... --port ${PORT:-8000}` — Render inyecta su
+                      propio `$PORT` en runtime (no siempre 8000) y espera que el proceso
+                      escuche ahí; `exec` reemplaza el proceso de `sh` por `uvicorn` (no lo
+                      deja como hijo) para que reciba `SIGTERM` de Render directo. Verificado
+                      local con `docker run -e PORT=10000`: escuchó en 10000, no en 8000.
+                      **Bug real encontrado en el primer deploy a Render (no relacionado al
+                      cambio de puerto):** faltaba `COPY prompts/ prompts/` — `Dockerfile`
+                      nunca se actualizó desde el 2026-07-31 pese a que `prompts/` se creó
+                      recién el 2026-08-01 (refactor de `SYSTEM_PROMPT`) y creció el
+                      2026-08-03 (`query_rewrite.txt`); local nunca lo notó porque se corre
+                      desde la raíz del repo con `prompts/` al lado. Efecto real: primer
+                      deploy a Render murió con `FileNotFoundError: /app/prompts/
+                      query_rewrite.txt` al importar `src.tools`. Fix: agregada la línea
+                      `COPY prompts/ prompts/`. Verificado con `docker build` + `docker run`
+                      real (POST /chat real, respuesta con cita) antes de repushear.
 .dockerignore        ✅ (2026-07-30) nuevo — excluye .venv/, .git/, docs/, tests/,
                       .env, reports/, courses/, scripts/, *.md del contexto de build.
+
+render.yaml         ✅ (2026-08-09) nuevo — Blueprint de Render para el backend, Fase 2 del
+                      esquema Streamlit/Render. `runtime: docker` sobre el `Dockerfile` ya
+                      probado (no duplica la receta de deploy con el runtime nativo de
+                      Python de Render), `plan: free`, `region: oregon`. 4 env vars con
+                      `sync: false` (`OPENAI_API_KEY`, `DATABASE_URL`, `LANGCHAIN_API_KEY`,
+                      `LANGCHAIN_TRACING_V2`) — los valores se cargan a mano en el dashboard
+                      de Render al crear el Blueprint, nunca committeados. `DATABASE_URL` es
+                      la credencial completa de `.env` (rol dueño, puede `CREATE TABLE`/
+                      `INSERT`), no la de `ci_readonly` de GitHub Actions (esa solo puede
+                      `SELECT` sobre `chunks` — con esa el backend rompería al intentar
+                      `checkpointer.setup()`). Sin `healthCheckPath` configurado a propósito
+                      — la API no tiene ningún endpoint `GET` todavía (solo `POST /chat` y
+                      `POST /feedback`), así que Render se conforma con el chequeo TCP de que
+                      el puerto abre; un `GET /health` queda anotado como mejora pendiente,
+                      no bloqueante. Deploy real verificado en
+                      `https://agentic-rag-fastapi.onrender.com`: `POST /chat` (200, cita real
+                      del manual Siemens Sitrans P320, `rag_search` usado) y `POST /feedback`
+                      (201, confirmado en Postgres real y luego borrado).
 
 EXPERIMENTS.md      ✅ (2026-08-06) nuevo — doc narrativo de decisiones basadas en datos:
                       cada experimento de retrieval (bug de keyword search, barrido de RRF,
@@ -485,6 +534,18 @@ streamlit_app/
 │                        plano). Verificado end-to-end en local: pregunta real con
 │                        cita de fuente, feedback real confirmado en Postgres
 │                        (tabla feedback) y LangSmith (key="user_score").
+│                        [2026-08-09, Fase 2] Manejo de errores real — hasta ahora
+│                        `response.raise_for_status()` en `/chat` no tenía `try/except`:
+│                        un 429 del rate limiting nuevo (ver `src/main.py` arriba)
+│                        tiraba un `HTTPError` sin atrapar y Streamlit mostraba un stack
+│                        trace crudo al usuario final. Ahora atrapa `HTTPError` (mensaje
+│                        distinto si es 429: "mucha demanda, esperá un minuto") y
+│                        `RequestException` genérica (backend caído), con `st.error()` +
+│                        `st.stop()` en vez de romper. `send_feedback()` devuelve `bool`
+│                        en vez de ignorar la respuesta — antes un fallo quedaba
+│                        silencioso (ni error ni confirmación); ahora un fallo muestra
+│                        `st.toast()` de advertencia en vez de marcar el voto como
+│                        exitoso sin haberlo sido.
 ├── requirements.txt   ✅ (2026-08-07) streamlit==1.51.0, requests==2.32.5 — aislado
 │                        a proposito del requirements.txt de la raiz (ese trae
 │                        psycopg/ragas/langgraph del backend, deps pesadas que
@@ -1203,8 +1264,8 @@ request ínfimo).
 
 | # | Fase | Horas |
 |---|---|---|
-| 1 | Frontend Streamlit ✅ COMPLETA (2026-08-07) | 1.5–2h |
-| 2 | Deploy backend Render + rate limiting | 1.5–2h |
+| 1 | Frontend Streamlit ✅ COMPLETA (2026-08-07, commiteada 09/08) | 1.5–2h |
+| 2 | Deploy backend Render + rate limiting ✅ COMPLETA (2026-08-09) | 1.5–2h |
 | 3 | Deploy frontend Streamlit Cloud | 0.5–1h |
 | 4 | Cierre y docs | 0.5h |
 
@@ -1256,11 +1317,49 @@ original, aparecieron al correrlo de verdad):
    recuperó solo tras volver la conectividad; hubo que reiniciar el proceso del
    backend para que abriera un pool limpio.
 
-**Fase 1 completa.** Nada de esto está commiteado todavía (sesión de hoy corrida
-dentro de la ventana 9-18hs ARG lun-vie).
-- **Próximo paso concreto:** Fase 2 (deploy del backend a Render + rate limiting
-  con `slowapi`), sábado 08/08 según el plan de sesiones.
+**Fase 1 completa.** **Corrección 2026-08-09:** esta entrada decía "nada de esto
+está commiteado todavía" — quedó así varios días (no hubo sesión el sábado 08/08
+como estaba planeado); se commiteó recién el 2026-08-09 como `b89c393`, junto con
+el arranque de la Fase 2 (ver actualización más abajo).
 - Sesión cerrada acá por hoy (2026-08-07).
+
+**Actualización (2026-08-09) — Fase 2 (deploy backend Render + rate limiting)
+completa:**
+
+Rate limiting con `slowapi` en `/chat` (10/minute) y `/feedback` (20/minute) vía
+`get_ipaddr` (ver detalle de diseño en `src/main.py` arriba). `render.yaml` nuevo
+(Blueprint de Render, `plan: free`/`region: oregon`, Docker runtime sobre el
+`Dockerfile` ya probado, secrets `sync: false` cargados a mano en el dashboard).
+Dos bugs reales encontrados desplegando (no del diseño, del deploy real):
+`Dockerfile` no copiaba `prompts/` (deploy murió al importar `src.tools`) y
+`streamlit_app/app.py` no atrapaba errores HTTP de `/chat`/`/feedback` (un 429
+real mostraría un stack trace crudo al usuario). Ambos arreglados y verificados
+antes de dar la fase por cerrada — ver detalle completo en `Dockerfile` y
+`streamlit_app/app.py` arriba en "Estado actual del repo".
+
+**Deploy real verificado en `https://agentic-rag-fastapi.onrender.com`:**
+`POST /chat` (200, pregunta real sobre calibración de un Siemens Sitrans P320,
+respuesta con cita del manual correcto, `rag_search` usado) y `POST /feedback`
+(201, confirmado con `SELECT` en Postgres real y borrado después). **Fase 2
+completa.**
+
+Hallazgo sin investigar, no bloqueante: una corrida de prueba de `/chat` (contra
+Docker local, antes del deploy a Render) devolvió una respuesta con una URL de
+fuente corrupta — un fragmento de fecha (`-2024-11-08`) repetido decenas de veces
+al final de la cita. No se reprodujo en la corrida siguiente contra Render (misma
+pregunta tipo, URL limpia) — podría ser un caso aislado de repetición del LLM al
+generar el link. Queda anotado para revisar si vuelve a aparecer, no se investigó
+a fondo para no desviar la sesión de la Fase 2.
+
+- **Commiteado:** `b89c393` (Fase 1, streamlit_app/ completo — atrasado desde el
+  07/08), `4a77ba5` (rate limiting + render.yaml + fix de errores en Streamlit),
+  `4757f53` (fix Dockerfile prompts/).
+- **Próximo paso concreto:** Fase 3 (deploy del frontend Streamlit a Streamlit
+  Community Cloud, apuntando `BACKEND_URL` a la URL real de Render).
+- **Nota de timeline:** el deadline del LLM Zoomcamp se corrió del 10/08 al
+  17/08 — hay más margen del que se venía manejando en las sesiones anteriores
+  para Fase 3/4 y para revisar el hallazgo de la URL corrupta.
+- Sesión cerrada acá por hoy (2026-08-09).
 
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
