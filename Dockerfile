@@ -16,4 +16,9 @@ COPY src/ src/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Forma shell (no exec/array) para que ${PORT:-8000} se expanda: Render inyecta
+# su propio $PORT en runtime y espera que el proceso escuche ahi (no siempre
+# 8000); localmente sin $PORT seteado, cae al 8000 de siempre. `exec` reemplaza
+# el proceso de sh por uvicorn (no lo deja como hijo) para que reciba SIGTERM
+# de Render directo, en vez de que se pierda en la capa del shell.
+CMD exec uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}

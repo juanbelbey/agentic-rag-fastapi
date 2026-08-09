@@ -14,6 +14,9 @@ openai==2.33.0
 fastapi==0.136.1
 uvicorn==0.46.0
 
+# Rate limiting (deploy publico en Render, stretch #2)
+slowapi==0.1.9
+
 # Validacion de datos
 pydantic==2.12.4
 

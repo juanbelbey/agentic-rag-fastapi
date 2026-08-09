@@ -41,12 +41,17 @@ with st.sidebar:
         st.rerun()
 
 
-def send_feedback(run_id: str, score: float) -> None:
-    requests.post(
-        f"{BACKEND_URL}/feedback",
-        json={"run_id": run_id, "thread_id": st.session_state.thread_id, "score": score},
-        timeout=10,
-    )
+def send_feedback(run_id: str, score: float) -> bool:
+    try:
+        response = requests.post(
+            f"{BACKEND_URL}/feedback",
+            json={"run_id": run_id, "thread_id": st.session_state.thread_id, "score": score},
+            timeout=10,
+        )
+        response.raise_for_status()
+        return True
+    except requests.exceptions.RequestException:
+        return False
 
 
 for i, msg in enumerate(st.session_state.messages):
@@ -65,12 +70,16 @@ for i, msg in enumerate(st.session_state.messages):
             else:
                 col_up, col_down, _ = st.columns([1, 1, 10])
                 if col_up.button("👍", key=f"up_{i}"):
-                    send_feedback(msg["run_id"], 1.0)
-                    msg["feedback"] = "up"
+                    if send_feedback(msg["run_id"], 1.0):
+                        msg["feedback"] = "up"
+                    else:
+                        st.toast("No se pudo registrar el feedback, intenta de nuevo.", icon="⚠️")
                     st.rerun()
                 if col_down.button("👎", key=f"down_{i}"):
-                    send_feedback(msg["run_id"], 0.0)
-                    msg["feedback"] = "down"
+                    if send_feedback(msg["run_id"], 0.0):
+                        msg["feedback"] = "down"
+                    else:
+                        st.toast("No se pudo registrar el feedback, intenta de nuevo.", icon="⚠️")
                     st.rerun()
 
 if prompt := st.chat_input("Preguntame sobre transmisores, calibracion, mantenimiento..."):
@@ -80,13 +89,23 @@ if prompt := st.chat_input("Preguntame sobre transmisores, calibracion, mantenim
 
     with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
         with st.spinner("Pensando..."):
-            response = requests.post(
-                f"{BACKEND_URL}/chat",
-                json={"message": prompt, "thread_id": st.session_state.thread_id},
-                timeout=60,
-            )
-            response.raise_for_status()
-            data = response.json()
+            try:
+                response = requests.post(
+                    f"{BACKEND_URL}/chat",
+                    json={"message": prompt, "thread_id": st.session_state.thread_id},
+                    timeout=60,
+                )
+                response.raise_for_status()
+                data = response.json()
+            except requests.exceptions.HTTPError as exc:
+                if exc.response is not None and exc.response.status_code == 429:
+                    st.error("Hay mucha demanda en este momento. Espera un minuto y volve a intentar.")
+                else:
+                    st.error("Ocurrió un error al consultar al agente. Intenta de nuevo en unos segundos.")
+                st.stop()
+            except requests.exceptions.RequestException:
+                st.error("No se pudo conectar con el backend. Intenta de nuevo en unos segundos.")
+                st.stop()
         st.markdown(data["response"])
 
     st.session_state.messages.append({

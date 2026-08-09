@@ -1,0 +1,26 @@
+# render.yaml
+# Blueprint de Render para el backend FastAPI. Usa el Dockerfile ya probado
+# (build/run local verificado 2026-07-31) en vez del runtime nativo de Python
+# de Render -- misma imagen que corre local, sin duplicar la receta de deploy.
+# Los valores de los secrets (sync: false) NO viven aca -- se cargan a mano en
+# el dashboard de Render al crear el Blueprint, nunca committeados.
+
+services:
+  - type: web
+    name: agentic-rag-fastapi
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      # Opcional -- poner "true" en el dashboard solo si queres traces de
+      # produccion en LangSmith (consume cuota de LangSmith por request real).
+      - key: LANGCHAIN_TRACING_V2
+        sync: false

@@ -6,10 +6,13 @@ import uuid
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from langgraph.checkpoint.postgres import PostgresSaver
 from langsmith import Client
 from psycopg_pool import ConnectionPool
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_ipaddr
 
 # Carga .env antes de importar src.graph (que importa src.tools): ese import
 # evalua `os.getenv("LANGCHAIN_API_KEY")` a nivel de modulo para decidir si
@@ -82,9 +85,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic RAG FastAPI", version="0.1.0", lifespan=lifespan)
 
+# get_ipaddr (no get_remote_address): en Render la app corre detras de un
+# proxy/load balancer, asi que request.client.host da la IP interna del
+# proxy, no la del caller real. get_ipaddr lee X-Forwarded-For primero.
+limiter = Limiter(key_func=get_ipaddr)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest) -> ChatResponse:
+@limiter.limit("10/minute")
+def chat(request: Request, payload: ChatRequest) -> ChatResponse:
     """Envia un mensaje al grafo usando thread_id para persistencia."""
     if settings is None or graph is None:
         raise HTTPException(status_code=500, detail="La configuracion no fue inicializada")
@@ -121,7 +132,8 @@ def chat(payload: ChatRequest) -> ChatResponse:
 
 
 @app.post("/feedback", status_code=201)
-def feedback(payload: FeedbackInput) -> dict[str, str]:
+@limiter.limit("20/minute")
+def feedback(request: Request, payload: FeedbackInput) -> dict[str, str]:
     """Guarda el feedback de un usuario (pulgar arriba/abajo) sobre una respuesta de /chat."""
     if pool is None:
         raise HTTPException(status_code=500, detail="La configuracion no fue inicializada")
