@@ -6,11 +6,56 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-07 — Fase 1 del esquema Streamlit/Render: frontend Streamlit completo
+**Commits:** ninguno — sesión corrida dentro de la ventana 9-18hs ARG lun-vie
+(viernes). `streamlit_app/` (nuevo), `CHANGELOG.md`, `ROADMAP.md` sin commitear.
+
+- **`streamlit_app/app.py` nuevo** — frontend Streamlit, Fase 1 del esquema
+  confirmado el 2026-08-06 (stretch #2, Streamlit + deploy). Chat con
+  `st.session_state` (historial + `thread_id` por sesión) consumiendo `/chat` y
+  `/feedback` del backend real, sin tocar `src/`. Botones 👍/👎 por respuesta
+  ligados al `run_id` devuelto por `/chat`; sidebar con descripción del proyecto
+  + botón "Nueva conversación" (resetea `thread_id` y `messages` — resetear solo
+  `messages` no alcanza, el backend seguiría recordando la conversación vieja
+  por el `thread_id` repetido, vía el checkpointer de Postgres); avatares por
+  rol y caption mostrando si el agente usó `rag_search`.
+- **`streamlit_app/requirements.txt` nuevo** (`streamlit==1.51.0`,
+  `requests==2.32.5`), deliberadamente aislado del `requirements.txt` de la
+  raíz — ese trae `psycopg`/`ragas`/`langgraph` del backend, deps pesadas que
+  Streamlit Cloud no necesita para la UI (y podrían fallar de instalar ahí).
+- **`streamlit_app/.streamlit/config.toml` nuevo** — tema custom (modo claro,
+  azul técnico, fuente Inter vía Google Fonts).
+- **Dos bugs reales encontrados y arreglados corriendo la app de punta a
+  punta** (no del diseño, del runtime real):
+  1. `st.secrets.get("KEY", default)` lanza `StreamlitSecretNotFoundError` si
+     no existe *ningún* `secrets.toml` (no solo si falta la key dentro de uno
+     que sí existe) — pasa siempre en dev local. Fix: `try/except` alrededor
+     de `st.secrets["BACKEND_URL"]`.
+  2. Un corte transitorio de DNS/red (`failed to resolve host
+     'aws-0-us-east-1.pooler.supabase.com'`, infraestructura, no bug de
+     código) tumbó el pool de conexiones de Postgres del backend y no se
+     recuperó solo al volver la conectividad — hubo que reiniciar el proceso
+     del backend para abrir un pool limpio.
+- **Verificado end-to-end en local:** backend real (`.venv`) + Streamlit
+  corriendo juntos, pregunta real respondida con cita de fuente, feedback real
+  confirmado en Postgres (tabla `feedback`) y en LangSmith (`key="user_score"`
+  visible en la pestaña Feedback del trace).
+- **Fase 1 completa.**
+- **Próximo paso concreto:** Fase 2 (deploy del backend a Render + rate
+  limiting con `slowapi`), sábado 08/08 según el plan de sesiones del
+  2026-08-06.
+- Sesión cerrada acá por hoy (2026-08-07).
+
+---
+
 ## 2026-08-06 — Cierra stretch #1 (top_k 3→5) + registro de experimentos + esquema Streamlit/Render
 **Commits:** `70c41a2` (RAGAS de ayer, commiteado hoy a las 08:56 ART — fuera de la ventana
-9-18hs). El resto de esta entrada (`src/tools.py`, `EXPERIMENTS.md`,
-`evals/results/experiments_log.csv`, `evals/results/2026-08-06/`) sigue sin commitear —
-sesión corrida dentro de la ventana 9-18hs ARG lun-vie.
+9-18hs) + `6c55282` (resto de esta entrada — `src/tools.py`, `EXPERIMENTS.md`,
+`evals/results/experiments_log.csv`, `evals/results/2026-08-06/`, ROADMAP/CHANGELOG —
+commiteado a las 20:24 ART, también fuera de la ventana 9-18hs). **Corrección
+2026-08-07:** esta entrada decía "sigue sin commitear" pero el commit se había hecho
+esa misma noche — desincronización de documentación detectada al pasar
+`/poneme-al-dia`, no de código.
 
 - **`rag_search(top_k)` de 3 a 5** (`src/tools.py`) — hallazgo real al revisar los
   resultados de RAGAS del 2026-08-05: producción usaba `top_k=3`, pero hit_rate/mrr

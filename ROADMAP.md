@@ -410,7 +410,7 @@ evals/
                         `evals/results/2026-08-06/09-37-33_ragas.json` — faithfulness 0.776,
                         answer_relevancy 0.718, context_precision 0.563, context_recall 0.773
                         (+0.094, la mejora real del cambio). Tabla comparativa completa en
-                        `EXPERIMENTS.md`. Sin commitear.
+                        `EXPERIMENTS.md`. Commiteado `6c55282` (2026-08-06 20:24 ART).
 ├── experiments_log.csv ✅ (2026-08-06) nuevo — historial de experimentos de retrieval y
 │                        generación en formato largo (fecha, área, experimento, variante,
 │                        métrica, valor), pensado para alimentar un dashboard/gráfico más
@@ -461,7 +461,57 @@ EXPERIMENTS.md      ✅ (2026-08-06) nuevo — doc narrativo de decisiones basad
                       temperatura, RAGAS) con qué se probó, qué se encontró y por qué se
                       decidió lo que se decidió. Complementa el detalle técnico de este
                       ROADMAP con una versión "para portfolio/entrevista" — los datos crudos
-                      viven en `evals/results/experiments_log.csv`. Sin commitear.
+                      viven en `evals/results/experiments_log.csv`. Commiteado `6c55282`
+                      (2026-08-06 20:24 ART).
+
+streamlit_app/
+├── app.py             ✅ (2026-08-07) nuevo — frontend Streamlit, Fase 1 del esquema
+│                        Streamlit/Render (stretch #2). Consume /chat y /feedback del
+│                        backend real, sin tocar src/. `st.session_state.messages` +
+│                        `st.session_state.thread_id` (uuid4 por sesión) para el
+│                        historial del chat — sobrevive a reruns dentro de la misma
+│                        sesión de navegador, no es persistencia real (esa la da el
+│                        checkpointer de Postgres vía thread_id). Botones 👍/👎ligados
+│                        al run_id de cada respuesta (key=f"up_{i}"/f"down_{i}" por
+│                        indice del mensaje — necesario para que Streamlit distinga
+│                        botones iguales dentro del loop de render); tras votar,
+│                        reemplaza los botones por un caption de confirmación, sin
+│                        dejar votar dos veces. Sidebar con descripcion del proyecto +
+│                        boton "Nueva conversación" (resetea thread_id Y messages —
+│                        resetear solo messages no alcanza, el backend seguiria
+│                        recordando la conversacion vieja por el thread_id repetido).
+│                        Avatares por rol + caption mostrando si el agente uso
+│                        rag_search (👀 visibilidad de que es agentico, no un chat
+│                        plano). Verificado end-to-end en local: pregunta real con
+│                        cita de fuente, feedback real confirmado en Postgres
+│                        (tabla feedback) y LangSmith (key="user_score").
+├── requirements.txt   ✅ (2026-08-07) streamlit==1.51.0, requests==2.32.5 — aislado
+│                        a proposito del requirements.txt de la raiz (ese trae
+│                        psycopg/ragas/langgraph del backend, deps pesadas que
+│                        Streamlit Cloud no necesita para la UI y podrian fallar
+│                        de instalar ahi). Streamlit Cloud busca requirements.txt
+│                        en el mismo directorio del archivo principal antes que en
+│                        la raiz del repo, asi que alcanza con esto, sin flags.
+└── .streamlit/
+    └── config.toml    ✅ (2026-08-07) tema custom: base="light", primaryColor azul
+                          tecnico, font="Inter:<url Google Fonts>, sans-serif" (la
+                          sintaxis "Nombre:URL" esta documentada en el config.py de
+                          streamlit 1.51.0, no improvisada). Requiere reiniciar el
+                          proceso de Streamlit para tomar efecto — a diferencia de
+                          app.py, [theme] solo se lee al arrancar, no en cada rerun.
+
+Bugs reales encontrados corriendo Fase 1 de punta a punta (no del diseño, del
+runtime real):
+- `st.secrets.get("KEY", default)` lanza `StreamlitSecretNotFoundError` si no
+  existe NINGUN `secrets.toml` en el filesystem (no solo si falta la key en uno
+  que si existe) — pasa siempre en dev local, donde no se crea ese archivo a
+  proposito. Fix: `try/except` alrededor de `st.secrets["BACKEND_URL"]` en vez
+  de `.get()`.
+- Corte transitorio de DNS/red (`failed to resolve host
+  'aws-0-us-east-1.pooler.supabase.com'`, error real de infraestructura, no de
+  codigo) tumbo el pool de conexiones de Postgres del backend (`psycopg_pool`
+  en `main.py`) y no se recupero solo tras volver la conectividad — hubo que
+  reiniciar el proceso del backend para abrir un pool limpio.
 
 ── PRÓXIMO PASO ──
 Capa 5B.2 completa (2026-07-04). rag_search() corre 100% sobre Postgres:
@@ -1133,7 +1183,7 @@ stretch #2/#3 (Streamlit + deploy):**
 con `top_k=5`. Re-corrida completa de `ragas_eval.py` confirmó mejora neta:
 `context_recall` 0.679 → 0.773 (+0.094), `context_precision` 0.571 → 0.563 (ruido),
 faithfulness/answer_relevancy planas. `top_k=5` queda de default (`src/tools.py`,
-sin commitear). **Stretch #1 (RAGAS) completo.**
+commiteado `6c55282`). **Stretch #1 (RAGAS) completo.**
 
 Creados `EXPERIMENTS.md` (raíz) y `evals/results/experiments_log.csv` — a pedido
 de Juan, para dejar registro "prolijo" de las decisiones basadas en datos
@@ -1153,7 +1203,7 @@ request ínfimo).
 
 | # | Fase | Horas |
 |---|---|---|
-| 1 | Frontend Streamlit | 1.5–2h |
+| 1 | Frontend Streamlit ✅ COMPLETA (2026-08-07) | 1.5–2h |
 | 2 | Deploy backend Render + rate limiting | 1.5–2h |
 | 3 | Deploy frontend Streamlit Cloud | 0.5–1h |
 | 4 | Cierre y docs | 0.5h |
@@ -1167,10 +1217,50 @@ escrito todavía.
   rewriting): decía "pendiente de commitear" pero ya estaba pusheado desde
   `d47031b` (2026-08-04) — desincronización de documentación, no de código.
   Sigue pendiente que Juan pase el repo a público, a su criterio.
-- **Sin commitear** (sesión dentro de la ventana 9-18hs ARG lun-vie):
+- **Commiteado `6c55282`** (2026-08-06 20:24 ART, fuera de la ventana 9-18hs):
   `src/tools.py`, `EXPERIMENTS.md`, `evals/results/experiments_log.csv`,
-  `evals/results/2026-08-06/`, más esta entrada de ROADMAP/CHANGELOG.
+  `evals/results/2026-08-06/`, más esta entrada de ROADMAP/CHANGELOG. **Corrección
+  2026-08-07:** esta nota decía "sin commitear" pero el commit ya se había hecho esa
+  misma noche — desincronización de documentación detectada al pasar
+  `/poneme-al-dia`, no de código.
 - Sesión cerrada acá por hoy (2026-08-06).
+
+**Actualización (2026-08-07) — Fase 1 (Frontend Streamlit) completa:**
+
+`streamlit_app/` nuevo (carpeta aislada del resto del repo — ver detalle completo
+en "Estado actual del repo" más abajo): `app.py` (chat con `st.session_state` para
+historial + `thread_id` por sesión, botones 👍/👎 de feedback contra `/feedback`,
+sidebar con info del proyecto + botón "Nueva conversación", avatares por rol,
+caption mostrando si el agente usó `rag_search`), `requirements.txt` propio
+(`streamlit`/`requests`, deliberadamente aislado del `requirements.txt` de la raíz
+— Streamlit Cloud instala dependencias pesadas del backend, como `psycopg`/
+`ragas`/`langgraph`, si comparte el archivo raíz, sin necesitarlas para la UI),
+`.streamlit/config.toml` (tema: modo claro, azul técnico, fuente Inter vía Google
+Fonts).
+
+Verificado end-to-end en local (backend real con `.venv` + Streamlit corriendo
+juntos): pregunta real respondida con cita de fuente, feedback real confirmado
+tanto en Postgres (tabla `feedback`) como en LangSmith (`key="user_score"`
+visible en la pestaña Feedback del trace).
+
+Dos bugs reales encontrados y arreglados en el camino (no eran del diseño
+original, aparecieron al correrlo de verdad):
+1. `st.secrets.get("KEY", default)` **igual** lanza
+   `StreamlitSecretNotFoundError` si no existe ningún `secrets.toml` en el
+   filesystem (no solo si falta la key dentro de uno que sí existe) — pasa
+   siempre en dev local, donde no se crea ese archivo a propósito. Fix:
+   `try/except` alrededor de `st.secrets["BACKEND_URL"]`.
+2. Un corte transitorio de DNS/red tumbó el pool de conexiones de Postgres del
+   backend (`psycopg_pool`, error real de infraestructura — `failed to resolve
+   host 'aws-0-us-east-1.pooler.supabase.com'` — no bug de código) y no se
+   recuperó solo tras volver la conectividad; hubo que reiniciar el proceso del
+   backend para que abriera un pool limpio.
+
+**Fase 1 completa.** Nada de esto está commiteado todavía (sesión de hoy corrida
+dentro de la ventana 9-18hs ARG lun-vie).
+- **Próximo paso concreto:** Fase 2 (deploy del backend a Render + rate limiting
+  con `slowapi`), sábado 08/08 según el plan de sesiones.
+- Sesión cerrada acá por hoy (2026-08-07).
 
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
