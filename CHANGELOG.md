@@ -6,6 +6,29 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-10 — Fase 1 en progreso: cuenta Streamlit Cloud creada + housekeeping de skills
+**Commits:** ninguno al momento de esta entrada — sesión corrida dentro de la
+ventana 9-18hs ARG lun-vie (lunes). `.gitignore` y la baja de
+`.claude/skills/actualizar-roadmap-changelog/SKILL.md` del tracking quedaron
+sin commitear.
+
+- **Fase 1 (deploy frontend a Streamlit Community Cloud) en progreso, no
+  cerrada:** cuenta creada en `share.streamlit.io`, conectada con GitHub.
+  Falta completar el deploy en sí — bloqueado por pasar el repo a público
+  primero (Fase 5), a criterio de Juan. El código ya estaba listo desde el
+  07/08 (`st.secrets["BACKEND_URL"]` con fallback a `localhost`).
+- **Housekeeping de skills, sin relación al RAG:** `actualizar-roadmap-changelog`
+  era la única skill de proyecto commiteada en `.claude/skills/` de este
+  repo — se sacó y pasó a nivel usuario (`~/.claude/skills/`), y se agregó
+  `.claude/skills/` al `.gitignore`, para que ninguna skill quede trackeada
+  acá una vez que el repo sea público. Parte de armar un repo compartido de
+  skills (`claude-config`, privado) entre esta PC y la de Valkimia.
+- **Próximo paso concreto:** pasar el repo a público (Fase 5) — es lo que
+  bloquea terminar el deploy de Fase 1.
+- Sesión cerrada acá por hoy (2026-08-10).
+
+---
+
 ## 2026-08-09 — Fase 2 del esquema Streamlit/Render: deploy del backend en Render + rate limiting
 **Commits:** `b89c393` (Fase 1 atrasada — `streamlit_app/` completo + doc, ver entrada
 2026-08-07), `4a77ba5` (rate limiting + `render.yaml` + fix de errores en Streamlit),

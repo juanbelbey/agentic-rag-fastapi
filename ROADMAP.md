@@ -1361,6 +1361,27 @@ a fondo para no desviar la sesión de la Fase 2.
   para Fase 3/4 y para revisar el hallazgo de la URL corrupta.
 - Sesión cerrada acá por hoy (2026-08-09).
 
+**Actualización (2026-08-10) — Fase 1 en progreso (deploy Streamlit Community
+Cloud):**
+
+Cuenta creada en `share.streamlit.io`, conectada con GitHub. Deploy real
+todavía no completado — falta pasar el repo de privado a público antes de
+poder terminarlo (Fase 5 del esquema, ver POSPUESTO abajo), a criterio de
+Juan. Código ya listo desde el 07/08 (`streamlit_app/app.py` usa
+`st.secrets["BACKEND_URL"]` con fallback a `localhost` en dev).
+
+Housekeeping sin relación al RAG: `actualizar-roadmap-changelog` (la única
+skill de proyecto commiteada en `.claude/skills/`) se sacó del repo y pasó a
+nivel usuario (`~/.claude/skills/`) — no tiene sentido que quede trackeada
+acá una vez que el repo sea público. `.claude/skills/` sumado al
+`.gitignore` para que no se repita. Motivado por armar un repo compartido de
+skills entre esta PC y la de Valkimia (`claude-config`, privado). Cambios
+sin commitear todavía (ver Commits abajo).
+
+- **Próximo paso concreto:** pasar el repo a público (Fase 5) — es lo que
+  bloquea terminar el deploy de Fase 1.
+- Sesión cerrada acá por hoy (2026-08-10).
+
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):
 
