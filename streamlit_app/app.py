@@ -1,17 +1,23 @@
 """Frontend Streamlit: chat contra el agente RAG (consume /chat y /feedback)."""
 
+import os
 import uuid
 
 import requests
 import streamlit as st
 
-try:
-    # st.secrets levanta StreamlitSecretNotFoundError si no existe NINGUN
-    # secrets.toml (no solo si falta la key) -- pasa siempre en dev local,
-    # donde no creamos ese archivo a proposito.
-    BACKEND_URL = st.secrets["BACKEND_URL"]
-except Exception:
-    BACKEND_URL = "http://localhost:8000"
+# Prioridad: variable de entorno (docker-compose le pasa BACKEND_URL asi) >
+# st.secrets (como configura Streamlit Cloud, que no usa env vars) > localhost
+# (dev local suelto, sin compose ni secrets.toml).
+BACKEND_URL = os.environ.get("BACKEND_URL")
+if not BACKEND_URL:
+    try:
+        # st.secrets levanta StreamlitSecretNotFoundError si no existe NINGUN
+        # secrets.toml (no solo si falta la key) -- pasa siempre en dev local,
+        # donde no creamos ese archivo a proposito.
+        BACKEND_URL = st.secrets["BACKEND_URL"]
+    except Exception:
+        BACKEND_URL = "http://localhost:8000"
 
 ASSISTANT_AVATAR = "🔧"
 USER_AVATAR = "🙋"

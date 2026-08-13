@@ -204,6 +204,25 @@ src/
 │                     por persona (jugando a favor del objetivo real: capar el gasto total).
 │                     Verificado real: 20 requests seguidos a `/feedback` → primeros 20 en 201,
 │                     el 21 y 22 en 429 (filas de prueba borradas de Postgres después).
+│                     [2026-08-11, Fase 2 del esquema de cierre] Tabla `chat_logs` nueva
+│                     (mismo patrón idempotente que `feedback`) + `/chat` ahora mide
+│                     latencia (`time.perf_counter` alrededor de `graph.invoke()`) y suma
+│                     `usage_metadata` (input/output tokens) de los `AIMessage` de
+│                     `result["messages"]` — costo estimado con `PRICE_PER_1K_*_USD`
+│                     (precio real de `gpt-4o-mini` verificado en la doc de OpenAI el
+│                     mismo día: $0.15/1M input, $0.60/1M output). No cubre la llamada
+│                     interna de `_rewrite_query_impl()` en `tools.py` (corre aparte, no
+│                     queda en `result["messages"]`) — el costo queda documentado como
+│                     aproximado, no exacto. Insert en `chat_logs` es best-effort
+│                     (try/except, mismo criterio que el envío de feedback a LangSmith):
+│                     una falla de logging no debe romper la respuesta real del chat.
+│                     `GET /stats` nuevo (rate limit 30/minute) devuelve las últimas 500
+│                     filas de `chat_logs` y `feedback` sin agregar del lado del backend
+│                     — el dashboard de Streamlit hace la agregación con pandas.
+│                     Verificado real contra Supabase: `POST /chat` real (latencia
+│                     16054ms, 3010 tokens input / 252 output, costo estimado
+│                     $0.0006027 — coincide exacto con la fórmula) seguido de
+│                     `GET /stats` confirmando la fila.
 ├── schemas.py     ✅ ChatRequest, ChatResponse, TicketInput, RAGResult (Capa 4)
 │                     [2026-07-31 noche] `ChatResponse.run_id: str` nuevo — ver detalle en
 │                     main.py abajo (punto 3 del plan de entrega, feedback de usuario)
@@ -546,6 +565,24 @@ streamlit_app/
 │                        silencioso (ni error ni confirmación); ahora un fallo muestra
 │                        `st.toast()` de advertencia en vez de marcar el voto como
 │                        exitoso sin haberlo sido.
+│                        [2026-08-12, Fase 3 docker-compose] `BACKEND_URL` antes solo
+│                        miraba `st.secrets` (fallback `localhost:8000`) — dentro de
+│                        un container Docker no existe `secrets.toml`, así que caía
+│                        siempre al fallback y le hablaba a su propio container en vez
+│                        de al backend. Fix: prioridad `os.environ.get("BACKEND_URL")`
+│                        (la vía que usa docker-compose) > `st.secrets` (Streamlit
+│                        Cloud) > `localhost` (dev local suelto).
+├── Dockerfile         ✅ (2026-08-12) nuevo — imagen del frontend para docker-compose
+│                        (Fase 3 del esquema de cierre), no usada por Streamlit
+│                        Community Cloud (esa build-ea directo desde el repo). Mismo
+│                        patrón de cacheo de capas que el `Dockerfile` del backend:
+│                        `COPY requirements.txt` antes que el código. `COPY` con
+│                        prefijo `streamlit_app/` porque el contexto de build es la
+│                        raíz del repo (`context: .` en `docker-compose.yml`), no esta
+│                        carpeta. `CMD` fija `--server.address=0.0.0.0` explícito —
+│                        sin eso Streamlit puede bindear solo a la interfaz interna
+│                        del container, inalcanzable desde el mapeo de puertos o
+│                        desde otros containers.
 ├── requirements.txt   ✅ (2026-08-07) streamlit==1.51.0, requests==2.32.5 — aislado
 │                        a proposito del requirements.txt de la raiz (ese trae
 │                        psycopg/ragas/langgraph del backend, deps pesadas que
@@ -553,13 +590,61 @@ streamlit_app/
 │                        de instalar ahi). Streamlit Cloud busca requirements.txt
 │                        en el mismo directorio del archivo principal antes que en
 │                        la raiz del repo, asi que alcanza con esto, sin flags.
-└── .streamlit/
-    └── config.toml    ✅ (2026-08-07) tema custom: base="light", primaryColor azul
-                          tecnico, font="Inter:<url Google Fonts>, sans-serif" (la
-                          sintaxis "Nombre:URL" esta documentada en el config.py de
-                          streamlit 1.51.0, no improvisada). Requiere reiniciar el
-                          proceso de Streamlit para tomar efecto — a diferencia de
-                          app.py, [theme] solo se lee al arrancar, no en cada rerun.
+├── .streamlit/
+│   └── config.toml    ✅ (2026-08-07) tema custom: base="light", primaryColor azul
+│                         tecnico, font="Inter:<url Google Fonts>, sans-serif" (la
+│                         sintaxis "Nombre:URL" esta documentada en el config.py de
+│                         streamlit 1.51.0, no improvisada). Requiere reiniciar el
+│                         proceso de Streamlit para tomar efecto — a diferencia de
+│                         app.py, [theme] solo se lee al arrancar, no en cada rerun.
+└── pages/
+    └── 1_📊_Monitoring.py ✅ (2026-08-11) nueva — dashboard de monitoring, Fase 2
+                          del esquema de cierre. Página de Streamlit multipage
+                          (convención `pages/`, aparece sola en la nav lateral),
+                          consume `GET /stats` del backend — no conecta a Postgres
+                          directo desde el frontend (evita exponer `DATABASE_URL`
+                          en un secret público). 4 metric tiles (requests totales,
+                          latencia promedio, costo estimado total, % feedback
+                          positivo) + 5 gráficos (requests por día, latencia
+                          promedio por día, costo acumulado, uso de tools, feedback
+                          de usuarios) armados con pandas + `st.bar_chart`/
+                          `st.line_chart` nativos de Streamlit (pandas ya es
+                          dependencia transitiva de `streamlit`, no suma nada a
+                          `requirements.txt`). Verificado real en el browser
+                          (Playwright headless, sin `chromium-cli` disponible en
+                          este entorno Windows): los 5 gráficos renderizan con
+                          datos reales de Supabase, sin errores de consola.
+                          **Hallazgo pendiente (2026-08-11, revisando los
+                          screenshots después de cerrar la sesión):** con pocos
+                          datos (hoy, 1 sola fila en `chat_logs`) dos gráficos
+                          quedan vacíos — "Latencia promedio por día" y "Costo
+                          estimado acumulado" usan `st.line_chart`, que no dibuja
+                          nada con un solo punto (no hay segmento que conectar).
+                          Los otros 3 (`st.bar_chart`) sí se ven bien con un solo
+                          punto. Fix propuesto, no aplicado todavía: cambiar esos
+                          dos a `st.bar_chart` (consistente con el resto) +
+                          formatear la métrica "Latencia promedio" en segundos
+                          con un decimal en vez de ms enteros (hoy se corta:
+                          "16054 ..." no entra en la columna del metric tile).
+                          [2026-08-12, Fase 3 docker-compose] Mismo fix de
+                          `BACKEND_URL` que `app.py` arriba — este archivo también
+                          solo miraba `st.secrets`, así que fallaba igual dentro de
+                          docker-compose.
+
+docker-compose.yml   ✅ (2026-08-12) nuevo — Fase 3 del esquema de cierre. Une el
+                      `Dockerfile` del backend (raíz) y el nuevo `streamlit_app/
+                      Dockerfile` en dos servicios (`backend`, `frontend`) sobre la
+                      red interna que Compose crea automáticamente para los
+                      servicios de un mismo archivo — cada uno queda accesible por
+                      su nombre de servicio como hostname (`BACKEND_URL=http://
+                      backend:8000` en `frontend`, valor fijo a mano, Docker no lo
+                      resuelve solo). `backend` carga `.env` completo vía
+                      `env_file` en vez de listar cada variable. `depends_on` en
+                      `frontend` solo ordena el arranque (backend primero), no
+                      espera a que esté listo para recibir requests. Verificado
+                      real: `docker compose up --build`, chat end-to-end (frontend
+                      container → backend container → Supabase) y dashboard de
+                      Monitoring cargando sin error de conexión.
 
 Bugs reales encontrados corriendo Fase 1 de punta a punta (no del diseño, del
 runtime real):
@@ -1381,6 +1466,63 @@ sin commitear todavía (ver Commits abajo).
 - **Próximo paso concreto:** pasar el repo a público (Fase 5) — es lo que
   bloquea terminar el deploy de Fase 1.
 - Sesión cerrada acá por hoy (2026-08-10).
+
+**Actualización (2026-08-11) — Fase 1 y Fase 5 completas, Fase 2 (dashboard de
+monitoring) completa:**
+
+Fase 1 cerrada de verdad: el primer deploy real en Streamlit Community Cloud
+falló con `pyarrow` (dependencia de `streamlit`) sin wheel para Python 3.14
+(versión que Streamlit Cloud asigna por default, recién salida) — sin wheel
+intenta compilar desde código fuente y necesita `cmake`, ausente en ese entorno
+de build. Fix: fijar Python 3.12 en Settings → General de la app ya desplegada
+(mismo runtime que el `Dockerfile` del backend). Verificado real: pregunta de
+prueba respondida con cita de fuente, end-to-end `usuario → Streamlit Cloud →
+Render → Supabase` funcionando.
+
+Fase 5 completa: antes de pasar el repo a público, chequeo de seguridad manual
+(sin secrets/`.env`/PDFs con copyright trackeados, verificado con `git grep`/
+`git log --all --full-history`) más limpieza de historial con `git-filter-repo`
+— sacado `.claude/` de los 53 commits (el `SKILL.md` de
+`actualizar-roadmap-changelog` seguía visible en el historial pese a estar
+untracked desde el 10/08, confirmado con `git merge-base --is-ancestor`) + force-
+push. Backup previo con `git bundle --all` antes de reescribir, por si algo
+salía mal. Repo pasado a público en GitHub.
+
+`Portfolio-Ciencia-de-Datos` (repo aparte, linkeado desde LinkedIn/CV) también
+actualizado: `agentic-rag-fastapi` agregado como proyecto destacado arriba de
+todo — no se tocó el link del CV, el portfolio queda como índice.
+
+**Esquema de cierre re-armado (`/esquema-de-tarea`)** ahora que Fase 1 y 5 están
+hechas: quedan Fase 2 (dashboard monitoring), Fase 3 (docker-compose), Fase 4
+(README honesto + traducción a inglés — 4a/4b fusionadas en una sola pasada, más
+traducción de `streamlit_app` que no estaba en el alcance original), Fase 6
+(re-ranking con Cohere rerank, al final, condicionado a que sobre tiempo).
+Contra el timeline real (martes 11/08 a sábado 15/08, 1.5h/día = 7.5h): fases
+2-4 estiman 5.5h-8h, más 4h-6h de limpieza de docs desactualizados detectados
+en la sesión (`STACK.md` sin las libs de Capa 5B en adelante, `COPILOT_STRATEGY.md`
+— config personal para IA, no doc de proyecto, mismo criterio que `.claude/`,
+`ROADMAP.md` mezclando el plan de especialización personal con el roadmap
+técnico del proyecto, `CORPUS_INSTRUMENTACION.MD` con título "PENDIENTE" pese a
+estar completo) — sube a 9.5h-14h antes de re-ranking, por encima del
+presupuesto real de 7.5h. Decisión de Juan: limpieza de docs como último paso
+antes de re-ranking, avanzar por prioridad (rúbrica primero) y ver qué entra.
+
+**Fase 2 (dashboard) completa el mismo día** — ver detalle técnico en
+`src/main.py` y `streamlit_app/pages/1_📊_Monitoring.py` arriba en "Estado
+actual del repo".
+
+- Sesión cerrada acá por hoy (2026-08-11). Cambios de `src/main.py` y
+  `streamlit_app/pages/` sin commitear a pedido explícito de Juan.
+
+**Fase 3 completa (2026-08-12) — docker-compose backend+frontend.** Ver detalle
+técnico en `streamlit_app/Dockerfile` y `docker-compose.yml` arriba en "Estado
+actual del repo". El hallazgo del dashboard (gráficos vacíos con un solo dato)
+sigue sin arreglar — quedó pospuesto, no bloqueaba Fase 3.
+
+- **Próximo paso concreto:** Fase 4 (README honesto + traducción a inglés de
+  README y `streamlit_app`).
+- Sesión cerrada acá por hoy (2026-08-12). Todo lo pendiente del 08-11 y de hoy
+  se commitea junto en esta sesión.
 
 **Timeline armado con Juan (2026-08-01)** para lo que resta del plan de entrega,
 contra su disponibilidad real (1.5h lunes a viernes, 3h sábados, 0h domingos):

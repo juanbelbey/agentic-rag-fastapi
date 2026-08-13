@@ -6,6 +6,94 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-12 — Fase 3 completa: docker-compose (backend + frontend)
+**Commits:** commiteado hoy junto con los cambios pendientes del 08-11 (Fase 1/2/5,
+ver entrada de abajo) — una sola sesión de commit para todo lo acumulado.
+
+- **Fase 3 (containerization vía docker-compose) completa:** `streamlit_app/Dockerfile`
+  nuevo — imagen del frontend, mismo patrón de cacheo de capas que el `Dockerfile`
+  del backend (copiar `requirements.txt` antes que el código). `CMD` fija
+  `--server.address=0.0.0.0` explícito: sin eso Streamlit puede bindear solo a la
+  interfaz interna del container, inalcanzable desde el mapeo de puertos o desde
+  otros containers. `docker-compose.yml` nuevo en la raíz: dos servicios
+  (`backend`, `frontend`) sobre la red interna que Compose crea automáticamente
+  (cada servicio queda accesible por su nombre como hostname) — `backend` carga
+  `.env` completo vía `env_file`, `frontend` recibe `BACKEND_URL=http://backend:8000`
+  fijo por variable de entorno.
+- **Fix en `streamlit_app/app.py` y `streamlit_app/pages/1_📊_Monitoring.py`:**
+  `BACKEND_URL` antes solo miraba `st.secrets` (con fallback a `localhost:8000`) —
+  `st.secrets` no existe dentro de un container Docker (no hay `secrets.toml`), así
+  que ambos archivos caían al fallback y el frontend intentaba hablarle a su propio
+  container en vez de al backend. Orden nuevo: variable de entorno (la vía que usa
+  docker-compose) > `st.secrets` (la vía que usa Streamlit Cloud) > `localhost`
+  (dev local suelto, sin compose ni secrets.toml).
+- Verificado real: `docker compose up --build` levantando los dos servicios, chat
+  funcionando end-to-end (`frontend` container → `backend` container → Supabase) y
+  el dashboard de Monitoring cargando sin error de conexión.
+- **Próximo paso concreto:** Fase 4 (README honesto + traducción a inglés de
+  README y `streamlit_app`).
+
+---
+
+## 2026-08-11 — Fase 1 y Fase 5 completas + Fase 2 (dashboard de monitoring) completa
+**Commits:** `35d7028` (housekeeping pendiente del 10/08, commiteado hoy). Aparte,
+reescritura de historial vía `git-filter-repo` (saca `.claude/` de los 53 commits) +
+force-push — no es un commit nuevo, cambian los hashes de los existentes. Los cambios
+de hoy en `src/main.py` y `streamlit_app/pages/` quedan **sin commitear** a pedido
+explícito de Juan (cierre de sesión).
+
+- **Fase 1 (deploy Streamlit Community Cloud) completa:** el primer deploy real
+  falló con `pyarrow` (dependencia de `streamlit`) sin wheel para Python 3.14
+  (versión que Streamlit Cloud asigna por default) — sin wheel intenta compilar
+  desde código fuente y necesita `cmake`, ausente en ese entorno. Fix: fijar Python
+  3.12 en Settings → General de la app (mismo runtime que el `Dockerfile` del
+  backend). Verificado real end-to-end: `usuario → Streamlit Cloud → Render →
+  Supabase`, pregunta real respondida con cita de fuente.
+- **Fase 5 (repo público) completa:** chequeo de seguridad manual antes de publicar
+  (sin `.env`/secrets/PDFs con copyright trackeados, verificado con `git grep` y
+  `git log --all --full-history`) + limpieza de historial con `git-filter-repo`
+  (sacado `.claude/` de los 53 commits — el `SKILL.md` de
+  `actualizar-roadmap-changelog` seguía visible en el historial pese a estar
+  untracked desde el 10/08) + force-push. Backup previo con `git bundle --all`.
+  Repo pasado a público en GitHub.
+- **`Portfolio-Ciencia-de-Datos`** (repo aparte, linkeado desde LinkedIn/CV)
+  actualizado con `agentic-rag-fastapi` como proyecto destacado — el portfolio
+  queda como índice, sin tocar el link del CV.
+- **Esquema de cierre re-armado (`/esquema-de-tarea`):** con Fase 1 y 5 hechas,
+  quedan Fase 2 (dashboard), Fase 3 (docker-compose), Fase 4 (README honesto +
+  traducción a inglés, 4a/4b fusionadas, más traducción de `streamlit_app` que se
+  sumó al alcance original), Fase 6 (re-ranking con Cohere rerank, al final,
+  condicionado a que sobre tiempo). Contra el timeline real (martes a sábado,
+  1.5h/día = 7.5h): fases 2-4 estiman 5.5h-8h, más 4h-6h de limpieza de docs
+  desactualizados detectados en la sesión (`STACK.md`, `COPILOT_STRATEGY.md`,
+  `ROADMAP.md` mezclando plan de especialización personal con roadmap técnico,
+  `CORPUS_INSTRUMENTACION.MD`) — sube a 9.5h-14h antes de re-ranking, por encima
+  del presupuesto. Decisión de Juan: limpieza de docs al final, antes de
+  re-ranking, avanzar por prioridad de rúbrica primero.
+- **Fase 2 (dashboard de monitoring) completa:** tabla `chat_logs` nueva +
+  `/chat` mide latencia/tokens/costo estimado (precio real de `gpt-4o-mini`
+  verificado en la doc de OpenAI: $0.15/1M input, $0.60/1M output; no cubre la
+  llamada interna de `query_rewrite`, costo queda aproximado) + `GET /stats`
+  nuevo (últimas 500 filas de `chat_logs`/`feedback`, sin agregar del lado del
+  backend). `streamlit_app/pages/1_📊_Monitoring.py` nuevo: 4 metric tiles + 5
+  gráficos con pandas/`st.bar_chart`/`st.line_chart`. Verificado real: `/chat`
+  contra Supabase (latencia 16054ms, 3010/252 tokens, costo $0.0006027 — exacto
+  contra la fórmula) + dashboard en el browser real (Playwright headless, sin
+  `chromium-cli` en este entorno Windows), 5 gráficos renderizando sin errores
+  de consola.
+- **Hallazgo pendiente (revisando los screenshots después de cerrar):** con
+  pocos datos, "Latencia promedio por día" y "Costo estimado acumulado" quedan
+  vacíos — usan `st.line_chart`, que no dibuja nada con un solo punto. Fix
+  propuesto sin aplicar: pasarlos a `st.bar_chart` (como los otros 3) +
+  formatear "Latencia promedio" en segundos con un decimal (hoy se corta:
+  "16054 ..." no entra en el metric tile).
+- **Próximo paso concreto:** Fase 3 (docker-compose) o Fase 4 (README +
+  traducción a inglés), a definir la próxima sesión. Arreglar el hallazgo del
+  dashboard antes o junto con eso.
+- Sesión cerrada acá por hoy (2026-08-11).
+
+---
+
 ## 2026-08-10 — Fase 1 en progreso: cuenta Streamlit Cloud creada + housekeeping de skills
 **Commits:** ninguno al momento de esta entrada — sesión corrida dentro de la
 ventana 9-18hs ARG lun-vie (lunes). `.gitignore` y la baja de
