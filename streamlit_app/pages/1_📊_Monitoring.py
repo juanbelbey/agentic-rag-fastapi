@@ -46,7 +46,7 @@ chat_logs["date"] = chat_logs["created_at"].dt.date
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Requests totales", len(chat_logs))
-col2.metric("Latencia promedio", f"{chat_logs['latency_ms'].mean():.0f} ms")
+col2.metric("Latencia promedio", f"{chat_logs['latency_ms'].mean() / 1000:.1f} s")
 col3.metric("Costo estimado total", f"${chat_logs['estimated_cost_usd'].sum():.4f}")
 if not feedback.empty:
     positive_pct = (feedback["score"] >= 0.5).mean() * 100
@@ -60,11 +60,13 @@ st.subheader("Requests por día")
 st.bar_chart(chat_logs.groupby("date").size().rename("requests"))
 
 st.subheader("Latencia promedio por día")
-st.line_chart(chat_logs.groupby("date")["latency_ms"].mean().rename("latencia_ms"))
+# bar_chart en vez de line_chart -- con un solo dia de datos, line_chart no
+# tiene un segundo punto para trazar el segmento y queda vacio.
+st.bar_chart(chat_logs.groupby("date")["latency_ms"].mean().rename("latencia_ms"))
 
 st.subheader("Costo estimado acumulado")
 cost_by_day = chat_logs.groupby("date")["estimated_cost_usd"].sum().cumsum()
-st.line_chart(cost_by_day.rename("costo_acumulado_usd"))
+st.bar_chart(cost_by_day.rename("costo_acumulado_usd"))
 
 st.subheader("Uso de tools")
 tool_counts: dict[str, int] = {}

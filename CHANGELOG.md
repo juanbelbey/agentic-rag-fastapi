@@ -30,8 +30,22 @@ ver entrada de abajo) — una sola sesión de commit para todo lo acumulado.
 - Verificado real: `docker compose up --build` levantando los dos servicios, chat
   funcionando end-to-end (`frontend` container → `backend` container → Supabase) y
   el dashboard de Monitoring cargando sin error de conexión.
-- **Próximo paso concreto:** Fase 4 (README honesto + traducción a inglés de
-  README y `streamlit_app`).
+- **Fix del hallazgo de Monitoring (pendiente desde el 08-11):**
+  `streamlit_app/pages/1_📊_Monitoring.py` — "Latencia promedio por día" y
+  "Costo estimado acumulado" pasan de `st.line_chart` a `st.bar_chart`
+  (con un solo día de datos, `line_chart` no tiene segundo punto para trazar
+  el segmento y queda vacío); "Latencia promedio" del metric tile pasa de ms
+  enteros a segundos con un decimal (se cortaba: "16054 ..." no entraba en la
+  columna).
+- **README:** tabla de criterios de evaluación puesta al día — Monitoring y
+  Containerization estaban desactualizados (Fase 2/3 ya resueltas), LLM
+  evaluation no mencionaba `evals/compare_prompts.py` (comparación real de
+  prompt × modelo, documentada en `EXPERIMENTS.md`), y query rewriting
+  figuraba como pendiente estando implementado desde el 03/08.
+- **Próximo paso concreto:** Fase 4 (traducción a inglés de README y
+  `streamlit_app`). Limpieza de docs desactualizados (`STACK.md`,
+  `COPILOT_STRATEGY.md`, `ROADMAP.md`, `CORPUS_INSTRUMENTACION.MD`) marcada
+  como prioridad por Juan para la próxima sesión.
 
 ---
 

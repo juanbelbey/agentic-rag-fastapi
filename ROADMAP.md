@@ -621,11 +621,11 @@ streamlit_app/
                           estimado acumulado" usan `st.line_chart`, que no dibuja
                           nada con un solo punto (no hay segmento que conectar).
                           Los otros 3 (`st.bar_chart`) sí se ven bien con un solo
-                          punto. Fix propuesto, no aplicado todavía: cambiar esos
-                          dos a `st.bar_chart` (consistente con el resto) +
-                          formatear la métrica "Latencia promedio" en segundos
-                          con un decimal en vez de ms enteros (hoy se corta:
-                          "16054 ..." no entra en la columna del metric tile).
+                          punto. **Fix aplicado (2026-08-12):** los dos gráficos
+                          pasan a `st.bar_chart` (consistente con el resto) y la
+                          métrica "Latencia promedio" pasa a segundos con un
+                          decimal (`{:.1f} s`) en vez de ms enteros (antes se
+                          cortaba: "16054 ..." no entraba en el metric tile).
                           [2026-08-12, Fase 3 docker-compose] Mismo fix de
                           `BACKEND_URL` que `app.py` arriba — este archivo también
                           solo miraba `st.secrets`, así que fallaba igual dentro de
@@ -1517,7 +1517,8 @@ actual del repo".
 **Fase 3 completa (2026-08-12) — docker-compose backend+frontend.** Ver detalle
 técnico en `streamlit_app/Dockerfile` y `docker-compose.yml` arriba en "Estado
 actual del repo". El hallazgo del dashboard (gráficos vacíos con un solo dato)
-sigue sin arreglar — quedó pospuesto, no bloqueaba Fase 3.
+también se arregló hoy — ver nota en `streamlit_app/pages/1_📊_Monitoring.py`
+arriba.
 
 - **Próximo paso concreto:** Fase 4 (README honesto + traducción a inglés de
   README y `streamlit_app`).
