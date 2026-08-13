@@ -61,11 +61,11 @@ Este repo es la entrega del proyecto final del [LLM Zoomcamp](https://github.com
 | Problem description | Este README, seccion "Caso de uso" |
 | Retrieval flow | Knowledge base (Supabase/pgvector) + LLM en el flujo — hybrid search (vector + full-text) fusionado con RRF, `src/tools.py` (`rag_search`) |
 | Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR comparados entre vector-only, keyword-only e hybrid sobre 520 preguntas (`evals/ground_truth_retrieval.json`), ver `ROADMAP.md` Capa 5B.4 |
-| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` sobre `evals/golden_set.json`, corrido en CI (`.github/workflows/ci.yml`, job `evals`) |
+| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` sobre `evals/golden_set.json`, corrido en CI (`.github/workflows/ci.yml`, job `evals`); comparación de ≥2 enfoques (prompt × modelo, 4 combinaciones) en `evals/compare_prompts.py`, decisión final documentada con datos en `EXPERIMENTS.md` |
 | Interface | API REST con FastAPI — `POST /chat` (`src/main.py`) |
 | Ingestion pipeline | `scripts/ingest.py` — chunking + embeddings OpenAI + carga a Postgres/pgvector, script dedicado (no notebook manual) |
-| Monitoring | Pendiente |
-| Containerization | `Dockerfile` — build y run verificados, ver `CHANGELOG.md` 2026-07-31 |
+| Monitoring | Tabla `chat_logs` (latencia/tokens/costo estimado por request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 gráficos), ver `CHANGELOG.md` 2026-08-11 |
+| Containerization | `docker-compose.yml` levanta backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) juntos con un solo comando, ver `CHANGELOG.md` 2026-08-12 |
 | Reproducibility | Seccion "Como correrlo" arriba; versiones fijas en `requirements.txt`; dataset con copyright pero accesible: 11 links directos verificados HTTP 200 en `CORPUS_INSTRUMENTACION.MD`; evals reproducibles sin re-ingerir (datasets ya commiteados) |
 
-Best practices: hybrid search ✅ (evaluado, ver Retrieval evaluation arriba). Re-ranking y query rewriting: pendientes.
+Best practices: hybrid search ✅ (evaluado, ver Retrieval evaluation arriba). Query rewriting ✅ (`_rewrite_query_impl()` en `src/tools.py`, reescribe la query a inglés técnico antes del keyword search — hit_rate hybrid 0.317 → 0.415, +31%, sobre las 520 preguntas de `evals/ground_truth_retrieval.json`). Re-ranking: pendiente.
