@@ -20,10 +20,10 @@ if not BACKEND_URL:
 st.set_page_config(page_title="Monitoring", page_icon="📊")
 st.title("📊 Monitoring")
 st.caption(
-    "Métricas reales del backend, leídas de Postgres. El costo es una "
-    "estimación a partir de los tokens del LLM principal del chat -- no "
-    "incluye la llamada interna de query rewriting, así que queda algo por "
-    "debajo del costo real total."
+    "Real metrics from the backend, read from Postgres. Cost is an "
+    "estimate based on the main chat LLM's tokens -- it doesn't include "
+    "the internal query rewriting call, so it comes in slightly below "
+    "the actual total cost."
 )
 
 try:
@@ -31,57 +31,57 @@ try:
     response.raise_for_status()
     data = response.json()
 except requests.exceptions.RequestException:
-    st.error("No se pudo conectar con el backend para traer las métricas.")
+    st.error("Couldn't connect to the backend to fetch the metrics.")
     st.stop()
 
 chat_logs = pd.DataFrame(data["chat_logs"])
 feedback = pd.DataFrame(data["feedback"])
 
 if chat_logs.empty:
-    st.info("Todavía no hay conversaciones registradas.")
+    st.info("No conversations logged yet.")
     st.stop()
 
 chat_logs["created_at"] = pd.to_datetime(chat_logs["created_at"])
 chat_logs["date"] = chat_logs["created_at"].dt.date
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Requests totales", len(chat_logs))
-col2.metric("Latencia promedio", f"{chat_logs['latency_ms'].mean() / 1000:.1f} s")
-col3.metric("Costo estimado total", f"${chat_logs['estimated_cost_usd'].sum():.4f}")
+col1.metric("Total requests", len(chat_logs))
+col2.metric("Average latency", f"{chat_logs['latency_ms'].mean() / 1000:.1f} s")
+col3.metric("Total estimated cost", f"${chat_logs['estimated_cost_usd'].sum():.4f}")
 if not feedback.empty:
     positive_pct = (feedback["score"] >= 0.5).mean() * 100
-    col4.metric("Feedback positivo", f"{positive_pct:.0f}%")
+    col4.metric("Positive feedback", f"{positive_pct:.0f}%")
 else:
-    col4.metric("Feedback positivo", "sin datos")
+    col4.metric("Positive feedback", "no data")
 
 st.divider()
 
-st.subheader("Requests por día")
+st.subheader("Requests per day")
 st.bar_chart(chat_logs.groupby("date").size().rename("requests"))
 
-st.subheader("Latencia promedio por día")
+st.subheader("Average latency per day")
 # bar_chart en vez de line_chart -- con un solo dia de datos, line_chart no
 # tiene un segundo punto para trazar el segmento y queda vacio.
-st.bar_chart(chat_logs.groupby("date")["latency_ms"].mean().rename("latencia_ms"))
+st.bar_chart(chat_logs.groupby("date")["latency_ms"].mean().rename("latency_ms"))
 
-st.subheader("Costo estimado acumulado")
+st.subheader("Cumulative estimated cost")
 cost_by_day = chat_logs.groupby("date")["estimated_cost_usd"].sum().cumsum()
-st.bar_chart(cost_by_day.rename("costo_acumulado_usd"))
+st.bar_chart(cost_by_day.rename("cumulative_cost_usd"))
 
-st.subheader("Uso de tools")
+st.subheader("Tool usage")
 tool_counts: dict[str, int] = {}
 for row in chat_logs["tool_calls_used"]:
     tools = row or []
     if not tools:
-        key = "sin tool (respuesta directa)"
+        key = "no tool (direct answer)"
         tool_counts[key] = tool_counts.get(key, 0) + 1
     for tool_name in tools:
         tool_counts[tool_name] = tool_counts.get(tool_name, 0) + 1
 st.bar_chart(pd.Series(tool_counts, name="requests"))
 
-st.subheader("Feedback de usuarios")
+st.subheader("User feedback")
 if feedback.empty:
-    st.info("Todavía no hay feedback registrado.")
+    st.info("No feedback logged yet.")
 else:
     feedback_counts = feedback["score"].apply(lambda s: "👍" if s >= 0.5 else "👎").value_counts()
-    st.bar_chart(feedback_counts.rename("votos"))
+    st.bar_chart(feedback_counts.rename("votes"))

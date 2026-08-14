@@ -1,71 +1,71 @@
 # agentic-rag-fastapi
 
-Agente de soporte tecnico con RAG real (LangGraph + FastAPI + Postgres/pgvector) sobre manuales de instrumentacion de campo.
+Technical support agent with real RAG (LangGraph + FastAPI + Postgres/pgvector) over field instrumentation manuals.
 
-## Caso de uso
+## Use case
 
-Asistente para operadores y tecnicos de sistemas municipales de agua potable y saneamiento (plantas potabilizadoras, redes de distribucion, plantas de tratamiento cloacal): responde consultas sobre instrumentacion de campo (transmisores de presion, caudal y temperatura de Emerson/Rosemount, Siemens Sitrans y Endress+Hauser) — calibracion, codigos de error, rangos de medicion, mantenimiento — citando la fuente del manual, y crea un ticket cuando la consulta no esta cubierta por la documentacion o requiere escalarse a soporte humano.
+Assistant for operators and technicians at municipal water and sanitation utilities (water treatment plants, distribution networks, wastewater treatment plants): answers questions about field instrumentation (pressure, flow, and temperature transmitters from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser) — calibration, error codes, measurement ranges, maintenance — citing the source manual, and creates a ticket when a query isn't covered by the documentation or needs to be escalated to human support.
 
-Dominio elegido a partir de experiencia real: 2 anios como consultor tecnico en agua potable y saneamiento (plantas potabilizadoras, redes de distribucion, tratamiento cloacal para la Municipalidad de Monte Vera) — no un demo generico.
+Domain chosen from real experience: 2 years as a technical consultant in water supply and sanitation (water treatment plants, distribution networks, wastewater treatment for the Municipality of Monte Vera) — not a generic demo.
 
-## Como funciona
+## How it works
 
-- **Agente**: LangGraph (`StateGraph` con routing condicional entre `agent` y `tools`)
-- **Retrieval**: hybrid search (vector + full-text de Postgres) fusionado con Reciprocal Rank Fusion, sobre Supabase/pgvector
-- **Tools**: `rag_search` (busca en los manuales tecnicos), `create_ticket` (escala lo que no esta cubierto)
-- **API**: FastAPI, endpoint `POST /chat`
+- **Agent**: LangGraph (`StateGraph` with conditional routing between `agent` and `tools`)
+- **Retrieval**: hybrid search (vector + Postgres full-text) fused with Reciprocal Rank Fusion, over Supabase/pgvector
+- **Tools**: `rag_search` (searches the technical manuals), `create_ticket` (escalates what isn't covered)
+- **API**: FastAPI, `POST /chat` endpoint
 
-Ver `ROADMAP.md` para el estado actual del proyecto y `STACK.md` para las decisiones de librerias.
+See `ROADMAP.md` for the current project status and `STACK.md` for library decisions.
 
-## Documentacion tecnica: de donde sale
+## Technical documentation: where it comes from
 
-El corpus son 11 manuales oficiales de Emerson/Rosemount, Siemens Sitrans y Endress+Hauser (instrumentacion de presion, caudal y temperatura), descargados de los dominios oficiales de cada fabricante. Tienen copyright — no se redistribuyen: los PDFs originales estan en `.gitignore`, el repo solo versiona el script de ingesta. Detalle de fuentes y links oficiales en `CORPUS_INSTRUMENTACION.MD`.
+The corpus is 11 official manuals from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser (pressure, flow, and temperature instrumentation), downloaded from each manufacturer's official domain. They're copyrighted — not redistributed: the original PDFs are in `.gitignore`, the repo only versions the ingestion script. Source details and official links in `CORPUS_INSTRUMENTACION.MD`.
 
-## Como correrlo
+## How to run it
 
-**Requisitos para reproducir el pipeline completo:**
-- Python 3.12, dependencias fijadas en `requirements.txt` (`pip install -r requirements.txt` instala versiones exactas, no rangos)
-- Cuenta de OpenAI con API key (de pago — la ingesta completa embebe ~2451 chunks)
-- Postgres con la extension `vector` habilitada (Supabase free tier alcanza, ver `ROADMAP.md` Capa 5B.0)
-- Los 11 PDFs del corpus — no estan en el repo por copyright, pero son **descargables gratis y sin login** desde los dominios oficiales de cada fabricante: los 11 links directos (verificados HTTP 200) y el nombre de archivo exacto que espera cada uno estan en `CORPUS_INSTRUMENTACION.MD`. Se descargan a mano y se guardan en `docs/pdfs/` con esos nombres antes de ingerir.
+**Requirements to reproduce the full pipeline:**
+- Python 3.12, dependencies pinned in `requirements.txt` (`pip install -r requirements.txt` installs exact versions, not ranges)
+- OpenAI account with an API key (paid — the full ingestion embeds ~2451 chunks)
+- Postgres with the `vector` extension enabled (Supabase free tier is enough, see `ROADMAP.md`, Capa 5B.0)
+- The 11 corpus PDFs — not included in the repo due to copyright, but **freely downloadable without login** from each manufacturer's official domain: the 11 direct links (verified HTTP 200) and the exact filename each one expects are in `CORPUS_INSTRUMENTACION.MD`. Download them manually and save them to `docs/pdfs/` with those names before ingesting.
 
 ```bash
 python -m venv .venv
-.venv/Scripts/activate  # source .venv/bin/activate en Linux/Mac
+.venv/Scripts/activate  # source .venv/bin/activate on Linux/Mac
 pip install -r requirements.txt
-cp .env.example .env  # completar OPENAI_API_KEY y DATABASE_URL
-python -m scripts.ingest  # requiere docs/pdfs/ poblado, ver arriba
+cp .env.example .env  # fill in OPENAI_API_KEY and DATABASE_URL
+python -m scripts.ingest  # requires docs/pdfs/ populated, see above
 ```
 
 ```bash
 uvicorn src.main:app --reload
 ```
 
-`POST /chat` con `{"message": "...", "thread_id": "..."}`.
+`POST /chat` with `{"message": "...", "thread_id": "..."}`.
 
-Alternativa con Docker (no reingiere nada, solo consulta la base ya poblada):
+Alternative with Docker (doesn't re-ingest anything, only queries the already-populated database):
 
 ```bash
 docker build -t agentic-rag-fastapi .
 docker run --env-file .env -p 8000:8000 agentic-rag-fastapi
 ```
 
-**Reproducir los evals sin pagar de nuevo la ingesta:** `evals/ground_truth_retrieval.json` (520 preguntas de retrieval) y `evals/golden_set.json` (56 casos de generacion, incluye 8 de escalamiento a `create_ticket`) ya estan commiteados — no hace falta regenerarlos. Con una tabla `chunks` ya poblada (propia o restaurada de un dump), `python -m evals.retrieval_metrics` y `python -m evals.run_evals` corren directo sobre esos datasets. Los resultados de corridas ya hechas quedan en `evals/results/YYYY-MM-DD/` para inspeccionar sin correr nada.
+**Reproducing the evals without paying for ingestion again:** `evals/ground_truth_retrieval.json` (520 retrieval questions) and `evals/golden_set.json` (56 generation cases, including 8 escalation-to-`create_ticket` cases) are already committed — no need to regenerate them. With a populated `chunks` table (your own or restored from a dump), `python -m evals.retrieval_metrics` and `python -m evals.run_evals` run directly against those datasets. Results from past runs are in `evals/results/YYYY-MM-DD/` for inspection without running anything.
 
-## Criterios de evaluacion (LLM Zoomcamp 2026)
+## Evaluation criteria (LLM Zoomcamp 2026)
 
-Este repo es la entrega del proyecto final del [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) (DataTalks.Club). Mapa de los 9 criterios oficiales a donde vive cada uno en el codigo:
+This repo is the final project submission for the [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) (DataTalks.Club). Mapping of the 9 official criteria to where each one lives in the code:
 
-| Criterio | Donde esta |
+| Criterion | Where it is |
 |---|---|
-| Problem description | Este README, seccion "Caso de uso" |
-| Retrieval flow | Knowledge base (Supabase/pgvector) + LLM en el flujo — hybrid search (vector + full-text) fusionado con RRF, `src/tools.py` (`rag_search`) |
-| Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR comparados entre vector-only, keyword-only e hybrid sobre 520 preguntas (`evals/ground_truth_retrieval.json`), ver `ROADMAP.md` Capa 5B.4 |
-| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` sobre `evals/golden_set.json`, corrido en CI (`.github/workflows/ci.yml`, job `evals`); comparación de ≥2 enfoques (prompt × modelo, 4 combinaciones) en `evals/compare_prompts.py`, decisión final documentada con datos en `EXPERIMENTS.md` |
-| Interface | API REST con FastAPI — `POST /chat` (`src/main.py`) |
-| Ingestion pipeline | `scripts/ingest.py` — chunking + embeddings OpenAI + carga a Postgres/pgvector, script dedicado (no notebook manual) |
-| Monitoring | Tabla `chat_logs` (latencia/tokens/costo estimado por request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 gráficos), ver `CHANGELOG.md` 2026-08-11 |
-| Containerization | `docker-compose.yml` levanta backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) juntos con un solo comando, ver `CHANGELOG.md` 2026-08-12 |
-| Reproducibility | Seccion "Como correrlo" arriba; versiones fijas en `requirements.txt`; dataset con copyright pero accesible: 11 links directos verificados HTTP 200 en `CORPUS_INSTRUMENTACION.MD`; evals reproducibles sin re-ingerir (datasets ya commiteados) |
+| Problem description | This README, "Use case" section |
+| Retrieval flow | Knowledge base (Supabase/pgvector) + LLM in the flow — hybrid search (vector + full-text) fused with RRF, `src/tools.py` (`rag_search`) |
+| Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR compared across vector-only, keyword-only, and hybrid over 520 questions (`evals/ground_truth_retrieval.json`), see `ROADMAP.md`, Capa 5B.4 |
+| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` over `evals/golden_set.json`, run in CI (`.github/workflows/ci.yml`, `evals` job); comparison of ≥2 approaches (prompt × model, 4 combinations) in `evals/compare_prompts.py`, final decision documented with data in `EXPERIMENTS.md` |
+| Interface | REST API with FastAPI — `POST /chat` (`src/main.py`) |
+| Ingestion pipeline | `scripts/ingest.py` — chunking + OpenAI embeddings + load into Postgres/pgvector, dedicated script (not a manual notebook) |
+| Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts), see `CHANGELOG.md` 2026-08-11 |
+| Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command, see `CHANGELOG.md` 2026-08-12 |
+| Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset: 11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`; reproducible evals without re-ingesting (datasets already committed) |
 
-Best practices: hybrid search ✅ (evaluado, ver Retrieval evaluation arriba). Query rewriting ✅ (`_rewrite_query_impl()` en `src/tools.py`, reescribe la query a inglés técnico antes del keyword search — hit_rate hybrid 0.317 → 0.415, +31%, sobre las 520 preguntas de `evals/ground_truth_retrieval.json`). Re-ranking: pendiente.
+Best practices: hybrid search ✅ (evaluated, see Retrieval evaluation above). Query rewriting ✅ (`_rewrite_query_impl()` in `src/tools.py`, rewrites the query into technical English before the keyword search — hybrid hit_rate 0.317 → 0.415, +31%, over the 520 questions in `evals/ground_truth_retrieval.json`). Re-ranking: pending.
