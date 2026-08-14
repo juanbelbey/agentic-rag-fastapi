@@ -38,6 +38,9 @@ psycopg-pool==3.3.1
 # Extraccion de texto de PDFs (Capa 5B.4)
 pypdf==5.1.0
 
+# Generacion de PDFs sinteticos para el corpus de prueba (scripts/generate_synthetic_corpus.py)
+fpdf2==2.8.8
+
 # Configuracion
 python-dotenv==1.2.1
 
