@@ -2,6 +2,8 @@
 
 Technical support agent with real RAG (LangGraph + FastAPI + Postgres/pgvector) over field instrumentation manuals.
 
+🔗 **Live demo:** [agentic-rag-fastapi.streamlit.app](https://agentic-rag-fastapi.streamlit.app/) — ask it a real question about pressure/flow/temperature transmitters. Backend runs on Render's free tier, so the first request after a period of inactivity can take up to ~30s to wake up.
+
 ## Table of contents
 
 - [🎯 Use case](#use-case)
@@ -28,6 +30,25 @@ Domain chosen from real experience: 2 years as a technical consultant in water s
 - **API**: FastAPI, `POST /chat` endpoint
 
 See `ROADMAP.md` for the current project status and `STACK.md` for library decisions.
+
+<table>
+<tr>
+<td width="50%">
+
+**Chat** — answers with source citation
+
+<img src="docs/screenshots/chat.png" alt="Chat screen: a question about the Rosemount 3051's calibration procedure, answered with the source manual cited" width="100%">
+
+</td>
+<td width="50%">
+
+**Monitoring dashboard** — real metrics read from Postgres
+
+<img src="docs/screenshots/monitoring.png" alt="Monitoring dashboard: metric tiles for requests, latency, cost, feedback, plus a requests-per-day chart" width="100%">
+
+</td>
+</tr>
+</table>
 
 <a id="technical-documentation"></a>
 
