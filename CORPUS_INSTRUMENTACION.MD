@@ -174,6 +174,28 @@ técnica corporativa (Siemens y E+H tienen cláusulas equivalentes).
 
 ---
 
+## Corpus sintético (reproducibility sin descarga manual)
+
+**Motivación:** el corpus real (`docs/pdfs/`) es copyrighted y no se comitea —
+un reviewer del curso tiene que descargar los 11 PDFs a mano antes de poder
+correr `scripts/ingest.py`. Para eliminar ese paso manual, `docs/pdfs_synthetic/`
+(sí comiteada) tiene 11 PDFs generados con `gpt-4o-mini` sobre marcas y modelos
+ficticios (AquaPress, Rivertek, FieldSense), con la misma estructura que el
+corpus real: 3 fabricantes, mezcla de manual completo/quickstart/datasheet,
+mayoría de presión con algo de caudal (ver `scripts/generate_synthetic_corpus.py`).
+Cada PDF lleva la leyenda "SYNTHETIC SAMPLE" en la primera página y en el
+footer.
+
+**Qué NO es:** un reemplazo del corpus real. `evals/golden_set.json` y
+`evals/ground_truth_retrieval.json` se generaron contra el contenido real —
+correr la ingesta con el corpus sintético (`INGEST_PDFS_DIR=docs/pdfs_synthetic`,
+ver `README.md`) deja el pipeline funcionando de punta a punta, pero las
+respuestas del agente no van a coincidir con esas preguntas (hablan de
+productos distintos). Sirve para validar que la mecánica del pipeline
+funciona, no para reproducir las métricas reportadas.
+
+---
+
 ## Estado: completo
 
 Todos los pasos de este plan están hechos:

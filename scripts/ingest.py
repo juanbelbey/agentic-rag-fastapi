@@ -18,7 +18,11 @@ from pypdf import PdfReader
 from src.ingestion import chunk_text, embed_texts
 
 DOCS_DIR = Path(__file__).parent.parent / "docs"
-PDFS_DIR = DOCS_DIR / "pdfs"
+# Por defecto usa el corpus real (docs/pdfs/, gitignored, copyrighted). Un
+# reviewer sin acceso a esos PDFs puede setear INGEST_PDFS_DIR=docs/pdfs_synthetic
+# para correr el pipeline de punta a punta con el corpus sintetico incluido en
+# el repo -- ver README.md, seccion "How to run it".
+PDFS_DIR = Path(os.getenv("INGEST_PDFS_DIR", DOCS_DIR / "pdfs"))
 
 # Mas grandes que el default de chunk_text (500/250): estos manuales son mas
 # largos y densos que docs/langgraph-intro.txt, con procedimientos y tablas

@@ -21,20 +21,26 @@ See `ROADMAP.md` for the current project status and `STACK.md` for library decis
 
 The corpus is 11 official manuals from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser (pressure, flow, and temperature instrumentation), downloaded from each manufacturer's official domain. They're copyrighted — not redistributed: the original PDFs are in `.gitignore`, the repo only versions the ingestion script. Source details and official links in `CORPUS_INSTRUMENTACION.MD`.
 
+For anyone who wants to run the ingestion pipeline without downloading the real manuals, the repo also includes a **synthetic corpus** (`docs/pdfs_synthetic/`, 11 PDFs, fictional brands, same structure as the real one — see "How to run it" below and `CORPUS_INSTRUMENTACION.MD`).
+
 ## 🚀 How to run it
 
 **Requirements to reproduce the full pipeline:**
 - Python 3.12, dependencies pinned in `requirements.txt` (`pip install -r requirements.txt` installs exact versions, not ranges)
 - OpenAI account with an API key (paid — the full ingestion embeds ~2451 chunks)
 - Postgres with the `vector` extension enabled (Supabase free tier is enough, see `ROADMAP.md`, Capa 5B.0)
-- The 11 corpus PDFs — not included in the repo due to copyright, but **freely downloadable without login** from each manufacturer's official domain: the 11 direct links (verified HTTP 200) and the exact filename each one expects are in `CORPUS_INSTRUMENTACION.MD`. Download them manually and save them to `docs/pdfs/` with those names before ingesting.
+- The 11 corpus PDFs — two ways to get them:
+  - **Real corpus** (what the committed evals/results were run against): not included due to copyright, but **freely downloadable without login** from each manufacturer's official domain — the 11 direct links (verified HTTP 200) and the exact filename each one expects are in `CORPUS_INSTRUMENTACION.MD`. Download them manually into `docs/pdfs/`.
+  - **Synthetic corpus** (no manual step): already committed at `docs/pdfs_synthetic/` — 11 PDFs about fictional instrument brands, same structure (manufacturers/models/document types) as the real one. Lets a reviewer run the full pipeline with zero manual downloads. Content differs from the real corpus, so retrieval quality against `evals/golden_set.json` won't match the numbers reported below — that's expected, this path validates the pipeline mechanics, not the reported metrics.
 
 ```bash
 python -m venv .venv
 .venv/Scripts/activate  # source .venv/bin/activate on Linux/Mac
 pip install -r requirements.txt
 cp .env.example .env  # fill in OPENAI_API_KEY and DATABASE_URL
-python -m scripts.ingest  # requires docs/pdfs/ populated, see above
+python -m scripts.ingest  # real corpus: requires docs/pdfs/ populated, see above
+# or, no manual download needed:
+INGEST_PDFS_DIR=docs/pdfs_synthetic python -m scripts.ingest
 ```
 
 ```bash
@@ -66,7 +72,7 @@ This repo is the final project submission for the [LLM Zoomcamp](https://github.
 | 📥 Ingestion pipeline | `scripts/ingest.py` — chunking + OpenAI embeddings + load into Postgres/pgvector, dedicated script (not a manual notebook) |
 | 📈 Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts), see `CHANGELOG.md` 2026-08-11 |
 | 🐳 Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command, see `CHANGELOG.md` 2026-08-12 |
-| ♻️ Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset: 11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`; reproducible evals without re-ingesting (datasets already committed) |
+| ♻️ Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset (11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`), plus a committed synthetic corpus (`docs/pdfs_synthetic/`) for a zero-manual-steps path; reproducible evals without re-ingesting (datasets already committed) |
 
 **Best practices:**
 
