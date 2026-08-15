@@ -2,11 +2,23 @@
 
 Technical support agent with real RAG (LangGraph + FastAPI + Postgres/pgvector) over field instrumentation manuals.
 
+## Table of contents
+
+- [🎯 Use case](#use-case)
+- [⚙️ How it works](#how-it-works)
+- [📚 Technical documentation: where it comes from](#technical-documentation)
+- [🚀 How to run it](#how-to-run-it)
+- [✅ Evaluation criteria (LLM Zoomcamp 2026)](#evaluation-criteria)
+
+<a id="use-case"></a>
+
 ## 🎯 Use case
 
 Assistant for operators and technicians at municipal water and sanitation utilities (water treatment plants, distribution networks, wastewater treatment plants): answers questions about field instrumentation (pressure, flow, and temperature transmitters from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser) — calibration, error codes, measurement ranges, maintenance — citing the source manual, and creates a ticket when a query isn't covered by the documentation or needs to be escalated to human support.
 
 Domain chosen from real experience: 2 years as a technical consultant in water supply and sanitation (water treatment plants, distribution networks, wastewater treatment for the Municipality of Monte Vera) — not a generic demo.
+
+<a id="how-it-works"></a>
 
 ## ⚙️ How it works
 
@@ -17,11 +29,15 @@ Domain chosen from real experience: 2 years as a technical consultant in water s
 
 See `ROADMAP.md` for the current project status and `STACK.md` for library decisions.
 
+<a id="technical-documentation"></a>
+
 ## 📚 Technical documentation: where it comes from
 
 The corpus is 11 official manuals from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser (pressure, flow, and temperature instrumentation), downloaded from each manufacturer's official domain. They're copyrighted — not redistributed: the original PDFs are in `.gitignore`, the repo only versions the ingestion script. Source details and official links in `CORPUS_INSTRUMENTACION.MD`.
 
 For anyone who wants to run the ingestion pipeline without downloading the real manuals, the repo also includes a **synthetic corpus** (`docs/pdfs_synthetic/`, 11 PDFs, fictional brands, same structure as the real one — see "How to run it" below and `CORPUS_INSTRUMENTACION.MD`).
+
+<a id="how-to-run-it"></a>
 
 ## 🚀 How to run it
 
@@ -57,6 +73,8 @@ docker run --env-file .env -p 8000:8000 agentic-rag-fastapi
 ```
 
 **Reproducing the evals without paying for ingestion again:** `evals/ground_truth_retrieval.json` (520 retrieval questions) and `evals/golden_set.json` (56 generation cases, including 8 escalation-to-`create_ticket` cases) are already committed — no need to regenerate them. With a populated `chunks` table (your own or restored from a dump), `python -m evals.retrieval_metrics` and `python -m evals.run_evals` run directly against those datasets. Results from past runs are in `evals/results/YYYY-MM-DD/` for inspection without running anything.
+
+<a id="evaluation-criteria"></a>
 
 ## ✅ Evaluation criteria (LLM Zoomcamp 2026)
 
