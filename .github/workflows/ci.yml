@@ -39,7 +39,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Correr tests de reglas deterministas
-        run: python -m pytest tests/test_rules.py -v --html=reports/report.html --self-contained-html
+        run: python -m pytest tests/ --ignore=tests/test_evals.py -v --html=reports/report.html --self-contained-html
 
       - name: Guardar reporte como artefacto
         if: always()
