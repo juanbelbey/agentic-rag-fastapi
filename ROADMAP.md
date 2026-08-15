@@ -51,7 +51,8 @@ CAPA 5 — RAG real con PDFs            ✅ COMPLETADA
     5B.3 — Postgres checkpointer      ✅ COMPLETADA (verificado contra Supabase
                                           real: setup() crea tablas, persistencia
                                           por thread_id confirmada)
-    5B.4 — Corpus real + evals M4     ✅ COMPLETADA (ver CORPUS_INSTRUMENTACION.MD)
+    5B.4 — Corpus real + evals M4     ✅ COMPLETADA (+ corpus sintético para
+                                          reproducibility, ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy                       ✅ Render (backend) — AWS queda pendiente
                                           para otro momento
 ```
@@ -128,19 +129,27 @@ src/
 
 ```
 scripts/
-└── ingest.py
+├── ingest.py
+└── generate_synthetic_corpus.py
 ```
 
 - **`scripts/ingest.py`** — ingesta manual (`python -m scripts.ingest`, no la llama la
-  app): lee `docs/*.txt` y `docs/pdfs/*.pdf` (extracción con `pypdf`, sin OCR), chunkea
+  app): lee `docs/*.txt` y `docs/pdfs/*.pdf` por defecto (extracción con `pypdf`, sin
+  OCR; `INGEST_PDFS_DIR` permite apuntar a `docs/pdfs_synthetic` en su lugar), chunkea
   (`CHUNK_SIZE=1000`/`CHUNK_STEP=800`, más grande que el default de `chunk_text()`
   porque estos manuales son más densos), embebe y hace `TRUNCATE` + insert en la tabla
   `chunks` de Supabase. Separado a propósito de `main.py` — ingesta y serving son
   responsabilidades distintas.
+- **`scripts/generate_synthetic_corpus.py`** — genera los 11 PDFs de
+  `docs/pdfs_synthetic/` con `gpt-4o-mini` (marcas/modelos ficticios: AquaPress,
+  Rivertek, FieldSense) y `fpdf2`, mismo mix que el corpus real (3 fabricantes,
+  manual/quickstart/datasheet). Script manual, no lo llama la app ni CI — ver
+  `CORPUS_INSTRUMENTACION.MD`, sección "Corpus sintético".
 
 ```
 docs/
-└── pdfs/        (gitignored)
+├── pdfs/                (gitignored)
+└── pdfs_synthetic/      (11 PDFs, comiteados)
 archive/
 └── langgraph-intro.txt
 ```
@@ -148,6 +157,11 @@ archive/
 - **`docs/pdfs/`** — 11 manuales oficiales de instrumentación de campo (Emerson/
   Rosemount, Siemens Sitrans, Endress+Hauser), no committeados por copyright — ver
   `CORPUS_INSTRUMENTACION.MD`.
+- **`docs/pdfs_synthetic/`** — 11 PDFs sintéticos equivalentes, sí comiteados: permite
+  a un reviewer correr `scripts/ingest.py` de punta a punta sin descargar el corpus
+  real a mano (criterio de reproducibility del Zoomcamp). No reemplaza el corpus real
+  para las métricas ya reportadas (el ground truth se generó contra el real) — ver
+  `CORPUS_INSTRUMENTACION.MD`, sección "Corpus sintético".
 - **`archive/langgraph-intro.txt`** — corpus viejo (LangGraph docs), movido fuera de
   `docs/` para que no se mezcle con la ingesta real.
 
@@ -261,7 +275,9 @@ streamlit_app/
   conecta a Postgres directo, para no exponer `DATABASE_URL` en un secret público). 4
   metric tiles (requests totales, latencia promedio, costo estimado total, % feedback
   positivo) + 5 gráficos (requests/día, latencia/día, costo acumulado, uso de tools,
-  feedback), con pandas + `st.bar_chart` nativo de Streamlit.
+  feedback), con pandas + Altair (paleta de colores validada, no la default de
+  Streamlit). Capturas en `docs/screenshots/` (chat + monitoring), enlazadas desde el
+  README junto con el link al live demo.
 - **`Dockerfile`** — imagen del frontend para `docker-compose` (Streamlit Community
   Cloud no la usa, hace build directo desde el repo).
 - **`requirements.txt`** — aislado del de la raíz (solo `streamlit`/`requests`) para no

@@ -6,10 +6,71 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-15 — Corpus sintético para reproducibility + dashboard de Monitoring con Altair
+**Commits:** `b893937`/`0496340` (corpus sintético completo a 11 documentos), `81a34a6`
+(`ingest.py` configurable + docs), `fbb83b7` (tabla de contenidos en README), `c4e0b64`
+(dashboard con Altair + capturas + live demo), `a3e5004` (ajuste de caption), `1a972e3`
+(LICENSE + sacar fechas del README), `6e5913f` (tests nuevos + CI).
+
+- **Corpus sintético completo (11 PDFs, `docs/pdfs_synthetic/`):** sobre el piloto de
+  FieldSense (3 documentos, `8955b0f`, 2026-08-14) se sumaron AquaPress (5) y Rivertek
+  (3), mismo mix que el corpus real (3 fabricantes ficticios, manual/quickstart/
+  datasheet). Generados con `gpt-4o-mini` + `fpdf2` vía
+  `scripts/generate_synthetic_corpus.py` (nuevo, 312 líneas). Motivación: el corpus
+  real es copyrighted y no se comitea — un reviewer del curso tenía que descargar 11
+  PDFs a mano antes de poder correr `scripts/ingest.py`; el sintético elimina ese paso
+  para el criterio de reproducibility del Zoomcamp, sin reemplazar el corpus real
+  contra el que se generó el ground truth (`evals/ground_truth_retrieval.json`).
+  `requirements.txt` suma `fpdf2==2.8.8`.
+- **`scripts/ingest.py` configurable:** nueva variable `INGEST_PDFS_DIR` (default
+  `docs/pdfs`) permite apuntar la ingesta a `docs/pdfs_synthetic` sin tocar código.
+  `README.md` y `CORPUS_INSTRUMENTACION.MD` documentan el camino completo (sección
+  nueva "Corpus sintético" en este último).
+- **README — tabla de contenidos:** anchors explícitos (`<a id="...">`) por sección,
+  agregados porque el README venía creciendo sin navegación interna.
+- **Dashboard de Monitoring reescrito con Altair:** reemplaza el `st.bar_chart` nativo
+  de Streamlit por gráficos Altair con la paleta de colores ya validada en el resto
+  del proyecto (dataviz). Caption acortado a una frase; la nota sobre qué excluye el
+  costo estimado (la llamada interna de query rewriting) se movió al tile específico
+  de costo en vez de vivir en el caption general (`a3e5004`).
+- **README — capturas y live demo:** `docs/screenshots/chat.png` y `monitoring.png`
+  nuevas, mostradas lado a lado en una tabla HTML; agregado el link al live demo
+  (`agentic-rag-fastapi.streamlit.app`) con nota de que el primer request puede tardar
+  ~30s (Render free tier duerme el backend por inactividad).
+- **`ROADMAP.md`** actualizado para reflejar lo de arriba: árbol de `scripts/`/`docs/`
+  con las entradas nuevas, descripción de `ingest.py` (`INGEST_PDFS_DIR`) y del
+  dashboard de Monitoring (Altair en vez de `st.bar_chart`) al día.
+- **Auditoría pre-entrega:** corrida completa (tests, `docker build`, cruce fila por
+  fila contra la tabla de 9 criterios del README, chequeo del live demo, revisión de
+  secretos) — sin bloqueantes. Resultado: LISTO PARA ENTREGAR. De los hallazgos
+  "importante antes de entregar" se resolvieron los siguientes:
+  - **`LICENSE` (MIT)** agregada, con puntero desde una sección nueva al final del
+    README (`1a972e3`).
+  - **Fechas hardcodeadas sacadas del README:** la tabla de 9 criterios citaba
+    `CHANGELOG.md 2026-08-11`/`2026-08-12` en las filas de Monitoring/Containerization
+    — quedaban desactualizadas cada vez que se tocaba ese código (pasó hoy mismo con
+    el dashboard de Altair). Se sacó la fecha, queda solo la descripción (`1a972e3`).
+  - **3 archivos de tests nuevos** (`tests/test_ingestion.py`, `tests/test_schemas.py`,
+    `tests/test_main.py`, 40 tests): unitarios de `chunk_text()`/`rrf()` (puros, sin
+    red), validación de los 5 modelos Pydantic de `src/schemas.py`, e I/O sobre los 3
+    endpoints de `main.py` con `TestClient` de FastAPI (mockeando `pool`/`graph` vía
+    monkeypatch — verificado que `TestClient` sin `with` no dispara el `lifespan`, así
+    que no toca Postgres real salvo que el test lo pida a propósito). Job `rules` de
+    CI actualizado para correr `tests/` completo (antes solo `test_rules.py`),
+    verificado localmente con el comando exacto de `ci.yml` (`6e5913f`).
+  - **Pendiente, no resuelto hoy:** `create_ticket()` sigue siendo un stub
+    (`print()`, sin persistencia) — evaluado y pospuesto a propósito, no es
+    bloqueante para la entrega.
+- **Próximo paso concreto:** sigue pendiente Fase 6 (re-ranking con Cohere) si sobra
+  tiempo, y la consulta al Slack del curso sobre reproducibility/peer review anotada
+  en la entrada del 08-14 (no se hizo aún).
+
+---
+
 ## 2026-08-14 — Fase 4 cierra (traducción a inglés) + limpieza de docs desactualizados
-**Commits:** `583d323` (traducción a inglés de README y `streamlit_app`, Fase 4). El
-resto de esta entrada (limpieza de docs) queda sin commitear a pedido explícito de
-Juan — se sigue en ventana horaria 9-18hs ARG, se commitea después de las 18hs.
+**Commits:** `583d323` (traducción a inglés de README y `streamlit_app`, Fase 4);
+`92e64dd` (limpieza de docs descripta abajo, commiteada el 2026-08-15 09:30 ARG —
+sábado, fuera de la ventana restringida 9-18hs lun-vie).
 
 - **Fase 4 completa:** `README.md`, `streamlit_app/app.py` y
   `streamlit_app/pages/1_📊_Monitoring.py` traducidos a inglés.
