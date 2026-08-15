@@ -1,5 +1,9 @@
 # agentic-rag-fastapi
 
+[![CI](https://github.com/juanbelbey/agentic-rag-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/juanbelbey/agentic-rag-fastapi/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+
 Technical support agent with real RAG (LangGraph + FastAPI + Postgres/pgvector) over field instrumentation manuals.
 
 🔗 **Live demo:** [agentic-rag-fastapi.streamlit.app](https://agentic-rag-fastapi.streamlit.app/) — ask it a real question about pressure/flow/temperature transmitters. Backend runs on Render's free tier, so the first request after a period of inactivity can take up to ~30s to wake up.
