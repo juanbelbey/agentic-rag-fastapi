@@ -112,6 +112,110 @@ DOCUMENTS = [
             "400-600 words."
         ),
     },
+    # Documentos 4-11: dos marcas ficticias mas (AquaPress, Rivertek), para
+    # llegar a 11 documentos -- el mismo numero y la misma mezcla que el
+    # corpus real (docs/pdfs/): varios fabricantes, mezcla de manual
+    # completo + quick start guide + datasheet, mayoria de presion con
+    # algo de caudal, como en CORPUS_INSTRUMENTACION.MD.
+    {
+        "filename": "aquapress_ap210_pressure_transmitter_manual.pdf",
+        "title": "AquaPress AP-210 Pressure Transmitter -- Technical Manual",
+        "user_prompt": (
+            "Write a technical manual for the 'AquaPress AP-210', a "
+            "fictional pressure transmitter used for pump station discharge "
+            "pressure monitoring in water distribution networks. Include "
+            "these sections: PRODUCT OVERVIEW, TECHNICAL SPECIFICATIONS "
+            "(measurement range, accuracy, output signal, process "
+            "connection, ingress protection), CALIBRATION PROCEDURE (zero "
+            "and span adjustment), ERROR CODES (at least 5 codes with cause "
+            "and resolution), and MAINTENANCE. Roughly 500-700 words."
+        ),
+    },
+    {
+        "filename": "aquapress_ap210_pressure_transmitter_quickstart.pdf",
+        "title": "AquaPress AP-210 Pressure Transmitter -- Quick Start Guide",
+        "user_prompt": (
+            "Write a short quick start guide (not a full manual) for the "
+            "'AquaPress AP-210' pressure transmitter: INSTALLATION STEPS, "
+            "WIRING DIAGRAM DESCRIPTION (describe in words, no actual "
+            "diagram), and BASIC STARTUP CHECK. Roughly 200-300 words."
+        ),
+    },
+    {
+        "filename": "aquapress_ap410_pressure_transmitter_hart_manual.pdf",
+        "title": "AquaPress AP-410 Pressure Transmitter (HART) -- Technical Manual",
+        "user_prompt": (
+            "Write a technical manual for the 'AquaPress AP-410', a "
+            "fictional HART-protocol pressure transmitter used for filter "
+            "differential pressure monitoring in water treatment plants "
+            "(used to trigger backwash cycles). Include these sections: "
+            "PRODUCT OVERVIEW, TECHNICAL SPECIFICATIONS (measurement range, "
+            "accuracy, HART protocol details, hazardous area certification), "
+            "CALIBRATION PROCEDURE, ERROR CODES (at least 5 codes with cause "
+            "and resolution), and MAINTENANCE. Roughly 500-700 words."
+        ),
+    },
+    {
+        "filename": "aquapress_ap410_pressure_transmitter_datasheet.pdf",
+        "title": "AquaPress AP-410 Pressure Transmitter -- Datasheet",
+        "user_prompt": (
+            "Write a short product datasheet (not a full manual) for the "
+            "'AquaPress AP-410' pressure transmitter: PRODUCT SUMMARY, KEY "
+            "SPECIFICATIONS (as a plain list, no tables with pipes), and "
+            "ORDERING INFORMATION (model code options). Roughly 200-300 "
+            "words."
+        ),
+    },
+    {
+        "filename": "aquapress_ap600_diff_pressure_transmitter_manual.pdf",
+        "title": "AquaPress AP-600 Differential Pressure Transmitter -- Technical Manual",
+        "user_prompt": (
+            "Write a technical manual for the 'AquaPress AP-600', a "
+            "fictional differential pressure transmitter used specifically "
+            "for filter backwash triggering in water treatment plants. "
+            "Include these sections: PRODUCT OVERVIEW, TECHNICAL "
+            "SPECIFICATIONS, CALIBRATION PROCEDURE (zero and span "
+            "adjustment for differential pressure), ERROR CODES (at least 5 "
+            "codes with cause and resolution), and MAINTENANCE. Roughly "
+            "500-700 words."
+        ),
+    },
+    {
+        "filename": "rivertek_rt2050_pressure_transmitter_manual.pdf",
+        "title": "Rivertek RT-2050 Pressure Transmitter -- Technical Manual",
+        "user_prompt": (
+            "Write a technical manual for the 'Rivertek RT-2050', a "
+            "fictional pressure transmitter used for water treatment plant "
+            "process pressure monitoring. Include these sections: PRODUCT "
+            "OVERVIEW, TECHNICAL SPECIFICATIONS, CALIBRATION PROCEDURE, "
+            "ERROR CODES (at least 5 codes with cause and resolution), and "
+            "MAINTENANCE. Roughly 500-700 words."
+        ),
+    },
+    {
+        "filename": "rivertek_rt2050_pressure_transmitter_quickstart.pdf",
+        "title": "Rivertek RT-2050 Pressure Transmitter -- Quick Start Guide",
+        "user_prompt": (
+            "Write a short quick start guide (not a full manual) for the "
+            "'Rivertek RT-2050' pressure transmitter: INSTALLATION STEPS, "
+            "WIRING DIAGRAM DESCRIPTION (describe in words), and BASIC "
+            "STARTUP CHECK. Roughly 200-300 words."
+        ),
+    },
+    {
+        "filename": "rivertek_rt8700_flow_transmitter_manual.pdf",
+        "title": "Rivertek RT-8700 Magnetic Flow Transmitter -- Technical Manual",
+        "user_prompt": (
+            "Write a technical manual for the 'Rivertek RT-8700', a "
+            "fictional magnetic flow transmitter used for treated effluent "
+            "flow monitoring discharged to the receiving water body in "
+            "wastewater treatment plants. Include these sections: PRODUCT "
+            "OVERVIEW, TECHNICAL SPECIFICATIONS (flow range, accuracy, "
+            "electrode material, output signal), CALIBRATION PROCEDURE, "
+            "ERROR CODES (at least 5 codes with cause and resolution), and "
+            "MAINTENANCE (electrode cleaning). Roughly 500-700 words."
+        ),
+    },
 ]
 
 
@@ -192,9 +296,12 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     for doc in DOCUMENTS:
+        output_path = OUTPUT_DIR / doc["filename"]
+        if output_path.exists():
+            print(f"Ya existe, salteo: {output_path}")
+            continue
         print(f"Generando contenido para {doc['filename']}...")
         content = generate_content(doc["user_prompt"])
-        output_path = OUTPUT_DIR / doc["filename"]
         build_pdf(doc["title"], content, output_path)
         print(f"  -> {output_path}")
 
