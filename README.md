@@ -109,8 +109,8 @@ This repo is the final project submission for the [LLM Zoomcamp](https://github.
 | 🧪 LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` over `evals/golden_set.json`, run in CI (`.github/workflows/ci.yml`, `evals` job); comparison of ≥2 approaches (prompt × model, 4 combinations) in `evals/compare_prompts.py`, final decision documented with data in `EXPERIMENTS.md` |
 | 💬 Interface | REST API with FastAPI — `POST /chat` (`src/main.py`) |
 | 📥 Ingestion pipeline | `scripts/ingest.py` — chunking + OpenAI embeddings + load into Postgres/pgvector, dedicated script (not a manual notebook) |
-| 📈 Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts), see `CHANGELOG.md` 2026-08-11 |
-| 🐳 Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command, see `CHANGELOG.md` 2026-08-12 |
+| 📈 Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts) |
+| 🐳 Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command |
 | ♻️ Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset (11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`), plus a committed synthetic corpus (`docs/pdfs_synthetic/`) for a zero-manual-steps path; reproducible evals without re-ingesting (datasets already committed) |
 
 **Best practices:**
@@ -118,3 +118,7 @@ This repo is the final project submission for the [LLM Zoomcamp](https://github.
 - ✅ **Hybrid search** — evaluated, see Retrieval evaluation above
 - ✅ **Query rewriting** — `_rewrite_query_impl()` in `src/tools.py`, rewrites the query into technical English before the keyword search. Hybrid hit_rate 0.317 → 0.415 (+31%) over the 520 questions in `evals/ground_truth_retrieval.json`
 - ⬜ **Re-ranking** — pending
+
+## License
+
+[MIT](LICENSE) — the code is free to use, modify, and distribute. The corpus PDFs are a separate matter (see "Technical documentation" above): the real manuals are copyrighted and not included in the repo.
