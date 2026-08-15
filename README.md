@@ -46,9 +46,25 @@ See `ROADMAP.md` for the current project status and `STACK.md` for library decis
 </td>
 <td width="50%">
 
-**Monitoring dashboard** — real metrics read from Postgres
+**Monitoring — overview** — metric tiles + requests per day
 
-<img src="docs/screenshots/monitoring.png" alt="Monitoring dashboard: metric tiles for requests, latency, cost, feedback, plus a requests-per-day chart" width="100%">
+<img src="docs/screenshots/monitoring_overview.png" alt="Monitoring dashboard: metric tiles for total requests, average latency, estimated cost, positive feedback, plus a requests-per-day chart" width="100%">
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Monitoring — latency & cost**
+
+<img src="docs/screenshots/monitoring_latency_cost.png" alt="Monitoring dashboard: average latency per day and cumulative estimated cost charts" width="100%">
+
+</td>
+<td width="50%">
+
+**Monitoring — tools & feedback**
+
+<img src="docs/screenshots/monitoring_tools_feedback.png" alt="Monitoring dashboard: tool usage breakdown (rag_search / create_ticket / no tool) and user feedback votes" width="100%">
 
 </td>
 </tr>
