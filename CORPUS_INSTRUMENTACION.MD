@@ -1,4 +1,4 @@
-# PENDIENTE — Corpus RAG: Agua Potable y Saneamiento (Instrumentación de Campo)
+# Corpus RAG: Agua Potable y Saneamiento (Instrumentación de Campo)
 
 ## Contexto
 
@@ -174,22 +174,18 @@ técnica corporativa (Siemens y E+H tienen cláusulas equivalentes).
 
 ---
 
-## Próximos pasos
+## Estado: completo
 
-1. ~~Descargar los PDFs del checklist a la carpeta fuente (gitignored).~~ ✅
-   Hecho 2026-07-14 — 11 PDFs en `docs/pdfs/`, renombrados por fabricante/modelo/
-   tipo/idioma, `docs/pdfs/` agregada a `.gitignore`.
-2. Extender `scripts/ingest.py` con soporte real de PDFs (hoy solo lee `.txt` —
-   ver pendiente en ROADMAP) para chunking + embeddings + insert en pgvector.
-   **Siguiente paso concreto.**
-3. Actualizar el system prompt del agente y el README con el caso de uso:
-   soporte técnico para operadores de agua potable y saneamiento (incluir
-   la experiencia real de 2 años como consultor técnico, plantas
-   potabilizadoras + redes + tratamiento cloacal Municipalidad de Monte Vera).
-4. Generar ground truth con LLM + structured output (patrón HW4: modelo
-   Pydantic `Questions`, 5 preguntas por chunk/documento, etiquetadas por
-   `source`/fabricante/modelo), usando los ejemplos de consulta de este
-   documento como referencia de estilo/tono.
-5. Portar `hit_rate` / `mrr` / `evaluate()` a `evals/retrieval_metrics.py`.
-6. Correr el barrido de `k` de RRF contra el ground truth real y decidir si
-   el `k=60` default de `src/ingestion.py:104` se ajusta.
+Todos los pasos de este plan están hechos:
+
+1. ✅ 11 PDFs descargados a `docs/pdfs/` (gitignored), renombrados por
+   fabricante/modelo/tipo/idioma — 2026-07-14.
+2. ✅ `scripts/ingest.py` extrae texto de PDFs (`pypdf`) además de `.txt`,
+   chunkea y carga a la tabla `chunks` en Supabase/pgvector.
+3. ✅ System prompt del agente y README actualizados con el caso de uso real.
+4. ✅ Ground truth generado con LLM + structured output — 520 preguntas en
+   `evals/ground_truth_retrieval.json` (`evals/generate_ground_truth.py`).
+5. ✅ `hit_rate` / `mrr` portados a `evals/retrieval_metrics.py`, comparando
+   vector-only, keyword-only e hybrid.
+6. ✅ Barrido de `k` de RRF corrido contra el ground truth real — el default
+   quedó en `k=1` (no `k=60`), ver `rrf_k` en `src/tools.py`.

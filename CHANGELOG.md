@@ -6,6 +6,65 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-08-14 — Fase 4 cierra (traducción a inglés) + limpieza de docs desactualizados
+**Commits:** `583d323` (traducción a inglés de README y `streamlit_app`, Fase 4). El
+resto de esta entrada (limpieza de docs) queda sin commitear a pedido explícito de
+Juan — se sigue en ventana horaria 9-18hs ARG, se commitea después de las 18hs.
+
+- **Fase 4 completa:** `README.md`, `streamlit_app/app.py` y
+  `streamlit_app/pages/1_📊_Monitoring.py` traducidos a inglés.
+- **README:** además de la traducción, se le agregaron emojis a los headers y a la
+  tabla de criterios de evaluación (con criterio, no en cada línea), y el párrafo
+  denso de "Best practices" (hybrid search / query rewriting / re-ranking) pasó a
+  lista con checkmarks — más legible en GitHub.
+- **`courses/` sacada del tracking de git** (`git rm --cached -r`, agregada a
+  `.gitignore`): son notas personales de cursos, no parte de la entrega del
+  Zoomcamp ni pensadas para mostrar. Los archivos siguen en disco, solo dejan de
+  subirse.
+- **`COPILOT_STRATEGY.md` sacada del tracking de git** (agregada a `.gitignore`),
+  mismo criterio que `.claude/skills/`: es config personal de cómo Juan quiere que
+  lo acompañe una IA, no documentación del proyecto.
+- **`CORPUS_INSTRUMENTACION.MD` actualizado:** título dejó de decir "PENDIENTE"
+  (el corpus está completo desde 2026-07-14) y la sección "Próximos pasos" pasó a
+  "Estado: completo" — los 6 pasos del plan original están hechos, incluyendo el
+  barrido de `k` de RRF contra el ground truth real (quedó en `k=1`, no en el
+  `k=60` que decía el plan original).
+- **`STACK.md` reescrito** para reflejar `requirements.txt` real: sumadas las
+  librerías que faltaban (`psycopg2-binary`, `pgvector`, `langgraph-checkpoint-postgres`,
+  `psycopg`, `psycopg-pool`, `pypdf`, `slowapi`, `ragas`, `langchain-community`),
+  sacadas las secciones de "Capa 5A en memoria" / "dependencias pendientes" /
+  "stack planificado para Capa 5B" (Capa 5B ya está completa, no planificada), y
+  corregido el ejemplo de `dataclass` que todavía citaba `InMemoryIndex` en
+  `src/ingestion.py` — esa clase ya no existe en el código.
+- **`ROADMAP.md` reestructurado a fondo:**
+  - El plan de formación personal (Capa 1 a Capa 6 por curso + "Reglas técnicas
+    del stack") se sacó del archivo — mezclaba especialización personal con el
+    roadmap técnico del proyecto. Queda archivado en
+    `courses/ROADMAP_PLAN_FORMACION_ARCHIVADO.md` (gitignored, no se sube).
+  - La sección "Estado actual del repo" pasó de ~1560 a ~210 líneas. Hallazgo real
+    en el proceso: todo ese bloque vivía dentro de una sola fence de código
+    Markdown sin cerrar hasta el final — en GitHub renderizaba como texto plano
+    sin ningún formato, probablemente la causa de fondo de que se leyera mal más
+    allá de lo denso. La reescritura documenta el estado actual de cada módulo
+    (qué hace, decisiones técnicas activas) y saca fechas puntuales, hashes de
+    commit y narrativa de debugging paso a paso — eso ya vive en este changelog.
+  - "Mapa de capas": sacadas las fechas entre paréntesis de cada capa. Capa 6
+    pasó de "Deploy en AWS ⬜ PENDIENTE" a "Deploy ✅ Render (backend) — AWS queda
+    pendiente para otro momento", reflejando que el deploy real ya está hecho
+    (Render, no AWS).
+- **Portfolio (`Portfolio-Ciencia-de-Datos`, repo aparte):** título profesional
+  actualizado ("AI Engineer" → "Gen AI Solutions Developer") y stack tecnológico
+  sumando lo que ya está evidenciado en este repo (LangGraph, Supabase/pgvector,
+  LangSmith, RAGAS, Streamlit, GitHub Actions, Render). Commiteado y pusheado
+  (`a2520e7`) — no tiene la restricción horaria de este repo.
+- **Próximo paso concreto:** Fase 6 (re-ranking con Cohere), condicionada a que
+  sobre tiempo. Queda pendiente mandar una consulta al Slack del curso sobre dos
+  dudas: si se puede seguir mejorando el repo durante la ventana de peer review, y
+  si conviene automatizar la descarga del corpus (hoy manual) para reforzar el
+  criterio de reproducibility.
+
+---
+
 ## 2026-08-12 — Fase 3 completa: docker-compose (backend + frontend)
 **Commits:** commiteado hoy junto con los cambios pendientes del 08-11 (Fase 1/2/5,
 ver entrada de abajo) — una sola sesión de commit para todo lo acumulado.

@@ -2,13 +2,13 @@
 
 Technical support agent with real RAG (LangGraph + FastAPI + Postgres/pgvector) over field instrumentation manuals.
 
-## Use case
+## 🎯 Use case
 
 Assistant for operators and technicians at municipal water and sanitation utilities (water treatment plants, distribution networks, wastewater treatment plants): answers questions about field instrumentation (pressure, flow, and temperature transmitters from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser) — calibration, error codes, measurement ranges, maintenance — citing the source manual, and creates a ticket when a query isn't covered by the documentation or needs to be escalated to human support.
 
 Domain chosen from real experience: 2 years as a technical consultant in water supply and sanitation (water treatment plants, distribution networks, wastewater treatment for the Municipality of Monte Vera) — not a generic demo.
 
-## How it works
+## ⚙️ How it works
 
 - **Agent**: LangGraph (`StateGraph` with conditional routing between `agent` and `tools`)
 - **Retrieval**: hybrid search (vector + Postgres full-text) fused with Reciprocal Rank Fusion, over Supabase/pgvector
@@ -17,11 +17,11 @@ Domain chosen from real experience: 2 years as a technical consultant in water s
 
 See `ROADMAP.md` for the current project status and `STACK.md` for library decisions.
 
-## Technical documentation: where it comes from
+## 📚 Technical documentation: where it comes from
 
 The corpus is 11 official manuals from Emerson/Rosemount, Siemens Sitrans, and Endress+Hauser (pressure, flow, and temperature instrumentation), downloaded from each manufacturer's official domain. They're copyrighted — not redistributed: the original PDFs are in `.gitignore`, the repo only versions the ingestion script. Source details and official links in `CORPUS_INSTRUMENTACION.MD`.
 
-## How to run it
+## 🚀 How to run it
 
 **Requirements to reproduce the full pipeline:**
 - Python 3.12, dependencies pinned in `requirements.txt` (`pip install -r requirements.txt` installs exact versions, not ranges)
@@ -52,20 +52,24 @@ docker run --env-file .env -p 8000:8000 agentic-rag-fastapi
 
 **Reproducing the evals without paying for ingestion again:** `evals/ground_truth_retrieval.json` (520 retrieval questions) and `evals/golden_set.json` (56 generation cases, including 8 escalation-to-`create_ticket` cases) are already committed — no need to regenerate them. With a populated `chunks` table (your own or restored from a dump), `python -m evals.retrieval_metrics` and `python -m evals.run_evals` run directly against those datasets. Results from past runs are in `evals/results/YYYY-MM-DD/` for inspection without running anything.
 
-## Evaluation criteria (LLM Zoomcamp 2026)
+## ✅ Evaluation criteria (LLM Zoomcamp 2026)
 
 This repo is the final project submission for the [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) (DataTalks.Club). Mapping of the 9 official criteria to where each one lives in the code:
 
 | Criterion | Where it is |
 |---|---|
-| Problem description | This README, "Use case" section |
-| Retrieval flow | Knowledge base (Supabase/pgvector) + LLM in the flow — hybrid search (vector + full-text) fused with RRF, `src/tools.py` (`rag_search`) |
-| Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR compared across vector-only, keyword-only, and hybrid over 520 questions (`evals/ground_truth_retrieval.json`), see `ROADMAP.md`, Capa 5B.4 |
-| LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` over `evals/golden_set.json`, run in CI (`.github/workflows/ci.yml`, `evals` job); comparison of ≥2 approaches (prompt × model, 4 combinations) in `evals/compare_prompts.py`, final decision documented with data in `EXPERIMENTS.md` |
-| Interface | REST API with FastAPI — `POST /chat` (`src/main.py`) |
-| Ingestion pipeline | `scripts/ingest.py` — chunking + OpenAI embeddings + load into Postgres/pgvector, dedicated script (not a manual notebook) |
-| Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts), see `CHANGELOG.md` 2026-08-11 |
-| Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command, see `CHANGELOG.md` 2026-08-12 |
-| Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset: 11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`; reproducible evals without re-ingesting (datasets already committed) |
+| 📝 Problem description | This README, "Use case" section |
+| 🔎 Retrieval flow | Knowledge base (Supabase/pgvector) + LLM in the flow — hybrid search (vector + full-text) fused with RRF, `src/tools.py` (`rag_search`) |
+| 📊 Retrieval evaluation | `evals/generate_ground_truth.py` + `evals/retrieval_metrics.py` — hit_rate/MRR compared across vector-only, keyword-only, and hybrid over 520 questions (`evals/ground_truth_retrieval.json`), see `ROADMAP.md`, Capa 5B.4 |
+| 🧪 LLM evaluation | `evals/evaluators.py` + `evals/run_evals.py` over `evals/golden_set.json`, run in CI (`.github/workflows/ci.yml`, `evals` job); comparison of ≥2 approaches (prompt × model, 4 combinations) in `evals/compare_prompts.py`, final decision documented with data in `EXPERIMENTS.md` |
+| 💬 Interface | REST API with FastAPI — `POST /chat` (`src/main.py`) |
+| 📥 Ingestion pipeline | `scripts/ingest.py` — chunking + OpenAI embeddings + load into Postgres/pgvector, dedicated script (not a manual notebook) |
+| 📈 Monitoring | `chat_logs` table (latency/tokens/estimated cost per request) + `GET /stats` + dashboard `streamlit_app/pages/1_📊_Monitoring.py` (4 metric tiles + 5 charts), see `CHANGELOG.md` 2026-08-11 |
+| 🐳 Containerization | `docker-compose.yml` brings up backend (`Dockerfile`) + frontend (`streamlit_app/Dockerfile`) together with a single command, see `CHANGELOG.md` 2026-08-12 |
+| ♻️ Reproducibility | "How to run it" section above; pinned versions in `requirements.txt`; copyrighted but accessible dataset: 11 direct links verified HTTP 200 in `CORPUS_INSTRUMENTACION.MD`; reproducible evals without re-ingesting (datasets already committed) |
 
-Best practices: hybrid search ✅ (evaluated, see Retrieval evaluation above). Query rewriting ✅ (`_rewrite_query_impl()` in `src/tools.py`, rewrites the query into technical English before the keyword search — hybrid hit_rate 0.317 → 0.415, +31%, over the 520 questions in `evals/ground_truth_retrieval.json`). Re-ranking: pending.
+**Best practices:**
+
+- ✅ **Hybrid search** — evaluated, see Retrieval evaluation above
+- ✅ **Query rewriting** — `_rewrite_query_impl()` in `src/tools.py`, rewrites the query into technical English before the keyword search. Hybrid hit_rate 0.317 → 0.415 (+31%) over the 520 questions in `evals/ground_truth_retrieval.json`
+- ⬜ **Re-ranking** — pending

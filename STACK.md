@@ -11,8 +11,8 @@ Antes de agregar una dependencia nueva, consultarlo.
 ### Orquestación del agente
 | Librería | Versión | Rol |
 |---|---|---|
-| `langgraph` | 1.1.10 | Grafo del agente (`StateGraph`, routing, `MemorySaver`) |
-| `langchain-core` | 1.3.2 | Primitivas compartidas (`@tool`, `ToolNode`, `AnyMessage`, `add_messages`) |
+| `langgraph` | 1.1.10 | Grafo del agente (`StateGraph`, routing, checkpointer) |
+| `langchain-core` | 1.5.3 | Primitivas compartidas (`@tool`, `ToolNode`, `AnyMessage`, `add_messages`) |
 | `langchain-openai` | 1.2.1 | Integración OpenAI (`ChatOpenAI`, embeddings) |
 | `langchain` | 1.2.15 | Dependencia transitiva de los anteriores |
 
@@ -23,13 +23,14 @@ Antes de agregar una dependencia nueva, consultarlo.
 
 **Modelos en uso:**
 - `gpt-4o-mini` — modelo de chat del agente y del juez de evals
-- `text-embedding-3-small` — embeddings para Capa 5A (pendiente de usar)
+- `text-embedding-3-small` — embeddings de ingesta y de la query en `rag_search`
 
 ### API
 | Librería | Versión | Rol |
 |---|---|---|
-| `fastapi` | 0.136.1 | Servidor HTTP — endpoint `POST /chat` |
+| `fastapi` | 0.136.1 | Servidor HTTP — endpoints `POST /chat`, `GET /stats` |
 | `uvicorn` | 0.46.0 | ASGI server para correr FastAPI |
+| `slowapi` | 0.1.9 | Rate limiting del deploy público en Render |
 
 ### Validación y esquemas
 | Librería | Versión | Rol |
@@ -41,10 +42,26 @@ Antes de agregar una dependencia nueva, consultarlo.
 |---|---|---|
 | `langsmith` | 0.7.37 | Trazas de evals + feedback scores — degradación silenciosa sin API key |
 
-### Vectores (Capa 5A — en memoria)
+### Retrieval — Postgres/pgvector (Supabase)
 | Librería | Versión | Rol |
 |---|---|---|
-| `numpy` | — | Array de embeddings + cosine similarity en memoria |
+| `psycopg2-binary` | 2.9.11 | Cliente Postgres (queries de `rag_search`, `chat_logs`) |
+| `pgvector` | 0.4.1 | Tipo `vector` de Postgres desde Python |
+| `numpy` | 2.4.6 | Arrays de embeddings en el pipeline de ingesta |
+| `langgraph-checkpoint-postgres` | 3.1.0 | Checkpointer de LangGraph sobre Postgres (reemplaza `MemorySaver`) |
+| `psycopg[binary]` | 3.3.4 | psycopg v3 + pool, requerido por el checkpointer — convive con psycopg2 de arriba |
+| `psycopg-pool` | 3.3.1 | Pool de conexiones para el checkpointer |
+
+### Ingesta
+| Librería | Versión | Rol |
+|---|---|---|
+| `pypdf` | 5.1.0 | Extracción de texto de los PDFs del corpus |
+
+### Evaluación
+| Librería | Versión | Rol |
+|---|---|---|
+| `ragas` | 0.4.3 | Métricas de generación (faithfulness, etc.) sobre el RAG real |
+| `langchain-community` | 0.4.1 | Pin explícito por compatibilidad con `ragas` — ver comentario en `requirements.txt` |
 
 ### Config y utilidades
 | Librería | Versión | Rol |
@@ -85,9 +102,6 @@ Usarlo para datos que nunca salen del sistema o no necesitan validación.
 ```
 src/config.py
 └── Settings(frozen=True)   ← config de arranque: solo se lee, no se valida contra input externo
-
-src/ingestion.py
-└── InMemoryIndex           ← estado interno del índice: chunks + embeddings en memoria
 ```
 
 **Por qué dataclass aquí:** más liviano, sin overhead de validación, suficiente para
@@ -104,25 +118,8 @@ estructuras donde controlamos todos los valores que entran.
 
 | Alternativa descartada | Usamos en cambio | Razón |
 |---|---|---|
-| Pinecone, Weaviate | Supabase/pgvector (Capa 5B) | Stack unificado: Supabase ya maneja Postgres + vector + auth |
+| Pinecone, Weaviate | Supabase/pgvector | Stack unificado: Supabase ya maneja Postgres + vector + auth |
 | Arize Phoenix | LangSmith | Integración nativa con LangGraph, tier gratuito, más relevante en el mercado |
 | CircleCI | GitHub Actions | Evitar cuenta extra; equivalente para este proyecto |
 | LlamaIndex, LangChain RAG | Implementación propia | El objetivo es entender el pipeline, no abstraerlo |
-| `faiss` | numpy (Capa 5A) | numpy es suficiente para aprender cosine similarity sin instalar C++ deps |
-
----
-
-## Dependencias pendientes de agregar a requirements.txt
-
-| Librería | Estado | Acción |
-|---|---|---|
-| `langsmith` | Instalada, en uso en `evals/`, **no está en requirements.txt** | Agregar |
-| `numpy` | En `ingestion.py`, **no está instalada ni en requirements.txt** | Instalar y agregar |
-
----
-
-## Stack planificado para Capa 5B (no instalar hasta llegar)
-
-- `supabase` — cliente Python de Supabase
-- `pgvector` — extensión de Postgres para vectores (se activa desde Supabase, no requiere pip)
-- Postgres checkpointer de LangGraph — reemplaza `MemorySaver`
+| `faiss` | pgvector | El índice vive en Postgres — no hace falta una librería de índice en memoria aparte |
