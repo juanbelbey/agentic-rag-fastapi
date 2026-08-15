@@ -31,12 +31,7 @@ MUTED = "#898781"
 
 st.set_page_config(page_title="Monitoring", page_icon="📊")
 st.title("📊 Monitoring")
-st.caption(
-    "Real metrics from the backend, read from Postgres. Cost is an "
-    "estimate based on the main chat LLM's tokens -- it doesn't include "
-    "the internal query rewriting call, so it comes in slightly below "
-    "the actual total cost."
-)
+st.caption("Real metrics from the backend, read live from Postgres -- not demo data.")
 
 try:
     response = requests.get(f"{BACKEND_URL}/stats", timeout=15)
@@ -60,6 +55,7 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total requests", len(chat_logs))
 col2.metric("Average latency", f"{chat_logs['latency_ms'].mean() / 1000:.1f} s")
 col3.metric("Total estimated cost", f"${chat_logs['estimated_cost_usd'].sum():.4f}")
+col3.caption("Excludes the internal query-rewriting call, so it's slightly below the real total.")
 if not feedback.empty:
     positive_pct = (feedback["score"] >= 0.5).mean() * 100
     col4.metric("Positive feedback", f"{positive_pct:.0f}%")
