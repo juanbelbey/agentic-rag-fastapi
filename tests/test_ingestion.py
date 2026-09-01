@@ -1,11 +1,14 @@
-"""Tests unitarios de src/ingestion.py: chunk_text() y rrf().
+"""Tests unitarios de src/ingestion.py: chunk_text(), rrf() y _get_client().
 
-Ambas son funciones puras (sin red, sin costo, sin API key) -- a diferencia de
-embed_texts(), que si pega contra OpenAI y no se testea aca.
+chunk_text()/rrf() son funciones puras (sin red, sin costo, sin API key) -- a
+diferencia de embed_texts(), que si pega contra OpenAI y no se testea aca.
+_get_client() solo construye el objeto OpenAI (no hace ningun request), asi
+que se puede testear con una API key dummy sin costo ni red.
 """
 
 import pytest
 
+from src import ingestion
 from src.ingestion import chunk_text, rrf
 
 
@@ -81,3 +84,18 @@ class TestRRF:
         gap_k1 = dict(rrf(list_a, [], k=1))[1] - dict(rrf(list_a, [], k=1))[2]
         gap_k60 = dict(rrf(list_a, [], k=60))[1] - dict(rrf(list_a, [], k=60))[2]
         assert gap_k1 > gap_k60
+
+
+# ─── _get_client() ────────────────────────────────────────────────────────────
+
+class TestGetClient:
+    def test_client_has_explicit_max_retries(self, monkeypatch):
+        # Antes de la Fase 2 (agent reliability) el cliente se creaba sin
+        # max_retries, asi que quedaba en manos del default implicito del SDK
+        # de openai -- este test fija esa decision como algo explicito.
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-dummy")
+        monkeypatch.setattr(ingestion, "_client", None)
+
+        client = ingestion._get_client()
+
+        assert client.max_retries == ingestion._MAX_RETRIES

@@ -1,0 +1,345 @@
+{
+  "generated_at": "2026-09-01T17:33:21.087541",
+  "results": [
+    {
+      "id": "c001",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué botón se debe presionar para realizar un ajuste a cero digital en un área peligrosa?",
+      "expected_answer": "Para realizar un ajuste a cero digital en un área peligrosa, se debe presionar el botón de ajuste a cero (Digital zero button) mientras el transmisor está a presión cero.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g013",
+      "agent_answer": "Para realizar un ajuste a cero digital en un área peligrosa, debes presionar el botón de \"Digital Zero\" (ajuste a cero digital) en el transmisor cuando este esté a cero presión. Es importante que el transmisor esté lo suficientemente cerca de cero al momento de presionar el botón, ya que si no, el comando puede fallar debido a una corrección excesiva. \n\nEl procedimiento es el siguiente:\n1. Afloja la etiqueta superior del transmisor para exponer los botones.\n2. Presiona y mantén presionado el botón de \"Digital Zero\" durante al menos dos segundos y luego suéltalo para realizar el ajuste a cero digital.\n\nEsta información se encuentra en el manual de Emerson Rosemount 3051 (fuente: \"emerson_rosemount-3051_manual_en.pdf\").",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c002",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Cuáles son algunas de las unidades que se pueden seleccionar para medir la presión en el SITRANS P300?",
+      "expected_answer": "Las unidades que se pueden seleccionar para medir la presión en el SITRANS P300 son:\n\n- mbar\n- bar\n- mm columna de agua (4 °C/39 °F)\n- pulgada columna de agua (4 °C/39 °F)\n- ATM\n- Torr\n- g/cm²\n- kg/cm²\n- MPa\n- kPa\n- Pa\n- psi\n- mm columna de mercurio\n- mm columna de agua (20 °C/68 °F)\n- pie columna de agua (20 °C/68 °F)\n- pulgada columna de mercurio\n- pulgada columna de agua (20 °C/68 °F)",
+      "source": "siemens_sitrans-p300_manual_es.pdf",
+      "golden_set_id": "g014",
+      "agent_answer": "En el SITRANS P300, se pueden seleccionar varias unidades para medir la presión, incluyendo:\n\n- Presión relativa (g)\n- Presión absoluta (a)\n- psi (libras por pulgada cuadrada)\n\nLas configuraciones específicas de rango de medición y las unidades disponibles pueden variar según el modelo y la configuración del dispositivo. Para más detalles, puedes consultar el manual de servicio del SITRANS P300 (Siemens, 2005) donde se describen las especificaciones técnicas y las opciones de configuración disponibles. \n\nFuente: [siemens_sitrans-p300_manual_es.pdf](https://www.siemens.com/global/en.html)",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c003",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué tipo de advertencia se muestra si hay un problema con los datos del usuario que no son críticos?",
+      "expected_answer": "La advertencia que se muestra si hay un problema con los datos del usuario que no son críticos es: \"Status: Advisory\". Esto indica que un parámetro escrito por el usuario no coincide con el valor esperado y se representa en la pantalla LCD y la pantalla de la Interfaz de Operador Local (LOI) como \"MEMRY WARN\". Se recomienda confirmar y corregir todos los parámetros listados en la Información del Dispositivo, realizar un reinicio del dispositivo y, si es necesario, reemplazar el transmisor de presión.",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g015",
+      "agent_answer": "Si hay un problema con los datos del usuario que no son críticos, se mostrará una advertencia de \"Non-Critical User Data Warning\" en la pantalla LCD del transmisor. Esto indica que un parámetro escrito por el usuario no coincide con el valor esperado. \n\nLas acciones recomendadas son:\n1. Confirmar y corregir todos los parámetros listados en la Información del Dispositivo.\n2. Realizar un reinicio del dispositivo.\n3. Reemplazar el transmisor de presión si es necesario.\n\nEsta información se encuentra en el manual de Emerson Rosemount 2051 (Referencia: 00809-0100-4107, noviembre de 2024).",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c004",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Cuál es el rango de salida analógica que se debe ajustar al realizar un trim en el transmisor?",
+      "expected_answer": "El rango de salida analógica que se debe ajustar al realizar un trim en el transmisor es de 4-20 mA (1-5 Vdc).",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g016",
+      "agent_answer": "El rango de salida analógica que se debe ajustar al realizar un trim en el transmisor generalmente se establece en 4 mA para el punto de inicio de la medición y 20 mA para el punto final de la medición. Esto es aplicable a varios transmisores, incluyendo los de Emerson y Siemens.\n\nPor ejemplo, en el caso de los transmisores de Emerson, el procedimiento de ajuste de cero analógico establece la salida analógica en 4 mA. Para el ajuste de fin de medición, se aplica la presión máxima esperada, que generará una salida de 20 mA (Emerson Rosemount 2051 Quick Start).\n\nEn el caso de los transmisores Siemens SITRANS P300, se establece el inicio de la medición a 4 mA aplicando una presión de entrada mínima y el fin de la medición a 20 mA aplicando la presión máxima esperada (Siemens SITRANS P300 Manual).\n\nSi necesitas más detalles sobre un modelo específico o un procedimiento en particular, házmelo saber.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c005",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué se debe verificar en la conexión de presión del transmisor antes de proceder a su mantenimiento?",
+      "expected_answer": "Se debe verificar la conexión de presión del transmisor para asegurarse de que no esté obstruida y que los diafragmas aislantes no estén dañados.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g017",
+      "agent_answer": "Antes de proceder al mantenimiento de un transmisor de presión, se deben verificar los siguientes aspectos en la conexión de presión:\n\n1. **Condiciones de la Conexión**:\n   - Asegúrese de que el espacio para la conexión esté seco.\n   - Verifique que la caja y las conexiones al proceso no presenten fugas ni puntos no estancos que puedan permitir la salida del aceite de relleno o del fluido que se mide.\n   - Compruebe si la caja tiene daños críticos.\n   - Asegúrese de que el cable de conexión esté bien conectado y no esté dañado. (Fuente: Siemens SITRANS P DS III/P410 Manual)\n\n2. **Pruebas de Calibración**:\n   - Aplique presión y verifique que la presión digital coincida con la presión aplicada. Si no coincide, realice un ajuste digital.\n   - Verifique que la salida analógica reportada coincida con la salida analógica en vivo. Si no coinciden, realice un ajuste de salida analógica. (Fuente: Emerson Rosemount 2051 Manual)\n\nEstas verificaciones son cruciales para asegurar el correcto funcionamiento del transmisor y evitar problemas durante el mantenimiento.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c006",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Cuál es el primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta?",
+      "expected_answer": "El primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta es desactivar la función de seguridad y tomar las acciones apropiadas para evitar un disparo falso.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g037",
+      "agent_answer": "El primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta es \"bypassear la función de seguridad y tomar las medidas adecuadas para evitar un disparo falso\". Esto es crucial para garantizar que la verificación se realice de manera segura y sin interrupciones inesperadas en el sistema.\n\nEsta información proviene del manual de Emerson Rosemount (2051) y se detalla en el procedimiento para verificar la salida de corriente de alarmas. \n\nReferencia: Emerson Rosemount 2051 Manual.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c007",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué pasos se deben seguir para ajustar el inicio de escala en el cabezal de medición?",
+      "expected_answer": "Para ajustar el inicio de escala en el cabezal de medición, se debe realizar el ajuste gradualmente entre los límites de medida establecidos.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g038",
+      "agent_answer": "Para ajustar el inicio de escala en el cabezal de medición, puedes seguir estos pasos según el manual de Siemens Sitrans:\n\n1. **Ajuste el modo 5** en el dispositivo.\n2. **Ajuste el valor de presión del inicio de escala**.\n3. **Guarde el ajuste** presionando la tecla [M].\n\nEste procedimiento permite establecer el inicio de la medición sin necesidad de una presión de referencia. Es importante tener en cuenta que los cambios realizados en este modo solo afectan la escala de presión y no la curva característica personalizada.\n\n**Fuente**: Siemens Sitrans P DS III Manual (p. 91).",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c008",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué pasos se deben seguir para permitir la reducción de la tolerancia a fallos en aparatos complejos?",
+      "expected_answer": "Para permitir la reducción de la tolerancia a fallos en aparatos complejos, se deben seguir los siguientes pasos, según la norma IEC 61511-1, sección 11.4.4:\n\n1. Asegurar que el aparato está validado por la experiencia adquirida.\n2. Garantizar que el usuario solo puede configurar parámetros relativos al proceso, tales como el rango de ajuste, la dirección de la señal en caso de fallo y los valores límite.\n3. Bloquear el nivel de configuración del firmware contra un manejo no autorizado.\n4. Verificar que la función tenga una solicitud de SIL inferior a 4.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g039",
+      "agent_answer": "He creado un ticket para tu consulta sobre los pasos para permitir la reducción de la tolerancia a fallos en aparatos complejos, ya que no tengo información específica sobre este tema en la documentación disponible. Un técnico humano revisará tu solicitud.",
+      "tools_used": [
+        "create_ticket"
+      ]
+    },
+    {
+      "id": "c009",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué deben hacer si no hay señales de salida y la pantalla no es visible?",
+      "expected_answer": "Si no hay señales de salida y la pantalla no es visible, se deben realizar los siguientes pasos:\n\n1. Verificar la fuente de alimentación en los terminales 1 y 2.\n2. Revisar el fusible del dispositivo (2 A lento / 250 V).\n3. Si los problemas persisten, puede ser que la electrónica de medición esté defectuosa; en este caso, se deben ordenar las piezas de repuesto.",
+      "source": "endresshauser_promag-55_manual_en.pdf",
+      "golden_set_id": "g040",
+      "agent_answer": "Si no hay señales de salida y la pantalla no es visible, se recomienda seguir estos pasos:\n\n1. **Verificar la fuente de alimentación**: Asegúrate de que la alimentación eléctrica esté conectada correctamente a los terminales correspondientes.\n2. **Comprobar el fusible del dispositivo**: Verifica si el fusible está en buen estado. Para dispositivos que operan entre 20 a 260 V AC y 20 a 64 V DC, se requiere un fusible de 2 A lento / 250 V.\n3. **Revisar la electrónica de medición**: Si la pantalla sigue sin mostrar nada, puede que la electrónica de medición esté defectuosa y será necesario solicitar piezas de repuesto.\n\nEsta información se encuentra en el manual del Endress+Hauser ProMag 55 (fuente: endresshauser_promag-55_manual_en.pdf).",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c010",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Cómo se puede representar un carácter no soportado en la interfaz?",
+      "expected_answer": "Un carácter no soportado en la interfaz se representará como un asterisco \"*\".",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g041",
+      "agent_answer": "En el contexto de la interfaz de los transmisores de Emerson, si se ingresa un carácter que no es soportado, este se mostrará como un asterisco \"*\". Esto ocurre en el Local Operator Interface (LOI) cuando el texto actual contiene un carácter que la interfaz no puede mostrar (fuente: Emerson Rosemount 3051 Manual).\n\nSi tienes más preguntas o necesitas información adicional, no dudes en preguntar.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c011",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene que la temperatura ambiente admisible sea de -40 a +80 °C para la operación del transmisor?",
+      "expected_answer": "La temperatura ambiente admisible de -40 a +80 °C implica que el transmisor puede operar en una amplia gama de condiciones ambientales, permitiendo su uso en entornos extremos tanto de frío como de calor. Esto asegura la funcionalidad y fiabilidad del dispositivo en diversas aplicaciones, incluidos lugares donde las variaciones de temperatura pueden ser significativas. Además, la especificación cumple con los requisitos de seguridad intrínseca y envolvente antideflagrante, garantizando su seguridad en aplicaciones donde existe riesgo de explosiones.",
+      "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+      "golden_set_id": "g025",
+      "agent_answer": "La temperatura ambiente admisible de -40 a +80 °C para la operación de un transmisor tiene varias implicaciones importantes:\n\n1. **Rango de Operación**: Este rango permite que el transmisor funcione en una amplia variedad de condiciones ambientales, lo que es crucial en aplicaciones municipales donde las temperaturas pueden variar significativamente. Esto asegura que el dispositivo pueda operar en climas fríos y cálidos sin comprometer su rendimiento.\n\n2. **Estabilidad y Precisión**: Mantenerse dentro de este rango de temperatura es esencial para garantizar la estabilidad y precisión de las mediciones. Temperaturas fuera de este rango pueden afectar la calibración del dispositivo, lo que podría resultar en lecturas incorrectas.\n\n3. **Durabilidad y Fiabilidad**: Un rango de temperatura amplio indica que el transmisor está diseñado para ser robusto y fiable en condiciones adversas. Esto es especialmente importante en aplicaciones de agua potable y saneamiento, donde la fiabilidad es crítica para el funcionamiento continuo del sistema.\n\n4. **Condiciones de Instalación**: Los operadores deben considerar la ubicación de instalación del transmisor para evitar exposición directa a fuentes de calor o frío extremo, lo que podría llevar a que el dispositivo opere fuera de su rango especificado.\n\n5. **Requerimientos de Mantenimiento**: Con un rango de temperatura amplio, es posible que se requieran menos intervenciones de mantenimiento relacionadas con el clima, lo que puede reducir costos operativos a largo plazo.\n\nEstas implicaciones son fundamentales para asegurar un funcionamiento eficiente y efectivo del transmisor en sistemas de medición de presión, caudal y temperatura en aplicaciones municipales.\n\nFuente: Siemens SITRANS P320/P420 Datasheet (siemens_sitrans-p320-p420_datasheet_es.pdf).",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c012",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Por qué es importante familiarizarse con el funcionamiento del aparato antes de usarlo?",
+      "expected_answer": "Es importante familiarizarse con el modo de funcionamiento del aparato para garantizar un manejo correcto. Esto asegura que el usuario pueda poner en servicio y utilizar el dispositivo adecuadamente, evitando errores en la instalación y puesta en marcha.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g026",
+      "agent_answer": "Familiarizarse con el funcionamiento de un aparato antes de usarlo es crucial por varias razones:\n\n1. **Seguridad**: Conocer las funciones y limitaciones del equipo ayuda a prevenir accidentes y lesiones. Cada instrumento tiene características específicas que deben ser entendidas para su uso seguro.\n\n2. **Precisión**: Entender cómo funciona el aparato permite obtener mediciones más precisas y confiables. Esto es especialmente importante en aplicaciones críticas como el monitoreo de sistemas de agua potable y saneamiento.\n\n3. **Mantenimiento adecuado**: Saber cómo operar el equipo facilita la identificación de problemas y la realización de un mantenimiento preventivo adecuado, lo que puede prolongar la vida útil del instrumento.\n\n4. **Eficiencia**: Familiarizarse con el aparato permite un uso más eficiente, optimizando el tiempo y los recursos durante las operaciones.\n\n5. **Interpretación de datos**: Comprender el funcionamiento del aparato ayuda a interpretar correctamente los datos que se obtienen, lo que es esencial para la toma de decisiones informadas en la gestión de sistemas de agua.\n\nEn resumen, la familiarización con el equipo es fundamental para garantizar un uso seguro, eficiente y efectivo, así como para asegurar la calidad de los resultados obtenidos.",
+      "tools_used": []
+    },
+    {
+      "id": "c013",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene usar un sistema que no es compatible con dispositivos HART Revision 7?",
+      "expected_answer": "Usar un sistema que no es compatible con dispositivos HART Revision 7 puede llevar a la imposibilidad de establecer comunicación adecuada entre el sistema y los dispositivos, afectando así la capacidad de monitorear y configurar el dispositivo correctamente. Es fundamental confirmar la capacidad HART del sistema que se utiliza antes de la puesta en marcha e instalación para evitar problemas de comunicación.",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g027",
+      "agent_answer": "Usar un sistema que no es compatible con dispositivos HART Revision 7 puede tener varias implicaciones:\n\n1. **Limitaciones en la comunicación**: Los sistemas que no son compatibles con HART Revision 7 pueden no ser capaces de comunicarse adecuadamente con dispositivos que utilizan esta versión. Esto puede resultar en una funcionalidad limitada, ya que el sistema podría cargar un menú genérico con capacidades reducidas (Emerson, \"Manual de operación y mantenimiento\", 2024).\n\n2. **Acceso a funciones avanzadas**: HART Revision 7 ofrece características adicionales y mejoras en la comunicación que no están disponibles en versiones anteriores, como HART Revision 5. Esto incluye la capacidad de ajustar parámetros de medición sin necesidad de aplicar presión, así como la compensación del punto cero (Siemens, \"Instrucciones de servicio SITRANS P300\", 2005).\n\n3. **Dificultades en la configuración**: Si el equipo no puede comunicarse con dispositivos HART Revision 7, puede ser necesario realizar ajustes manuales o utilizar herramientas de configuración específicas para cambiar entre versiones, lo que puede complicar el proceso de configuración y mantenimiento (Emerson, \"Manual de operación y mantenimiento\", 2024).\n\n4. **Impacto en la interoperabilidad**: La falta de compatibilidad puede afectar la interoperabilidad entre diferentes dispositivos de distintos fabricantes, limitando la capacidad de integrar y gestionar un sistema de control más amplio que incluya dispositivos HART de diversas versiones.\n\nEn resumen, la incompatibilidad con HART Revision 7 puede resultar en una funcionalidad reducida, limitaciones en la configuración y un impacto negativo en la interoperabilidad de los dispositivos en un sistema de control.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c014",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales?",
+      "expected_answer": "Una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales implica que el transmisor ha fallado en la verificación de su funcionamiento correcto. Esto puede resultar en una incorrecta medición del flujo, lo que afectaría la precisión del sistema de monitoreo. En este caso, el resultado de la prueba del medidor de flujo se consideraría como \"FALLADO\", indicando que el dispositivo no está operando conforme a las especificaciones establecidas.",
+      "source": "emerson_rosemount-8732em_manual_en.pdf",
+      "golden_set_id": "g028",
+      "agent_answer": "Una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales puede tener varias implicaciones:\n\n1. **Funcionamiento Incorrecto**: Si el dispositivo presenta una desviación significativa, puede no estar midiendo correctamente, lo que podría llevar a decisiones erróneas basadas en datos incorrectos. Esto es crítico en sistemas de agua potable y saneamiento, donde la precisión es vital para la seguridad y el cumplimiento normativo.\n\n2. **Necesidad de Calibración**: Una desviación fuera de los límites aceptables sugiere que el instrumento necesita ser recalibrado. Esto puede implicar un proceso de ajuste que podría ser necesario realizar de inmediato para restaurar la precisión del dispositivo.\n\n3. **Impacto en el Proceso**: Dependiendo del tipo de medición (presión, caudal, temperatura), una desviación puede afectar el rendimiento del sistema, como la eficiencia de las bombas, el tratamiento del agua o la distribución del flujo.\n\n4. **Revisión de Mantenimiento**: Una desviación inusual puede indicar que el instrumento está sufriendo desgaste o daño, lo que podría requerir una revisión más exhaustiva o mantenimiento preventivo.\n\nSegún el manual de Emerson, se establece que el resultado de la verificación de un medidor debe estar dentro de un porcentaje específico de desviación de los parámetros de prueba originales. Si la lectura está fuera de este rango, el medidor debe ser considerado como \"Fallido\" y requerirá atención (Emerson Rosemount 8732EM Manual, 2024).\n\nEs crucial realizar un seguimiento regular de las calibraciones y mantener registros de las desviaciones para asegurar la integridad del sistema de medición.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c015",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Cuál es una de las funciones que permite la parametrización remota del SITRANS P420?",
+      "expected_answer": "Una de las funciones que permite la parametrización remota del SITRANS P420 es la función \"Remote Safety Handling\", que permite conectar y validar la función SIL de forma remota a través de SIMATIC PDM, lo que conlleva un ahorro de tiempo y costes al eliminar la necesidad de desplazamientos y controles in situ.",
+      "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+      "golden_set_id": "g029",
+      "agent_answer": "Una de las funciones que permite la parametrización remota del SITRANS P420 es el ajuste de los valores inferior y superior del rango de medición. Además, se pueden realizar ajustes como la corrección del cero, la selección de la curva característica y el bloqueo de botones, entre otros. Estas funciones son accesibles a través de la comunicación HART, lo que facilita la configuración y diagnóstico del dispositivo de forma remota. \n\nFuente: Siemens SITRANS P320/P420 Datasheet.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c016",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿El transmisor Rosemount 3051 soporta comunicación Modbus?",
+      "note": "Verificado por busqueda de texto sobre el PDF real: el manual del Rosemount 3051 no menciona Modbus en ningun lado (si menciona Bluetooth/wireless/Profibus, para otras capacidades). Modbus si aparece en el manual del 8732EM, otro producto distinto.",
+      "agent_answer": "El transmisor Rosemount 3051 no soporta comunicación Modbus. Sin embargo, es compatible con el protocolo HART. En su configuración estándar, el transmisor se establece en la dirección cero (0) para operar con una señal de salida analógica de 4-20 mA. Para activar la comunicación en modo multidrop, es necesario cambiar la dirección del transmisor a un número del 1 al 63, lo que desactiva la salida analógica de 4-20 mA y la convierte en 4 mA. Esto permite la comunicación de mensajes HART, que pueden incluir señales de fallo en transmisores en modo multidrop (fuente: Emerson Rosemount 3051 Manual).\n\nSi necesitas más información sobre cómo configurar o utilizar el protocolo HART, házmelo saber.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c017",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo se configura el protocolo CANopen en estos transmisores?",
+      "note": "Verificado por busqueda de texto: 'canopen' no aparece en ninguno de los 11 documentos del corpus real.",
+      "agent_answer": "No se encontró información específica sobre la configuración del protocolo CANopen para los transmisores de Emerson, Rosemount, Siemens o Endress+Hauser en la documentación recuperada. Sin embargo, se menciona que algunos de estos dispositivos utilizan el protocolo HART para la comunicación.\n\nPara configurar el protocolo CANopen, generalmente se requiere acceder a la configuración del dispositivo a través de un software específico o un comunicador compatible. Los pasos exactos pueden variar según el modelo y la marca del transmisor.\n\nDado que no se encontró información específica, te recomendaría consultar el manual del usuario del dispositivo en particular o contactar al soporte técnico del fabricante para obtener instrucciones precisas sobre la configuración de CANopen.\n\nSi necesitas asistencia adicional o si hay un problema físico con el equipo, puedo crear un ticket para que un técnico humano se encargue. ¿Te gustaría que hiciera eso?",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c018",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿El SITRANS P300 tiene conectividad Bluetooth?",
+      "note": "Verificado por busqueda de texto: el manual del SITRANS P300 no menciona Bluetooth, WiFi ni Profibus en ningun lado.",
+      "agent_answer": "El SITRANS P300 no cuenta con conectividad Bluetooth. Este dispositivo utiliza comunicación HART para la transmisión de datos, lo que permite la conexión con comunicadores HART y sistemas de control compatibles. La información sobre su comunicación y características se puede encontrar en el manual de servicio del SITRANS P300 (Referencia A5E00359576-02, edición 06/2005) donde se detalla que la comunicación se realiza a través del protocolo HART, pero no se menciona Bluetooth como opción de conectividad. \n\nSi necesitas más información sobre el SITRANS P300 o su configuración, házmelo saber.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c019",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Cuál es el rango de presión del Rosemount 8800?",
+      "note": "Producto real de Emerson, pero no es ninguno de los 4 documentos Emerson ingeridos (2051, 3051 manual y quickstart, 8732EM).",
+      "agent_answer": "El rango de presión del transmisor Rosemount 8800 no se encuentra explícitamente en la información recuperada. Sin embargo, en general, los transmisores de presión de la serie Rosemount suelen tener rangos que varían dependiendo del modelo específico y de la configuración.\n\nPara obtener información precisa sobre el rango de presión del Rosemount 8800, te recomendaría consultar el manual específico de ese modelo o la documentación técnica proporcionada por Emerson. Si necesitas asistencia adicional o no puedes encontrar el manual, puedo ayudarte a crear un ticket para que un técnico lo revise.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c020",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo calibro un transmisor Yokogawa EJA110?",
+      "note": "Marca real (Yokogawa), pero ninguno de los 3 fabricantes documentados en el corpus (Emerson/Rosemount, Siemens Sitrans, Endress+Hauser) es Yokogawa.",
+      "agent_answer": "No encontré información específica sobre la calibración del transmisor Yokogawa EJA110 en la documentación disponible. He creado un ticket para escalar esta consulta y obtener asistencia adicional. Si necesitas más ayuda o información sobre otro tema, no dudes en preguntar.",
+      "tools_used": [
+        "rag_search",
+        "create_ticket"
+      ]
+    },
+    {
+      "id": "c021",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Qué mantenimiento requiere el sensor FieldSense FS-200?",
+      "note": "FieldSense es una marca ficticia del corpus SINTETICO (docs/pdfs_synthetic/), usada para reproducibility. Nunca deberia aparecer al buscar contra el corpus real.",
+      "agent_answer": "El sensor FieldSense FS-200, al igual que otros dispositivos de medición, requiere un mantenimiento básico para asegurar su correcto funcionamiento. Según la documentación técnica, el sistema de medida del separador generalmente no necesita mantenimiento, pero si se mide un medio que esté sucio, viscoso o cristalizante, es recomendable limpiar las membranas de vez en cuando. Para esto, se debe eliminar cualquier incrustación utilizando un disolvente adecuado, evitando detergentes que puedan corroer el material y teniendo cuidado de no dañar las membranas con herramientas afiladas.\n\nAdemás, se sugiere realizar inspecciones regulares de las juntas y definir un intervalo de mantenimiento basado en el uso del aparato y las condiciones específicas del entorno de instalación (siendo posible que este intervalo varíe según la resistencia a la corrosión y otros factores).\n\nEs importante seguir las instrucciones del fabricante para asegurar la seguridad y el correcto funcionamiento del dispositivo durante su vida útil.\n\n**Fuente:** Siemens SITRANS P DS III/P410 Manual, A5E00053220-10.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c022",
+      "answerable": false,
+      "category": "fuera_de_dominio",
+      "expected_behavior": "abstain",
+      "question": "¿Cuál es la capital de Francia?",
+      "agent_answer": "La capital de Francia es París. Sin embargo, no puedo ayudar con preguntas que no estén relacionadas con soporte técnico para sistemas municipales de agua potable y saneamiento. Si tienes alguna consulta sobre instrumentación de campo o equipos relacionados, estaré encantado de ayudarte.",
+      "tools_used": []
+    },
+    {
+      "id": "c023",
+      "answerable": false,
+      "category": "fuera_de_dominio",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo configuro las notificaciones de Windows 11?",
+      "agent_answer": "Lo siento, pero mi enfoque está en brindar soporte técnico relacionado con sistemas municipales de agua potable y saneamiento. Para consultas sobre Windows 11, te recomendaría buscar en la documentación oficial de Microsoft o en foros especializados. Si tienes alguna pregunta relacionada con instrumentación de campo o equipos específicos, estaré encantado de ayudarte.",
+      "tools_used": []
+    },
+    {
+      "id": "c024",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Cómo lo arreglo?",
+      "note": "No especifica que equipo ni que falla. Comportamiento esperado distinto al resto: pedir aclaracion, no necesariamente decir 'no tengo informacion'.",
+      "agent_answer": "Para poder ayudarte, necesito más información sobre el problema específico que estás enfrentando. Por favor, proporciona detalles sobre el equipo o instrumento que está fallando, así como cualquier código de error que estés viendo o síntomas del problema.",
+      "tools_used": []
+    },
+    {
+      "id": "c025",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Qué falla tiene el equipo?",
+      "note": "No especifica cual equipo ni sintoma. Mismo criterio que c024.",
+      "agent_answer": "Para poder ayudarte a identificar la falla del equipo, necesito más información específica sobre el problema que estás experimentando. Por favor, proporciona detalles como el tipo de instrumento, cualquier código de error que aparezca, o síntomas específicos que hayas notado.",
+      "tools_used": []
+    },
+    {
+      "id": "c026",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Cuál es la configuración correcta?",
+      "note": "No especifica transmisor ni parametro. Mismo criterio que c024.",
+      "agent_answer": "Para configurar correctamente un transmisor de presión, caudal o temperatura, puedes seguir los siguientes procedimientos según el fabricante:\n\n1. **Siemens SITRANS P300**:\n   - Para establecer la atenuación eléctrica en 0 segundos:\n     1. Ajusta el modo 4.\n     2. Presiona las teclas <UP> y <DOWN> simultáneamente.\n     3. Guarda los datos pulsando la tecla <MODE>.\n   - Esto establece la atenuación eléctrica en 0 segundos, lo que puede ser necesario para ciertas aplicaciones. (Fuente: Siemens SITRANS P300 Manual)\n\n2. **Emerson Rosemount 2051**:\n   - Para verificar la configuración del dispositivo utilizando el AMS Device Manager:\n     1. Haz clic derecho en el dispositivo y selecciona \"Configuration Properties\".\n     2. Navega por las pestañas para revisar los datos de configuración del transmisor.\n     3. Verifica los parámetros como Tag, Unidades, Función de transferencia, Niveles de alarma, Variable primaria, Valores de rango y Damping.\n   - Esto asegura que los valores están configurados como se espera. (Fuente: Emerson Rosemount 2051 Manual)\n\n3. **Emerson Rosemount 3051**:\n   - Para configurar el volumen:\n     - Utiliza el método \"Configure Tank\" para que tu transmisor de presión emita en unidades de volumen. Puedes seleccionar entre cinco geometrías de tanque estándar o configurar el dispositivo con una tabla de estratificación para crear una relación entre el nivel y el volumen.\n   - Esto permite calcular el volumen en función de la geometría del tanque. (Fuente: Emerson Rosemount 3051 Manual)\n\nSi necesitas información más específica o si hay un modelo particular que deseas configurar, por favor indícalo.",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c027",
+      "answerable": false,
+      "category": "mixta",
+      "expected_behavior": "partial_abstain",
+      "question": "¿Cuál es el rango de presión del Rosemount 3051 y cómo se activa su modo de comunicación satelital?",
+      "note": "Primera parte real y respondible (esta en el manual); segunda parte inventada (el Rosemount 3051 no tiene modo de comunicacion satelital).",
+      "agent_answer": "### Rango de Presión del Rosemount 3051\n\nEl Rosemount 3051 tiene varios rangos de presión, que incluyen:\n\n- **250 mbar / 25 kPa / 3.63 psi**\n- **600 mbar / 60 kPa / 8.70 psi**\n- **1600 mbar / 160 kPa / 23.21 psi**\n- **5 bar / 500 kPa / 72.52 psi**\n\nLa precisión de medida para estos rangos es de hasta 0.125% del rango ajustado, dependiendo del rango específico utilizado (fuente: [Emerson Rosemount 3051 Manual](https://www.emerson.com/documents/automation/rosemount-3051-manual-en-2024-07-00809-0100-4007-en-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-",
+      "tools_used": [
+        "rag_search"
+      ]
+    },
+    {
+      "id": "c028",
+      "answerable": false,
+      "category": "mixta",
+      "expected_behavior": "partial_abstain",
+      "question": "¿El SITRANS P300 mide caudal además de presión, y qué unidades usa para eso?",
+      "note": "El SITRANS P300 es un transmisor de presion, no mide caudal -- mezcla un producto real con una capacidad que no tiene.",
+      "agent_answer": "El SITRANS P300 puede medir tanto presión como caudal. En particular, es capaz de medir caudal volumétrico y caudal másico. Las unidades utilizadas para el caudal volumétrico pueden variar, pero típicamente incluyen litros por segundo (l/s) o metros cúbicos por hora (m³/h), dependiendo de la configuración específica del dispositivo.\n\nEsta información se encuentra en el manual técnico del SITRANS P300 (siemens_sitrans-p300_manual_es.pdf).",
+      "tools_used": [
+        "rag_search"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,419 @@
+{
+  "generated_at": "2026-09-01T17:09:00.732492",
+  "scored_cases": [
+    {
+      "id": "c001",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué botón se debe presionar para realizar un ajuste a cero digital en un área peligrosa?",
+      "expected_answer": "Para realizar un ajuste a cero digital en un área peligrosa, se debe presionar el botón de ajuste a cero (Digital zero button) mientras el transmisor está a presión cero.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g013",
+      "top_score": 0.5
+    },
+    {
+      "id": "c002",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Cuáles son algunas de las unidades que se pueden seleccionar para medir la presión en el SITRANS P300?",
+      "expected_answer": "Las unidades que se pueden seleccionar para medir la presión en el SITRANS P300 son:\n\n- mbar\n- bar\n- mm columna de agua (4 °C/39 °F)\n- pulgada columna de agua (4 °C/39 °F)\n- ATM\n- Torr\n- g/cm²\n- kg/cm²\n- MPa\n- kPa\n- Pa\n- psi\n- mm columna de mercurio\n- mm columna de agua (20 °C/68 °F)\n- pie columna de agua (20 °C/68 °F)\n- pulgada columna de mercurio\n- pulgada columna de agua (20 °C/68 °F)",
+      "source": "siemens_sitrans-p300_manual_es.pdf",
+      "golden_set_id": "g014",
+      "top_score": 0.5
+    },
+    {
+      "id": "c003",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué tipo de advertencia se muestra si hay un problema con los datos del usuario que no son críticos?",
+      "expected_answer": "La advertencia que se muestra si hay un problema con los datos del usuario que no son críticos es: \"Status: Advisory\". Esto indica que un parámetro escrito por el usuario no coincide con el valor esperado y se representa en la pantalla LCD y la pantalla de la Interfaz de Operador Local (LOI) como \"MEMRY WARN\". Se recomienda confirmar y corregir todos los parámetros listados en la Información del Dispositivo, realizar un reinicio del dispositivo y, si es necesario, reemplazar el transmisor de presión.",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g015",
+      "top_score": 0.5
+    },
+    {
+      "id": "c004",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Cuál es el rango de salida analógica que se debe ajustar al realizar un trim en el transmisor?",
+      "expected_answer": "El rango de salida analógica que se debe ajustar al realizar un trim en el transmisor es de 4-20 mA (1-5 Vdc).",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g016",
+      "top_score": 0.5
+    },
+    {
+      "id": "c005",
+      "answerable": true,
+      "category": "factual",
+      "question": "¿Qué se debe verificar en la conexión de presión del transmisor antes de proceder a su mantenimiento?",
+      "expected_answer": "Se debe verificar la conexión de presión del transmisor para asegurarse de que no esté obstruida y que los diafragmas aislantes no estén dañados.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g017",
+      "top_score": 0.5
+    },
+    {
+      "id": "c006",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Cuál es el primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta?",
+      "expected_answer": "El primer paso que debes seguir antes de verificar la salida de corriente de la alarma alta es desactivar la función de seguridad y tomar las acciones apropiadas para evitar un disparo falso.",
+      "source": "emerson_rosemount-3051_manual_en.pdf",
+      "golden_set_id": "g037",
+      "top_score": 0.5
+    },
+    {
+      "id": "c007",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué pasos se deben seguir para ajustar el inicio de escala en el cabezal de medición?",
+      "expected_answer": "Para ajustar el inicio de escala en el cabezal de medición, se debe realizar el ajuste gradualmente entre los límites de medida establecidos.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g038",
+      "top_score": 0.5
+    },
+    {
+      "id": "c008",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué pasos se deben seguir para permitir la reducción de la tolerancia a fallos en aparatos complejos?",
+      "expected_answer": "Para permitir la reducción de la tolerancia a fallos en aparatos complejos, se deben seguir los siguientes pasos, según la norma IEC 61511-1, sección 11.4.4:\n\n1. Asegurar que el aparato está validado por la experiencia adquirida.\n2. Garantizar que el usuario solo puede configurar parámetros relativos al proceso, tales como el rango de ajuste, la dirección de la señal en caso de fallo y los valores límite.\n3. Bloquear el nivel de configuración del firmware contra un manejo no autorizado.\n4. Verificar que la función tenga una solicitud de SIL inferior a 4.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g039",
+      "top_score": 0.5
+    },
+    {
+      "id": "c009",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Qué deben hacer si no hay señales de salida y la pantalla no es visible?",
+      "expected_answer": "Si no hay señales de salida y la pantalla no es visible, se deben realizar los siguientes pasos:\n\n1. Verificar la fuente de alimentación en los terminales 1 y 2.\n2. Revisar el fusible del dispositivo (2 A lento / 250 V).\n3. Si los problemas persisten, puede ser que la electrónica de medición esté defectuosa; en este caso, se deben ordenar las piezas de repuesto.",
+      "source": "endresshauser_promag-55_manual_en.pdf",
+      "golden_set_id": "g040",
+      "top_score": 0.5
+    },
+    {
+      "id": "c010",
+      "answerable": true,
+      "category": "procedimental",
+      "question": "¿Cómo se puede representar un carácter no soportado en la interfaz?",
+      "expected_answer": "Un carácter no soportado en la interfaz se representará como un asterisco \"*\".",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g041",
+      "top_score": 0.5
+    },
+    {
+      "id": "c011",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene que la temperatura ambiente admisible sea de -40 a +80 °C para la operación del transmisor?",
+      "expected_answer": "La temperatura ambiente admisible de -40 a +80 °C implica que el transmisor puede operar en una amplia gama de condiciones ambientales, permitiendo su uso en entornos extremos tanto de frío como de calor. Esto asegura la funcionalidad y fiabilidad del dispositivo en diversas aplicaciones, incluidos lugares donde las variaciones de temperatura pueden ser significativas. Además, la especificación cumple con los requisitos de seguridad intrínseca y envolvente antideflagrante, garantizando su seguridad en aplicaciones donde existe riesgo de explosiones.",
+      "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+      "golden_set_id": "g025",
+      "top_score": 0.5
+    },
+    {
+      "id": "c012",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Por qué es importante familiarizarse con el funcionamiento del aparato antes de usarlo?",
+      "expected_answer": "Es importante familiarizarse con el modo de funcionamiento del aparato para garantizar un manejo correcto. Esto asegura que el usuario pueda poner en servicio y utilizar el dispositivo adecuadamente, evitando errores en la instalación y puesta en marcha.",
+      "source": "siemens_sitrans-p-dsIII-p410_manual_es.pdf",
+      "golden_set_id": "g026",
+      "top_score": 0.5
+    },
+    {
+      "id": "c013",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene usar un sistema que no es compatible con dispositivos HART Revision 7?",
+      "expected_answer": "Usar un sistema que no es compatible con dispositivos HART Revision 7 puede llevar a la imposibilidad de establecer comunicación adecuada entre el sistema y los dispositivos, afectando así la capacidad de monitorear y configurar el dispositivo correctamente. Es fundamental confirmar la capacidad HART del sistema que se utiliza antes de la puesta en marcha e instalación para evitar problemas de comunicación.",
+      "source": "emerson_rosemount-2051_manual_en.pdf",
+      "golden_set_id": "g027",
+      "top_score": 0.5
+    },
+    {
+      "id": "c014",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Qué implicaciones tiene una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales?",
+      "expected_answer": "Una lectura de calibración que indique un porcentaje de desviación fuera de los parámetros originales implica que el transmisor ha fallado en la verificación de su funcionamiento correcto. Esto puede resultar en una incorrecta medición del flujo, lo que afectaría la precisión del sistema de monitoreo. En este caso, el resultado de la prueba del medidor de flujo se consideraría como \"FALLADO\", indicando que el dispositivo no está operando conforme a las especificaciones establecidas.",
+      "source": "emerson_rosemount-8732em_manual_en.pdf",
+      "golden_set_id": "g028",
+      "top_score": 0.5
+    },
+    {
+      "id": "c015",
+      "answerable": true,
+      "category": "inferencial",
+      "question": "¿Cuál es una de las funciones que permite la parametrización remota del SITRANS P420?",
+      "expected_answer": "Una de las funciones que permite la parametrización remota del SITRANS P420 es la función \"Remote Safety Handling\", que permite conectar y validar la función SIL de forma remota a través de SIMATIC PDM, lo que conlleva un ahorro de tiempo y costes al eliminar la necesidad de desplazamientos y controles in situ.",
+      "source": "siemens_sitrans-p320-p420_datasheet_es.pdf",
+      "golden_set_id": "g029",
+      "top_score": 0.5
+    },
+    {
+      "id": "c016",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿El transmisor Rosemount 3051 soporta comunicación Modbus?",
+      "note": "Verificado por busqueda de texto sobre el PDF real: el manual del Rosemount 3051 no menciona Modbus en ningun lado (si menciona Bluetooth/wireless/Profibus, para otras capacidades). Modbus si aparece en el manual del 8732EM, otro producto distinto.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c017",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo se configura el protocolo CANopen en estos transmisores?",
+      "note": "Verificado por busqueda de texto: 'canopen' no aparece en ninguno de los 11 documentos del corpus real.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c018",
+      "answerable": false,
+      "category": "relacionado_ausente",
+      "expected_behavior": "abstain",
+      "question": "¿El SITRANS P300 tiene conectividad Bluetooth?",
+      "note": "Verificado por busqueda de texto: el manual del SITRANS P300 no menciona Bluetooth, WiFi ni Profibus en ningun lado.",
+      "top_score": 0.6429
+    },
+    {
+      "id": "c019",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Cuál es el rango de presión del Rosemount 8800?",
+      "note": "Producto real de Emerson, pero no es ninguno de los 4 documentos Emerson ingeridos (2051, 3051 manual y quickstart, 8732EM).",
+      "top_score": 0.5
+    },
+    {
+      "id": "c020",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo calibro un transmisor Yokogawa EJA110?",
+      "note": "Marca real (Yokogawa), pero ninguno de los 3 fabricantes documentados en el corpus (Emerson/Rosemount, Siemens Sitrans, Endress+Hauser) es Yokogawa.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c021",
+      "answerable": false,
+      "category": "producto_no_documentado",
+      "expected_behavior": "abstain",
+      "question": "¿Qué mantenimiento requiere el sensor FieldSense FS-200?",
+      "note": "FieldSense es una marca ficticia del corpus SINTETICO (docs/pdfs_synthetic/), usada para reproducibility. Nunca deberia aparecer al buscar contra el corpus real.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c022",
+      "answerable": false,
+      "category": "fuera_de_dominio",
+      "expected_behavior": "abstain",
+      "question": "¿Cuál es la capital de Francia?",
+      "top_score": 0.5
+    },
+    {
+      "id": "c023",
+      "answerable": false,
+      "category": "fuera_de_dominio",
+      "expected_behavior": "abstain",
+      "question": "¿Cómo configuro las notificaciones de Windows 11?",
+      "top_score": 0.5
+    },
+    {
+      "id": "c024",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Cómo lo arreglo?",
+      "note": "No especifica que equipo ni que falla. Comportamiento esperado distinto al resto: pedir aclaracion, no necesariamente decir 'no tengo informacion'.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c025",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Qué falla tiene el equipo?",
+      "note": "No especifica cual equipo ni sintoma. Mismo criterio que c024.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c026",
+      "answerable": false,
+      "category": "ambigua",
+      "expected_behavior": "clarify",
+      "question": "¿Cuál es la configuración correcta?",
+      "note": "No especifica transmisor ni parametro. Mismo criterio que c024.",
+      "top_score": 0.5
+    },
+    {
+      "id": "c027",
+      "answerable": false,
+      "category": "mixta",
+      "expected_behavior": "partial_abstain",
+      "question": "¿Cuál es el rango de presión del Rosemount 3051 y cómo se activa su modo de comunicación satelital?",
+      "note": "Primera parte real y respondible (esta en el manual); segunda parte inventada (el Rosemount 3051 no tiene modo de comunicacion satelital).",
+      "top_score": 0.5
+    },
+    {
+      "id": "c028",
+      "answerable": false,
+      "category": "mixta",
+      "expected_behavior": "partial_abstain",
+      "question": "¿El SITRANS P300 mide caudal además de presión, y qué unidades usa para eso?",
+      "note": "El SITRANS P300 es un transmisor de presion, no mide caudal -- mezcla un producto real con una capacidad que no tiene.",
+      "top_score": 0.5
+    }
+  ],
+  "sweep": [
+    {
+      "threshold": 0.0,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.05,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.1,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.15,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.2,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.25,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.3,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.35,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.4,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.45,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.5,
+      "false_negatives": 0,
+      "false_negative_rate": 0.0,
+      "false_positives": 8,
+      "false_positive_rate": 1.0
+    },
+    {
+      "threshold": 0.55,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 1,
+      "false_positive_rate": 0.125
+    },
+    {
+      "threshold": 0.6,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 1,
+      "false_positive_rate": 0.125
+    },
+    {
+      "threshold": 0.65,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.7,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.75,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.8,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.85,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.9,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.95,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 1.0,
+      "false_negatives": 15,
+      "false_negative_rate": 1.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0
+    }
+  ]
+}

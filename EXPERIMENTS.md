@@ -93,6 +93,162 @@ golden set (`g002`, `g016`, `g029`) llegaron a `context_precision` **y**
 **Qué se decidió:** subir el default a `top_k=5` para alinear producción con
 lo medido. Ver sección RAGAS abajo para el resultado.
 
+### 2026-09-01 — Umbral de abstención sobre score RRF: descartado
+
+**Qué se probó:** `evals/critical_eval_set.json` (28 casos: 15 answerable
+curadas del golden set + 13 unanswerable nuevas, verificadas contra los PDFs
+reales con `pypdf` antes de escribirlas — ver `docs/PROJECT_CAPABILITY_AUDIT.md`,
+gap de evaluation reliability). Hipótesis: el score RRF del mejor chunk que
+devuelve `_hybrid_search()` separa preguntas con respuesta real en el corpus de
+preguntas sin ella, y un umbral fijo sobre ese score puede activar abstención
+en el agente. Barrido de 21 umbrales candidatos (0.00 a 1.00, paso 0.05) —
+`evals/abstention_threshold.py`.
+
+**Qué se encontró (hallazgo real, no positivo):** el score RRF **no separa
+nada** — 26 de los 28 casos (answerable y unanswerable por igual) dieron
+exactamente `0.5000`, sin importar si la pregunta tenía respuesta real en el
+corpus o era sobre la capital de Francia. Ningún umbral del barrido logra un
+punto intermedio: por debajo de 0.55 pasan el 100% de los casos (FN=0%,
+FP=100%); en 0.55+ se cortan el 100% de los answerable junto con casi todos
+los unanswerable (FN=100%). Es una función escalón, no una señal graduable.
+
+**Por qué pasa:** `_vector_search` siempre devuelve sus `top_k` vecinos más
+cercanos aunque ninguno sea realmente relevante — similitud coseno no tiene
+concepto de "no hay match", solo "esto es lo menos lejano". Ese resultado
+top-1 cae en rank 0 del lado vector, y RRF con `k=1` le asigna 1/(1+0+1)=0.5
+por el solo hecho de rankear primero — **RRF mide posición en el ranking
+fusionado, no similitud real**. La keyword search sí distingue mejor
+(devuelve vacío si el tsquery no matchea nada), pero su aporte al score fusionado
+es demasiado chico para mover la aguja salvo casos puntuales (`c018`: 0.6429).
+
+**Qué se decidió:** NO implementar abstención basada en umbral de score RRF —
+la señal no existe con la arquitectura de retrieval actual.
+
+**Segundo intento, mismo día — distancia coseno cruda de `_vector_search`:**
+mismo `critical_eval_set.json`, ahora con la distancia del vecino más cercano
+(antes de fusionar con keyword search), barrido adaptado al rango real
+observado (0.2534 a 0.8868). Esta vez sí hay una distribución continua real,
+no un escalón — pero con un techo claro: el mejor punto de balance (umbral
+≈0.44) todavía deja **5/15 (33%) falsos negativos** (answerable rechazadas) y
+**3/8 (37.5%) falsos positivos** (unanswerable aceptadas). Ningún umbral logra
+bajar los dos errores a la vez.
+
+**Por qué falla en un subconjunto específico:** el umbral separa bien
+`fuera_de_dominio` (`c022`, "capital de Francia", distancia 0.8868 — la más
+alta de las 28) pero falla sistemáticamente en `producto_no_documentado`:
+preguntas sobre el Rosemount 8800 o un Yokogawa EJA110 (`c019`/`c020`,
+distancia ~0.38) quedan **más cerca** que varias preguntas answerable reales
+(`c010`, 0.6273; `c012`, 0.4843) — porque el tema general (calibración de
+transmisores de presión) es semánticamente similar aunque el producto
+específico no esté documentado. La distancia coseno mide similitud temática,
+no verifica si el hecho puntual (este modelo, este protocolo) está
+realmente en el chunk.
+
+**Qué se decidió:** ningún corte numérico puro (RRF o distancia) alcanza para
+sostener la abstención por sí solo — la distancia ayuda con lo obviamente
+fuera de dominio pero no distingue "mismo tema, producto equivocado", que es
+justamente el caso más común de alucinación en este dominio. Sub-paso (e)
+queda pendiente de decidir con Juan: la evidencia apunta a usar la distancia
+como señal de apoyo (ej. anotar el chunk como "posible baja confianza" en el
+output de la tool) combinada con instrucción explícita en el prompt para que
+el LLM verifique el hecho puntual, no reemplazar el criterio semántico por un
+umbral automático.
+
+**Hipótesis intermedia de Juan, descartada con datos:** ¿usar el keyword
+search actual como segunda señal (si el término específico no aparece por
+keyword, descartar)? Se verificó con `_rewrite_query`/`_build_or_tsquery`
+sobre 3 casos reales (Rosemount 8800, Yokogawa EJA110, FieldSense FS-200): el
+tsquery arma un OR de TODAS las palabras de la pregunta reescrita
+(`'pressure | range | rosemount | 8800'`), así que matchea por palabras
+genéricas del dominio ("pressure", "range") sin que el término específico
+("8800") haya aparecido en ningún chunk — el rank resultante (0.0667) fue
+más alto que el de una pregunta real y válida (`c001`, rank 0.0533). El OR
+del keyword search (elegido a propósito para el bug de preguntas
+parafraseadas, ver arriba) no sirve para aislar términos específicos sin
+modificarlo — necesitaría un chequeo nuevo y separado (extraer el término
+identificador y verificar su presencia literal), no reusar el keyword search
+tal como está. Marcado como candidato futuro, no construido.
+
+### 2026-09-01 — Comportamiento real del agente completo ante el critical set
+
+**Qué se probó:** en vez de seguir midiendo señales de retrieval aisladas, se
+corrió el agente COMPLETO (`graph.invoke()`, LLM + `rag_search` reales) contra
+las 28 preguntas de `critical_eval_set.json` (`evals/critical_set_agent_check.py`)
+para ver si el criterio semántico del LLM (sin ningún cambio de prompt
+todavía) ya resuelve el problema de abstención en la práctica.
+
+**Qué se encontró (revisión manual de las 13 respuestas a preguntas
+unanswerable):**
+- **`relacionado_ausente` (3/3 correctas):** el agente declina limpio en los
+  3 casos (Modbus, CANopen, Bluetooth) sin inventar nada — "no soporta
+  comunicación Modbus... es compatible con HART", etc. El criterio semántico
+  ya funciona bien acá.
+- **`producto_no_documentado` (1/3 correcta, 1 dudosa, 1 alucinación real):**
+  Yokogawa EJA110 → declina y escala con `create_ticket` (correcto). Rosemount
+  8800 → dice que no está explícito pero igual generaliza ("los transmisores
+  de la serie Rosemount suelen tener rangos que..."). **FieldSense FS-200
+  (marca ficticia) → alucinación real: responde con instrucciones de
+  mantenimiento de OTRO producto (un separador de un manual Siemens) y las
+  presenta como propias del FS-200, citando la fuente real como si
+  respaldara la respuesta inventada.**
+- **`fuera_de_dominio` (1/2 — decisión de producto, no bug):** la pregunta de
+  Windows 11 se rechaza bien; la de "capital de Francia" la responde
+  (correctamente) y recién después aclara que su foco es soporte técnico.
+  No es un bug, es una decisión de alcance sin resolver: ¿debería negarse a
+  cualquier pregunta fuera de dominio aunque sea trivia inofensiva?
+- **`ambigua` (2/3 correctas):** "¿cómo lo arreglo?" y "¿qué falla tiene el
+  equipo?" piden aclaración correctamente. "¿Cuál es la configuración
+  correcta?" NO pide aclaración — responde con procedimientos de 3
+  fabricantes distintos sin preguntar cuál corresponde.
+- **`mixta` (0/2 — el hallazgo más serio):** SITRANS P300 (mide presión, no
+  caudal) → el agente afirma que sí mide caudal, con unidades inventadas,
+  citando el manual real como fuente de una capacidad que el producto no
+  tiene. Rosemount 3051 (rango real + "modo de comunicación satelital"
+  inventado) → responde bien la parte real pero ignora por completo la parte
+  inventada (ni la confirma ni la desmiente) **y además genera una URL de
+  cita corrupta** (un string de `-0-0-0-0-...` repetido cientos de veces) —
+  hallazgo separado, no relacionado con abstención: el prompt pide "citá la
+  fuente" pero `RAGResult.source` es solo un nombre de archivo, nunca una
+  URL, y el modelo fabrica un link que no existe en ningún lado del contexto.
+
+**Qué se decidió:** el criterio semántico actual SÍ funciona para el caso más
+fácil (tema totalmente ausente) pero falla de forma real en 3 patrones
+específicos: (1) generalizar desde productos similares en vez de decir "no
+tengo el dato de este modelo puntual", (2) no pedir aclaración ante preguntas
+genuinamente ambiguas con múltiples interpretaciones válidas, (3) verificar
+solo una parte de una pregunta con múltiples afirmaciones y quedarse callado
+o inventar en el resto. Sub-paso (e) se enfoca en reforzar el prompt contra
+estos 3 patrones puntuales (con ejemplos concretos, no instrucciones vagas) +
+corregir la instrucción de citación para que nunca fabrique una URL. Política
+de producto decidida con Juan: `fuera_de_dominio` se rechaza siempre, sin
+excepción (ni trivia inofensiva). Resultados completos en
+`evals/results/2026-09-01/17-33-21_critical_set_agent_check.json`.
+
+**Validación del fix (mismo día) — 4 prompt agregados a
+`prompts/system_prompt_direct_answer.txt`:** (1) no generalizar desde
+productos similares, (2) pedir aclaración ante ambigüedad real, (3) verificar
+cada parte de una pregunta multi-afirmación por separado, (4) citar solo
+nombre de documento, nunca URL. Re-corridos los 6 casos que habían fallado:
+
+| Caso | Antes | Después |
+|---|---|---|
+| `c019` (Rosemount 8800) | Generalizaba desde otros Rosemount | ✅ Declina limpio, sin generalizar |
+| `c021` (FieldSense FS-200) | Alucinaba mantenimiento de otro producto | ✅ Declina y escala con `create_ticket` |
+| `c022` (capital de Francia) | Respondía y después redirigía | ✅ Rechaza directo, sin responder |
+| `c026` (configuración sin especificar) | Respondía por los 3 fabricantes | ✅ Pide aclaración |
+| `c027` (Rosemount 3051 + "modo satelital" inventado) | Ignoraba la parte inventada en silencio, + URL corrupta | ⚠️ URL corregida (cita solo el nombre del PDF), pero ahora **responde la parte inventada** equiparándola a "multidrop" (real) como si validara la premisa de "modo satelital" — sigue mal, de otra forma |
+| `c028` (SITRANS P300 mide caudal) | Afirmaba que sí mide caudal, con unidades inventadas | ❌ Sigue afirmando que mide caudal (solo agrega "no se especifican las unidades exactas") |
+
+**Resultado: 4/6 arreglados, la categoría `mixta` (pregunta con una parte real
+y una inventada en la misma consulta) sigue sin resolverse** — el prompt
+engineering solucionó bien "tema totalmente ausente", "ambigüedad" y
+"generalización entre productos", pero no alcanza para separar de forma
+confiable una afirmación verdadera de una falsa dentro de la MISMA pregunta.
+Gap real y documentado, no oculto: la Fase 4 mejora la abstención de forma
+medible sin resolverla al 100% — mencionar esto explícitamente en cualquier
+conversación sobre el proyecto (mismo criterio que "no usar production-ready
+sin evidencia suficiente", ver `docs/PROJECT_CAPABILITY_AUDIT.md`).
+
 ---
 
 ## Generación (prompt, modelo, temperatura)

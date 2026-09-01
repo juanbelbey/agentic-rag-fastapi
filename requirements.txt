@@ -44,6 +44,11 @@ fpdf2==2.8.8
 # Configuracion
 python-dotenv==1.2.1
 
+# Retry/backoff ante errores transitorios de Postgres (Fase 2 - agent reliability).
+# Ya venia como dependencia transitiva de langchain/openai; se fija explicita porque
+# ahora el proyecto la importa y usa directamente en src/tools.py.
+tenacity==9.1.4
+
 # Tests
 pytest==9.0.3
 pytest-html==4.2.0

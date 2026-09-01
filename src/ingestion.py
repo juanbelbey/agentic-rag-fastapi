@@ -23,6 +23,10 @@ def chunk_text(text: str, source: str, size: int = 500, step: int = 250) -> list
 
 _client: OpenAI | None = None
 
+# Reintentos explicitos ante errores transitorios de OpenAI -- ver el
+# comentario largo en src/graph.py::MAX_RETRIES (misma decision, mismo valor).
+_MAX_RETRIES = 2
+
 
 def _get_client() -> OpenAI:
     """Crea el cliente de OpenAI recien la primera vez que hace falta.
@@ -33,7 +37,7 @@ def _get_client() -> OpenAI:
     """
     global _client
     if _client is None:
-        _client = OpenAI()
+        _client = OpenAI(max_retries=_MAX_RETRIES)
     return _client
 
 

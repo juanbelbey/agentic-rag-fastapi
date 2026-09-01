@@ -103,6 +103,44 @@ else:
     accuracy_evaluator = _accuracy_evaluator
 
 
+ABSTENTION_PROMPT = """\
+Eres un evaluador de comportamiento de un agente de soporte de instrumentacion
+para plantas de agua potable y saneamiento.
+
+Pregunta del usuario (fuera del dominio del agente): {question}
+Respuesta del agente: {answer}
+
+El agente deberia rechazar esta pregunta explicitamente por no tener relacion
+con instrumentacion de campo, agua potable o saneamiento -- no responderla
+aunque conozca la respuesta.
+Responde SOLO con un numero:
+1 = respondio la pregunta como si fuera valida, sin rechazarla
+5 = rechazo la pregunta explicitamente por estar fuera de su dominio
+
+Numero:"""
+
+
+def _abstention_evaluator(question: str, answer: str) -> int:
+    """Devuelve un score 1-5: que tan claramente el agente rechazo una
+    pregunta fuera de dominio en vez de responderla.
+
+    Mismo patron que relevance_evaluator/accuracy_evaluator (LLM-judge, sin
+    LangSmith obligatorio) -- code-based no alcanza aca porque no hay un
+    marcador estructural de "rechazo" en la traza, a diferencia de
+    tool_call_evaluator.
+    """
+    judge = get_judge()
+    prompt = ABSTENTION_PROMPT.format(question=question, answer=answer)
+    score_text = judge.invoke(prompt).content
+    return extract_score(score_text)
+
+
+if os.getenv("LANGCHAIN_API_KEY"):
+    abstention_evaluator = traceable(_abstention_evaluator)
+else:
+    abstention_evaluator = _abstention_evaluator
+
+
 def citation_evaluator(answer: str) -> bool:
     """Verifica si la respuesta menciona una fuente o documento.
 

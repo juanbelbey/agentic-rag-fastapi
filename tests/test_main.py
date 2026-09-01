@@ -9,6 +9,7 @@ el archivo. Cada test mockea via monkeypatch los globals que necesita
 """
 
 from fastapi.testclient import TestClient
+from langgraph.errors import GraphRecursionError
 
 from src import main
 
@@ -135,6 +136,48 @@ class TestChatEndpoint:
 
         response = client.post("/chat", json={"message": "hola", "thread_id": "t1"})
         assert response.status_code == 500
+
+    def test_agent_exception_logs_chat_error(self, monkeypatch):
+        # Antes de _log_chat(), un fallo de graph.invoke() no dejaba ninguna
+        # fila en chat_logs -- este test verifica que ahora si queda registrado.
+        class BrokenGraph:
+            def invoke(self, *args, **kwargs):
+                raise RuntimeError("boom")
+
+        fake_pool = FakePool()
+        monkeypatch.setattr(main, "settings", object())
+        monkeypatch.setattr(main, "graph", BrokenGraph())
+        monkeypatch.setattr(main, "pool", fake_pool)
+
+        response = client.post("/chat", json={"message": "hola", "thread_id": "t1"})
+
+        assert response.status_code == 500
+        sql, params = fake_pool.conn.executed[-1]
+        assert "chat_logs" in sql
+        assert params[-2] == "error"
+        assert params[-1] == "RuntimeError"
+
+    def test_graph_recursion_error_returns_friendly_message_and_logs(self, monkeypatch):
+        # GraphRecursionError es subclase de RuntimeError -- este test verifica
+        # que el except especifico se ejecuta (mensaje propio al cliente) y no
+        # el generico, y que igual queda registrado en chat_logs.
+        class LoopingGraph:
+            def invoke(self, *args, **kwargs):
+                raise GraphRecursionError("Recursion limit of 25 reached")
+
+        fake_pool = FakePool()
+        monkeypatch.setattr(main, "settings", object())
+        monkeypatch.setattr(main, "graph", LoopingGraph())
+        monkeypatch.setattr(main, "pool", fake_pool)
+
+        response = client.post("/chat", json={"message": "hola", "thread_id": "t1"})
+
+        assert response.status_code == 500
+        assert "pasos permitidos" in response.json()["detail"]
+        sql, params = fake_pool.conn.executed[-1]
+        assert "chat_logs" in sql
+        assert params[-2] == "error"
+        assert params[-1] == "GraphRecursionError"
 
 
 # ─── POST /feedback ────────────────────────────────────────────────────────

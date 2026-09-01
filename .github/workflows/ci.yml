@@ -1,29 +1,39 @@
 # CI pipeline para agentic-rag-fastapi
 #
-# Dos jobs separados con propósitos distintos:
+# Tres niveles con proposito y costo distintos:
 #
-#   rules   → corre en TODO push a cualquier rama
-#             sin API key, sin costo, en ~10 segundos
-#             verifica que el código no esté roto
+#   rules       → Nivel 1: TODO push/PR a cualquier rama
+#                 0 llamadas a LLM/DB real, sin costo, en ~10 segundos
+#                 verifica que el codigo no este roto (unit tests, routing,
+#                 evaluadores code-based, retry mockeado, recursion, schemas)
 #
-#   evals   → corre SOLO en push a main
-#             requiere OPENAI_API_KEY como secret de GitHub
-#             verifica calidad de respuestas con LLM-as-judge
-#             se ejecuta poco para mantener el costo bajo
+#   smoke       → Nivel 2: SOLO push a main
+#                 requiere OPENAI_API_KEY/DATABASE_URL como secret de GitHub
+#                 3 casos fijos y curados contra el agente completo (RAG
+#                 normal, tool routing, abstencion) -- costo minimo, gate de
+#                 humo antes de mergear a main, no reemplaza al golden set
+#
+#   full_eval   → Nivel 3: SOLO manual (Actions -> Run workflow)
+#                 golden set completo (56 casos), RAGAS (4 metricas) y
+#                 retrieval (520 preguntas) -- la evaluacion sistematica
+#                 completa, con costo real, nunca automatica en cada push
 
 name: CI
 
 on:
   push:
-    branches: ["**"]   # cualquier rama dispara el pipeline completo
+    branches: ["**"]   # cualquier rama dispara Nivel 1; solo main dispara tambien Nivel 2
+  pull_request:
+    branches: ["**"]   # Nivel 1 tambien en PRs
+  workflow_dispatch:    # habilita "Run workflow" manual para Nivel 3 (full_eval)
 
 jobs:
 
-  # ─── Job 1: tests deterministas ────────────────────────────────────────────
+  # ─── Nivel 1: tests deterministas ──────────────────────────────────────────
   # Corre siempre. Sin LLM, sin costo, verifica que el código funciona.
 
   rules:
-    name: Rules-based tests
+    name: "Nivel 1: Rules-based tests"
     runs-on: ubuntu-latest
 
     steps:
@@ -49,24 +59,23 @@ jobs:
           path: reports/
           retention-days: 30
 
-  # ─── Job 2: evaluaciones con LLM-as-judge ──────────────────────────────────
-  # Corre SOLO en push a main. Requiere API key. Tiene costo por token.
+  # ─── Nivel 2: smoke test con LLM-as-judge ──────────────────────────────────
+  # Corre SOLO en push a main. Requiere API key. Tiene costo por token, minimo
+  # a proposito: 3 casos fijos, no el golden set completo (eso es Nivel 3).
 
-  evals:
-    name: LLM-as-judge evals
+  smoke:
+    name: "Nivel 2: Smoke test (agente completo)"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'   # condición: solo en rama main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # solo push a main, nunca en PRs ni manual
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      MAX_EVAL_CASES: "1"
       # GitHub lee estos secrets desde:
       # Settings → Secrets and variables → Actions → OPENAI_API_KEY / DATABASE_URL
       # Nunca aparecen en logs ni en el código — GitHub los enmascara automáticamente
       # DATABASE_URL usa el rol ci_readonly (solo SELECT sobre chunks, ver Supabase) —
       # no la credencial completa de producción.
-      # MAX_EVAL_CASES limita el golden set en CI para evitar gastar tokens de más.
 
     steps:
       - name: Checkout del repositorio
@@ -80,20 +89,60 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
-      - name: Correr evaluaciones LLM-as-judge
-        run: python -m pytest tests/test_evals.py::TestRelevanceEval::test_rag_response_is_relevant -v --html=reports/evals-report.html --self-contained-html
+      - name: "Correr smoke test (RAG normal + tool routing + abstencion)"
+        run: python -m pytest tests/test_evals.py -v --html=reports/smoke-report.html --self-contained-html
 
-      - name: Correr evaluación sistemática del golden set
-        run: python evals/run_evals.py
-
-      - name: Guardar artefactos de evaluacion
+      - name: Guardar reporte de smoke test
         if: always()   # guarda el reporte incluso si los tests fallan
         uses: actions/upload-artifact@v4
         with:
-          name: eval-artifacts-${{ github.run_number }}
-          path: |
-            reports/
-            evals/results/
+          name: smoke-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+          # Los artefactos se guardan 30 días en GitHub
+          # Se descargan desde la pestaña "Actions" del repo
+
+  # ─── Nivel 3: evaluacion sistematica completa ──────────────────────────────
+  # Corre SOLO manual (pestaña Actions → CI → Run workflow). Costo real: golden
+  # set completo (56 casos con LLM-judge), RAGAS (4 metricas) y retrieval
+  # (520 preguntas, solo embeddings, sin generacion). Nunca automatico.
+
+  full_eval:
+    name: "Nivel 3: Full evaluation (manual)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr golden set completo (56 casos, LLM-as-judge)
+        run: python evals/run_evals.py
+
+      - name: Correr RAGAS (faithfulness, answer_relevancy, context_precision, context_recall)
+        run: python evals/ragas_eval.py
+
+      - name: Correr metricas de retrieval (hit_rate/MRR sobre 520 preguntas)
+        run: python -m evals.retrieval_metrics
+
+      - name: Guardar artefactos de evaluacion completa
+        if: always()   # guarda los resultados incluso si algun paso falla
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-eval-artifacts-${{ github.run_number }}
+          path: evals/results/
           retention-days: 30
           # Los artefactos se guardan 30 días en GitHub
           # Se descargan desde la pestaña "Actions" del repo

@@ -1,6 +1,6 @@
 """Tests de evaluacion usando los evaluadores reutilizables de la Capa 3."""
 
-from evals.evaluators import convergence_evaluator, relevance_evaluator
+from evals.evaluators import abstention_evaluator, convergence_evaluator, relevance_evaluator
 
 
 # ─── Evaluaciones de relevancia ───────────────────────────────────────────────
@@ -36,6 +36,32 @@ class TestRelevanceEval:
 
         assert score >= 3, (
             f"Respuesta poco relevante (score={score}/5).\n"
+            f"Pregunta:   {question}\n"
+            f"Respuesta:  {response}"
+        )
+
+
+# ─── Abstencion ante preguntas fuera de dominio ───────────────────────────────
+
+class TestAbstentionEval:
+    """Smoke test de Nivel 2 (CI): el agente debe rechazar una pregunta fuera
+    de dominio en vez de responderla (ver prompts/system_prompt_direct_answer.txt).
+
+    Caso c023 del critical_eval_set (Windows 11) elegido a proposito: es la
+    unica pregunta fuera_de_dominio que hoy se comporta bien de forma
+    confiable -- "capital de Francia" (c022) sigue fallando (ver EXPERIMENTS.md,
+    limitacion conocida) y usarla aca haria el test flaky/rojo a proposito.
+    """
+
+    def test_declines_out_of_domain_question(self, invoke_agent):
+        question = "¿Cómo configuro las notificaciones de Windows 11?"
+        result = invoke_agent(question)
+        response = result["messages"][-1].content
+
+        score = abstention_evaluator(question, response)
+
+        assert score >= 3, (
+            f"El agente no rechazo una pregunta fuera de dominio (score={score}/5).\n"
             f"Pregunta:   {question}\n"
             f"Respuesta:  {response}"
         )

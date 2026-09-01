@@ -51,7 +51,7 @@ if chat_logs.empty:
 chat_logs["created_at"] = pd.to_datetime(chat_logs["created_at"])
 chat_logs["date"] = chat_logs["created_at"].dt.date
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Total requests", len(chat_logs))
 col2.metric("Average latency", f"{chat_logs['latency_ms'].mean() / 1000:.1f} s")
 col3.metric("Total estimated cost", f"${chat_logs['estimated_cost_usd'].sum():.4f}")
@@ -61,6 +61,16 @@ if not feedback.empty:
     col4.metric("Positive feedback", f"{positive_pct:.0f}%")
 else:
     col4.metric("Positive feedback", "no data")
+
+# 24h y no "total" a proposito: la tasa de error historica se diluye a medida
+# que se acumulan requests viejos, y lo que importa operacionalmente es "¿esta
+# fallando ahora?", no "¿cuanto fallo desde que existe el proyecto?".
+last_24h = chat_logs[chat_logs["created_at"] >= pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=24)]
+if not last_24h.empty and "status" in last_24h.columns:
+    error_pct = (last_24h["status"] == "error").mean() * 100
+    col5.metric("Error rate (24h)", f"{error_pct:.0f}%")
+else:
+    col5.metric("Error rate (24h)", "no data")
 
 st.divider()
 
@@ -214,6 +224,18 @@ st.altair_chart(
     ),
     use_container_width=True,
 )
+
+st.subheader("Errors by type")
+errors_df = chat_logs[chat_logs["status"] == "error"] if "status" in chat_logs.columns else pd.DataFrame()
+if errors_df.empty:
+    st.info("No errors logged in the last 500 requests.")
+else:
+    error_counts = errors_df["error_type"].fillna("unknown").value_counts().rename("count").reset_index()
+    error_counts.columns = ["error_type", "count"]
+    st.altair_chart(
+        bar_chart(error_counts, "error_type", "count", "Error type", "Count", color=CRITICAL, integer_ticks=True),
+        use_container_width=True,
+    )
 
 st.subheader("User feedback")
 if feedback.empty:

@@ -14,6 +14,7 @@ import os
 
 import pytest
 
+from src import tools
 from src.tools import create_ticket, rag_search
 
 
@@ -90,3 +91,18 @@ class TestToolBehavior:
         # La confirmacion siempre debe ser un string.
         result = create_ticket.invoke({"summary": "Test ticket", "category": "undocumented_query"})
         assert isinstance(result, str)
+
+
+# ─── Reglas sobre el cliente de OpenAI usado por rag_search ──────────────────
+
+class TestGetClient:
+    def test_client_has_explicit_max_retries(self, monkeypatch):
+        # Antes de la Fase 2 (agent reliability) el cliente se creaba sin
+        # max_retries, asi que quedaba en manos del default implicito del SDK
+        # de openai -- este test fija esa decision como algo explicito.
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test-dummy")
+        monkeypatch.setattr(tools, "_client", None)
+
+        client = tools._get_client()
+
+        assert client.max_retries == tools._MAX_RETRIES

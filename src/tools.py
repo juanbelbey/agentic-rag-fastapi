@@ -12,6 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import psycopg2
+import tenacity
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langsmith import traceable  # Decorador opcional para instrumentar funciones con LangSmith
@@ -91,6 +92,10 @@ def _load_prompt(filename: str) -> str:
 QUERY_REWRITE_PROMPT = _load_prompt("query_rewrite.txt")
 REWRITE_MODEL = "gpt-4o-mini"
 
+# Reintentos explicitos ante errores transitorios de OpenAI -- ver el
+# comentario largo en src/graph.py::MAX_RETRIES (misma decision, mismo valor).
+_MAX_RETRIES = 2
+
 _client: OpenAI | None = None
 
 
@@ -98,7 +103,7 @@ def _get_client() -> OpenAI:
     """Crea el cliente de OpenAI recien la primera vez que hace falta (mismo patron que src/ingestion.py)."""
     global _client
     if _client is None:
-        _client = OpenAI()
+        _client = OpenAI(max_retries=_MAX_RETRIES)
     return _client
 
 
@@ -204,28 +209,54 @@ def create_ticket(summary: str, category: str, priority: str = "medium") -> str:
     )
 
 
-@tool
-def rag_search(query: str, top_k: int = 5) -> str:
-    """Busca chunks relevantes combinando vector search + keyword search + RRF (Postgres)."""
+# Reintentos ante errores transitorios de conexion a Postgres (network blip,
+# pooler momentaneamente sin slots, timeout). OperationalError es la clase que
+# psycopg2 usa para eso -- errores de query (sintaxis, tipos, etc.) son
+# ProgrammingError/otros y no se reintentan, porque reintentar una query rota
+# nunca la arregla. 3 intentos totales (igual que MAX_RETRIES=2 de OpenAI en
+# graph.py: 1 intento + 2 reintentos), con backoff exponencial para no
+# insistir de inmediato sobre un servicio ya saturado.
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(psycopg2.OperationalError),
+    wait=tenacity.wait_exponential(multiplier=0.5, min=0.5, max=4),
+    stop=tenacity.stop_after_attempt(3),
+    reraise=True,
+)
+def _search_chunks(query: str, query_embedding, top_k: int) -> tuple[list[tuple[int, float]], list[tuple]]:
+    """Abre una conexion, corre la busqueda hibrida y trae las filas de chunks.
+
+    Retry-safe a proposito: cada intento abre una conexion NUEVA (via
+    _get_connection() adentro de la funcion decorada) en vez de reintentar
+    sobre una conexion que ya fallo -- una conexion rota no se arregla sola.
+    """
     conn = _get_connection()
     try:
-        query_embedding = embed_texts([query])[0]
         fused = _hybrid_search(conn, query, query_embedding, top_k)
-
         if not fused:
-            result = RAGResult(
-                content="No se encontraron resultados para esta búsqueda.",
-                source="system",
-                score=None,
-            )
-            return result.model_dump_json()
+            return fused, []
 
         ids = [chunk_id for chunk_id, _ in fused]
         with conn.cursor() as cur:
             cur.execute("SELECT id, content, source FROM chunks WHERE id = ANY(%s);", (ids,))
             rows = cur.fetchall()
+        return fused, rows
     finally:
         conn.close()
+
+
+@tool
+def rag_search(query: str, top_k: int = 5) -> str:
+    """Busca chunks relevantes combinando vector search + keyword search + RRF (Postgres)."""
+    query_embedding = embed_texts([query])[0]
+    fused, rows = _search_chunks(query, query_embedding, top_k)
+
+    if not fused:
+        result = RAGResult(
+            content="No se encontraron resultados para esta búsqueda.",
+            source="system",
+            score=None,
+        )
+        return result.model_dump_json()
 
     # Diccionario id -> (content, source) para reordenar según el ranking de fused, no el orden de Postgres
     rows_by_id = {row_id: (content, source) for row_id, content, source in rows}

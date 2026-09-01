@@ -24,10 +24,32 @@ MODEL_NAME = "gpt-4o-mini"
 TEMPERATURE = 0.3
 SYSTEM_PROMPT = load_prompt("system_prompt_direct_answer.txt")
 
+# Limite explicito de pasos del grafo (agent -> tools -> agent -> ...) antes de
+# tirar GraphRecursionError. Antes no se fijaba en ningun lado, asi que
+# quedaba en el default de LangGraph -- que en la version instalada de este
+# proyecto es 10007, no el 25 clasico de versiones viejas. Practicamente sin
+# techo: un agente que entra en loop sin converger tendria margen para miles
+# de llamadas reales a OpenAI antes de frenar solo. Una conversacion normal
+# de este agente usa entre 2 y 6 pasos (agent -> tools -> agent, a veces con
+# rag_search + create_ticket en la misma vuelta); 25 da margen generoso para
+# eso y corta un loop real mucho antes de que salga caro.
+RECURSION_LIMIT = 25
+
+# Reintentos explicitos ante errores transitorios de OpenAI (rate limit,
+# timeout, conexion). Antes no se fijaba nunca, asi que el SDK de openai
+# aplicaba su propio default (tambien 2) sin que quedara documentado ni
+# testeado en este proyecto -- ver Fase 2 del esquema de profesionalizacion
+# (agent reliability). Valor bajo a proposito: /chat es sincronico y el
+# usuario espera la respuesta, cada retry suma latencia real. Mismo patron
+# en src/tools.py y src/ingestion.py.
+MAX_RETRIES = 2
+
 
 def get_bound_llm(model_name: str = MODEL_NAME, temperature: float = TEMPERATURE) -> ChatOpenAI:
     """Crea el modelo con tools enlazadas solo cuando hace falta invocarlo."""
-    return ChatOpenAI(model=model_name, max_tokens=800, temperature=temperature).bind_tools(TOOLS)
+    return ChatOpenAI(
+        model=model_name, max_tokens=800, temperature=temperature, max_retries=MAX_RETRIES
+    ).bind_tools(TOOLS)
 
 
 def build_agent_node(system_prompt: str = SYSTEM_PROMPT, model_name: str = MODEL_NAME, temperature: float = TEMPERATURE):

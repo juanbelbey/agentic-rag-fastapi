@@ -1,6 +1,7 @@
 # src/main.py
 """Entrada FastAPI minima para conversar con el grafo del agente."""
 
+import logging
 import os
 import time
 import uuid
@@ -9,12 +10,18 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.errors import GraphRecursionError
 from langsmith import Client
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_ipaddr
+
+from src.logging_config import configure_logging
+
+configure_logging()
+logger = logging.getLogger("agentic_rag")
 
 # Precio de gpt-4o-mini verificado en platform.openai.com/docs/pricing el
 # 2026-08-11. Solo cubre el LLM principal del chat (los AIMessage de
@@ -33,7 +40,7 @@ PRICE_PER_1K_OUTPUT_USD = 0.0006
 load_dotenv()
 
 from src.config import Settings, load_settings  # noqa: E402
-from src.graph import graph_builder  # noqa: E402
+from src.graph import RECURSION_LIMIT, graph_builder  # noqa: E402
 from src.schemas import ChatRequest, ChatResponse, FeedbackInput  # noqa: E402
 
 settings: Settings | None = None
@@ -91,7 +98,9 @@ async def lifespan(app: FastAPI):
         # Log por request de /chat -- alimenta GET /stats (dashboard de
         # monitoring). tool_calls_used como TEXT[] (psycopg adapta listas de
         # str automaticamente). estimated_cost_usd es una aproximacion, ver
-        # nota de PRICE_PER_1K_*_USD arriba.
+        # nota de PRICE_PER_1K_*_USD arriba. status/error_type: antes de esto
+        # una fila solo se insertaba si graph.invoke() salia bien, asi que un
+        # fallo real nunca quedaba registrado -- ver _log_chat().
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS chat_logs (
@@ -103,10 +112,16 @@ async def lifespan(app: FastAPI):
                 prompt_tokens INTEGER NOT NULL DEFAULT 0,
                 completion_tokens INTEGER NOT NULL DEFAULT 0,
                 estimated_cost_usd REAL NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'ok',
+                error_type TEXT,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )
             """
         )
+        # ADD COLUMN IF NOT EXISTS: la tabla ya existe en Supabase desde antes
+        # de esta fase, CREATE TABLE IF NOT EXISTS no le agrega columnas nuevas.
+        conn.execute("ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'ok'")
+        conn.execute("ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS error_type TEXT")
         conn.execute("ALTER TABLE chat_logs ENABLE ROW LEVEL SECURITY")
 
     yield  # la app corre aqui
@@ -124,6 +139,53 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+def _log_chat(
+    run_id: uuid.UUID,
+    thread_id: str,
+    latency_ms: int,
+    status: str,
+    tool_calls_used: list[str] | None = None,
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    estimated_cost_usd: float = 0,
+    error_type: str | None = None,
+) -> None:
+    """Inserta una fila en chat_logs, tanto para un /chat exitoso como fallido.
+
+    Best-effort (igual que el envio de feedback a LangSmith): registrar la
+    metrica no debe romper la respuesta real del endpoint.
+    """
+    if pool is None:
+        return
+    try:
+        with pool.connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO chat_logs
+                    (run_id, thread_id, tool_calls_used, latency_ms,
+                     prompt_tokens, completion_tokens, estimated_cost_usd,
+                     status, error_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    run_id,
+                    thread_id,
+                    tool_calls_used or [],
+                    latency_ms,
+                    prompt_tokens,
+                    completion_tokens,
+                    estimated_cost_usd,
+                    status,
+                    error_type,
+                ),
+            )
+    except Exception:
+        logger.exception(
+            "chat_logs_insert_failed",
+            extra={"run_id": str(run_id), "thread_id": thread_id},
+        )
+
+
 @app.post("/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
 def chat(request: Request, payload: ChatRequest) -> ChatResponse:
@@ -135,7 +197,11 @@ def chat(request: Request, payload: ChatRequest) -> ChatResponse:
     # este UUID para el trace en vez de generar el suyo propio -- lo necesitamos
     # en la mano para devolverlo en la respuesta y despues asociarle feedback.
     run_id = uuid.uuid4()
-    config = {"configurable": {"thread_id": payload.thread_id}, "run_id": run_id}
+    config = {
+        "configurable": {"thread_id": payload.thread_id},
+        "run_id": run_id,
+        "recursion_limit": RECURSION_LIMIT,
+    }
 
     start = time.perf_counter()
     try:
@@ -143,7 +209,28 @@ def chat(request: Request, payload: ChatRequest) -> ChatResponse:
             {"messages": [{"role": "user", "content": payload.message}]},
             config=config,
         )
+    except GraphRecursionError as exc:
+        # Subclase de RuntimeError -- va ANTES del except Exception generico
+        # de abajo, si no nunca se ejecutaria. Mensaje propio al cliente (no
+        # el texto crudo de la excepcion): "no convergio" es mas accionable
+        # para quien pregunta que un error interno generico.
+        latency_ms = round((time.perf_counter() - start) * 1000)
+        logger.exception(
+            "chat_agent_recursion_limit",
+            extra={"run_id": str(run_id), "thread_id": payload.thread_id, "recursion_limit": RECURSION_LIMIT},
+        )
+        _log_chat(run_id, payload.thread_id, latency_ms, status="error", error_type="GraphRecursionError")
+        raise HTTPException(
+            status_code=500,
+            detail="El agente no pudo llegar a una respuesta en los pasos permitidos. Probá reformular la pregunta.",
+        ) from exc
     except Exception as exc:
+        latency_ms = round((time.perf_counter() - start) * 1000)
+        logger.exception(
+            "chat_agent_failed",
+            extra={"run_id": str(run_id), "thread_id": payload.thread_id, "error_type": type(exc).__name__},
+        )
+        _log_chat(run_id, payload.thread_id, latency_ms, status="error", error_type=type(exc).__name__)
         raise HTTPException(status_code=500, detail=f"Error al ejecutar el agente: {exc}") from exc
     latency_ms = round((time.perf_counter() - start) * 1000)
 
@@ -167,30 +254,16 @@ def chat(request: Request, payload: ChatRequest) -> ChatResponse:
         + completion_tokens / 1000 * PRICE_PER_1K_OUTPUT_USD
     )
 
-    if pool is not None:
-        try:
-            with pool.connection() as conn:
-                conn.execute(
-                    """
-                    INSERT INTO chat_logs
-                        (run_id, thread_id, tool_calls_used, latency_ms,
-                         prompt_tokens, completion_tokens, estimated_cost_usd)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        run_id,
-                        payload.thread_id,
-                        tool_calls_used,
-                        latency_ms,
-                        prompt_tokens,
-                        completion_tokens,
-                        estimated_cost_usd,
-                    ),
-                )
-        except Exception:
-            # Best-effort, igual que el envio de feedback a LangSmith: loguear
-            # la metrica no debe romper la respuesta real del chat.
-            pass
+    _log_chat(
+        run_id,
+        payload.thread_id,
+        latency_ms,
+        status="ok",
+        tool_calls_used=tool_calls_used,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        estimated_cost_usd=estimated_cost_usd,
+    )
 
     return ChatResponse(
         thread_id=payload.thread_id,
@@ -217,6 +290,7 @@ def feedback(request: Request, payload: FeedbackInput) -> dict[str, str]:
                 (payload.run_id, payload.thread_id, payload.score, payload.comment),
             )
     except Exception as exc:
+        logger.exception("feedback_insert_failed", extra={"run_id": str(payload.run_id)})
         raise HTTPException(status_code=400, detail=f"No se pudo guardar el feedback: {exc}") from exc
 
     if langsmith_client is not None:
@@ -227,7 +301,7 @@ def feedback(request: Request, payload: FeedbackInput) -> dict[str, str]:
         except Exception:
             # Mismo criterio que run_evals.py: LangSmith es best-effort, no debe
             # romper el endpoint si falla.
-            pass
+            logger.exception("langsmith_feedback_failed", extra={"run_id": str(payload.run_id)})
 
     return {"status": "ok"}
 
@@ -247,7 +321,7 @@ def stats(request: Request) -> dict[str, list[dict]]:
             cur.execute(
                 """
                 SELECT created_at, latency_ms, tool_calls_used, prompt_tokens,
-                       completion_tokens, estimated_cost_usd
+                       completion_tokens, estimated_cost_usd, status, error_type
                 FROM chat_logs
                 ORDER BY created_at DESC
                 LIMIT 500
