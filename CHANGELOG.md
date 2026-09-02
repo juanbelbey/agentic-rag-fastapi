@@ -6,6 +6,66 @@ Formato: fecha · tipo · descripción · qué capa representa.
 
 ---
 
+## 2026-09-02 — README: sección de Production hardening (Fase 6)
+**Sin commitear todavía.**
+
+- **README — nueva sección "🛡️ Production hardening"** (entre "How it works" y "Technical
+  documentation", con entrada nueva en la tabla de contenidos): resume en inglés las Fases
+  1-5 del 2026-09-01 (observability, reliability, testing gaps, critical eval set +
+  abstención, CI en 3 niveles) para que quien lea el README entienda qué hardening tiene el
+  proyecto sin ir a buscarlo en `EXPERIMENTS.md`. Incluye mención explícita del gap conocido
+  de la categoría "mixta" (no ocultarlo, ya documentado en `EXPERIMENTS.md`).
+
+## 2026-09-01 — Hardening post-auditoría (Fases 1-5) + reescritura de intros README/ROADMAP
+**Commits:** `e16e28d` (cierre Fases 1-5), `c375050` (intro README sin jerga), `b474c76`
+(intro ROADMAP + refresco de estado).
+
+- **Fase 1 — Failure observability:** `src/logging_config.py` nuevo (`JSONFormatter` sobre
+  `logging` estándar). Columnas `status`/`error_type` nuevas en `chat_logs` — antes, si
+  `graph.invoke()` fallaba, no quedaba ninguna fila logueada. Los `except Exception: pass`
+  silenciosos (inserts best-effort, feedback a LangSmith) ahora loguean con
+  `logger.exception(...)`. Tile "Error rate (24h)" + gráfico "Errors by type" en el dashboard
+  de Monitoring.
+- **Fase 2 — Agent reliability:** retry/backoff explícito (`tenacity`) sobre errores
+  transitorios de OpenAI (`max_retries` en `ChatOpenAI`/`OpenAI`) y Postgres
+  (`psycopg2.OperationalError`, cada intento con conexión nueva). `RECURSION_LIMIT=25`
+  explícito en `graph.invoke()` (el default real de la versión instalada de LangGraph es
+  10007, prácticamente sin techo) con `except GraphRecursionError` dedicado antes del
+  genérico.
+- **Fase 3 — Testing gaps:** `route_after_agent()` testeado en aislamiento (sin compilar el
+  grafo ni invocar el LLM) y los 3 evaluadores code-based de `evals/evaluators.py`
+  (`extract_score`, `tool_call_evaluator`, `convergence_evaluator`) con tests unitarios
+  nuevos.
+- **Fase 4 — Critical eval set + abstención:** `evals/critical_eval_set.json` nuevo (28
+  casos: 15 answerable + 13 unanswerable — fuera de dominio, relacionado-pero-ausente,
+  producto no documentado, ambigua, mixta). Barrido de umbral sobre score RRF y sobre
+  distancia coseno (`evals/abstention_threshold.py`) **descartado como solución** — ningún
+  corte numérico separa answerable de unanswerable con evidencia suficiente (detalle en
+  `EXPERIMENTS.md`). Abstención resuelta con reglas explícitas en
+  `prompts/system_prompt_direct_answer.txt` (rechazar fuera de dominio siempre, no
+  generalizar entre productos, pedir aclaración ante ambigüedad, verificar cada afirmación
+  de preguntas multi-parte por separado, citar solo nombre de archivo). Re-validado: 4/6
+  casos que fallaban se arreglaron; la categoría "mixta" (una afirmación real + una
+  inventada en la misma pregunta) queda como **gap conocido y documentado, no resuelto**.
+- **Fase 5 — CI en 3 niveles:** `.github/workflows/ci.yml` reestructurado —
+  `rules` (todo push/PR, sin llamadas a LLM), `smoke` (antes `evals`, solo push a `main`, 3
+  casos curados incluyendo un nuevo `abstention_evaluator`), `full_eval` (nuevo job, manual
+  vía `workflow_dispatch`, golden set completo + RAGAS + retrieval). `run_evals.py` salió
+  del push automático, ahora vive solo en `full_eval`.
+- **Docs de auditoría de portfolio** (`docs/PROJECT_CAPABILITY_AUDIT.md`,
+  `PORTFOLIO_CASE_STUDY.md`, `GENAI_SERVICE_POSITIONING.md`, generados el 2026-08-31)
+  incluidos en el commit de cierre.
+- **README — intro reescrita:** arrancaba con jerga técnica (RAG, LangGraph, FastAPI,
+  Postgres/pgvector) antes de decir qué hace el proyecto — un evaluador del LLM Zoomcamp
+  señaló que el caso de uso no quedaba claro. Reescrita para liderar con quién/qué/cómo en
+  lenguaje llano, la stack técnica queda como segunda frase. De paso, referencia rota al job
+  de CI corregida (`evals` → `smoke`, renombrado en la Fase 5 de hoy).
+- **ROADMAP — intro reescrita + estado refrescado:** el título/intro leían como diario de
+  estudio personal (incluía una línea de instrucción a Copilot) en un archivo que el README
+  linkea como estado del proyecto — reescrito con tono de documentación. Estado actualizado
+  con lo de las Fases 1-5 (job de CI, archivos nuevos en `src`/`tests`/`evals`, retry/
+  `recursion_limit`, critical eval set) que había quedado sin reflejar.
+
 ## 2026-08-15 — Corpus sintético para reproducibility + dashboard de Monitoring con Altair
 **Commits:** `b893937`/`0496340` (corpus sintético completo a 11 documentos), `81a34a6`
 (`ingest.py` configurable + docs), `fbb83b7` (tabla de contenidos en README), `c4e0b64`

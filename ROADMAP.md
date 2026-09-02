@@ -64,9 +64,9 @@ FASE 4 — Critical eval set + abstención ✅ COMPLETADA (gap conocido y docume
                                           preguntas con una parte real + una
                                           inventada en la misma pregunta)
 FASE 5 — CI en 3 niveles              ✅ COMPLETADA
-FASE 6 — README (problema/caso de uso) 🔶 EN CURSO (intro reescrita con feedback
-                                          real de evaluadores; falta sección de
-                                          hardening en el README)
+FASE 6 — README (problema/caso de uso) ✅ COMPLETADA (intro reescrita con feedback
+                                          real de evaluadores + sección de
+                                          "Production hardening" agregada)
 ```
 
 Nunca se salta una capa. Nunca se espera terminar todos los cursos

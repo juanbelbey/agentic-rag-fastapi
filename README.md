@@ -12,6 +12,7 @@ A support assistant for technicians at water treatment and wastewater plants: as
 
 - [🎯 Use case](#use-case)
 - [⚙️ How it works](#how-it-works)
+- [🛡️ Production hardening](#production-hardening)
 - [📚 Technical documentation: where it comes from](#technical-documentation)
 - [🚀 How to run it](#how-to-run-it)
 - [✅ Evaluation criteria (LLM Zoomcamp 2026)](#evaluation-criteria)
@@ -69,6 +70,18 @@ See `ROADMAP.md` for the current project status and `STACK.md` for library decis
 </td>
 </tr>
 </table>
+
+<a id="production-hardening"></a>
+
+## 🛡️ Production hardening
+
+Post-submission work (not required by the LLM Zoomcamp criteria) hardening the agent against real-world failure modes rather than adding new features — full detail in `EXPERIMENTS.md`:
+
+- **Failure observability**: structured JSON logging (`src/logging_config.py`); every chat request is logged to `chat_logs` even when the agent fails (`status`/`error_type` columns), instead of failing silently; "Error rate (24h)" tile on the Monitoring dashboard.
+- **Agent reliability**: explicit retry/backoff (`tenacity`) on transient OpenAI/Postgres errors; explicit `recursion_limit=25` on the LangGraph invocation (the library's own default is effectively unbounded) with a dedicated error message instead of a raw stack trace.
+- **Testing gaps closed**: `route_after_agent()` and the 3 code-based evaluators tested in isolation, no LLM/DB calls involved — part of an 85-case deterministic test suite that runs on every push.
+- **Critical evaluation set for abstention**: 28 hand-curated cases (`evals/critical_eval_set.json`) covering answerable vs. unanswerable questions — out-of-domain, related-but-absent, undocumented product, ambiguous, and mixed true+invented claims. Score-based thresholds (RRF, cosine distance) were tried and discarded with evidence; abstention is enforced through explicit prompt rules instead. **Known, documented gap**: the agent still can't reliably separate a true claim from a false one inside the *same* question — left as-is rather than hidden, see `EXPERIMENTS.md`.
+- **CI in 3 tiers**: `rules` (every push/PR, zero LLM calls) → `smoke` (push to `main`, 3 curated live cases including abstention) → `full_eval` (manual trigger, full golden set + RAGAS + retrieval metrics).
 
 <a id="technical-documentation"></a>
 
