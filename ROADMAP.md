@@ -1,19 +1,19 @@
 # ROADMAP.md
-# Plan completo de especialización — AI Engineer 2026
+# agentic-rag-fastapi — project status & architecture
 # Juan Belbey
 
-## Para qué existe este archivo
+## Qué es este archivo
 
-Este archivo es la fuente de verdad del proyecto:
-qué cursos hice, qué construí con cada uno, qué viene después,
-y qué capa del repo flagship corresponde a cada etapa.
-
-Copilot nunca debe improvisar qué viene después. Todo está acá.
-Para reglas de comportamiento y estilo de trabajo, ver COPILOT_STRATEGY.md.
+Fuente de verdad del estado actual del proyecto: qué está construido, por qué,
+y qué queda pendiente. Creció de forma incremental, módulo por módulo,
+siguiendo el curriculum del LLM Zoomcamp (DataTalks.Club) — el mapa de capas
+de abajo refleja ese orden de construcción. El historial commit por commit
+vive en `CHANGELOG.md`; las decisiones basadas en datos (experimentos de
+retrieval/generación) viven en `EXPERIMENTS.md`.
 
 ---
 
-## El repo flagship: agentic-rag-fastapi
+## Resumen
 
 Un sistema de soporte inteligente con RAG sobre PDFs de documentación
 técnica (LangGraph docs), agente con LangGraph, y tickets en Postgres.
@@ -55,6 +55,18 @@ CAPA 5 — RAG real con PDFs            ✅ COMPLETADA
                                           reproducibility, ver CORPUS_INSTRUMENTACION.MD)
 CAPA 6 — Deploy                       ✅ Render (backend) — AWS queda pendiente
                                           para otro momento
+
+Post-submission hardening (2026-09-01, ver EXPERIMENTS.md para el detalle):
+FASE 1 — Failure observability        ✅ COMPLETADA
+FASE 2 — Agent reliability            ✅ COMPLETADA
+FASE 3 — Testing gaps                 ✅ COMPLETADA
+FASE 4 — Critical eval set + abstención ✅ COMPLETADA (gap conocido y documentado:
+                                          preguntas con una parte real + una
+                                          inventada en la misma pregunta)
+FASE 5 — CI en 3 niveles              ✅ COMPLETADA
+FASE 6 — README (problema/caso de uso) 🔶 EN CURSO (intro reescrita con feedback
+                                          real de evaluadores; falta sección de
+                                          hardening en el README)
 ```
 
 Nunca se salta una capa. Nunca se espera terminar todos los cursos
@@ -77,11 +89,16 @@ src/
 ├── graph.py
 ├── main.py
 ├── schemas.py
-└── ingestion.py
+├── ingestion.py
+└── logging_config.py
 ```
 
 - **`config.py`** — valida `OPENAI_API_KEY` al arranque (fail-fast).
 - **`state.py`** — `AgentState` (`TypedDict` + reducer `add_messages`).
+- **`logging_config.py`** — `JSONFormatter` sobre `logging` estándar (sin dependencia
+  nueva), `configure_logging()` llamado al arranque en `main.py`. Todos los `except`
+  que antes fallaban en silencio (`except Exception: pass` de inserts best-effort,
+  feedback a LangSmith) ahora loguean con `logger.exception(...)` antes de continuar.
 - **`tools.py`** — `rag_search()` sobre Postgres/pgvector:
   - `_vector_search` (similitud coseno sobre `embedding`).
   - `_keyword_search` — full-text search de Postgres con `config='simple'` (el corpus
@@ -99,24 +116,38 @@ src/
   - `_vector_search`/`_keyword_search`/`_rewrite_query_impl` instrumentados con
     `@traceable` (LangSmith), opt-in por `LANGCHAIN_API_KEY` — sin esa key, no traza
     nada y no rompe.
+  - `_search_chunks()` (conexión + `_hybrid_search` + fetch) decorada con
+    `@tenacity.retry` (reintenta solo `psycopg2.OperationalError` — conexión/timeout,
+    no errores de query — 3 intentos, backoff exponencial, cada intento abre una
+    conexión nueva). Clientes de OpenAI (`tools.py`/`ingestion.py`) y `ChatOpenAI` de
+    `graph.py` con `max_retries` explícito (`MAX_RETRIES`).
   - Pendiente: pool de conexiones (hoy abre una conexión nueva por request) y FTS por
     idioma real (columna `language` + `to_tsvector` por idioma, en vez del `'simple'`
     global — sobre-ingeniería para 11 documentos hoy, reconsiderar si el corpus crece).
 - **`graph.py`** — `StateGraph` con routing condicional entre `agent` y `tools`.
-  `SYSTEM_PROMPT` se carga desde `prompts/` (no vive inline) vía `load_prompt()`.
-  En producción: `TEMPERATURE = 0.3`, `system_prompt_direct_answer.txt`, `gpt-4o-mini`,
+  `SYSTEM_PROMPT` se carga desde `prompts/` (no vive inline) vía `load_prompt()` —
+  incluye reglas de abstención (rechazo fuera de dominio, no generalizar entre
+  productos similares, pedir aclaración ante ambigüedad, verificar cada parte de
+  preguntas multi-afirmación, citar solo nombre de documento). En producción:
+  `TEMPERATURE = 0.3`, `system_prompt_direct_answer.txt`, `gpt-4o-mini`,
   `max_tokens=800` — elegidos comparando variantes prompt×modelo×temperatura con datos
-  reales (ver `EXPERIMENTS.md`). Exporta `graph_builder` sin compilar — cada consumidor
-  (`main.py`, tests, evals) decide su propio checkpointer.
+  reales (ver `EXPERIMENTS.md`). `RECURSION_LIMIT = 25` explícito (el default de
+  LangGraph en la versión instalada es 10007 — prácticamente sin techo). Exporta
+  `graph_builder` sin compilar — cada consumidor (`main.py`, tests, evals) decide su
+  propio checkpointer.
 - **`main.py`** — FastAPI: `POST /chat`, `POST /feedback`, `GET /stats`. El `lifespan`
   abre un pool real de Postgres (`psycopg_pool`), corre `checkpointer.setup()` (el
   checkpointer de LangGraph es Postgres, no `MemorySaver`) y crea las tablas
-  `feedback`/`chat_logs` de forma idempotente. `/chat` registra latencia y costo
-  estimado (tokens × precio de `gpt-4o-mini`) en `chat_logs`; el insert es best-effort
-  (no rompe la respuesta si falla). Rate limiting con `slowapi` (`/chat` 10/min,
-  `/feedback` 20/min, `/stats` 30/min) por IP real (`get_ipaddr`, necesario porque
-  Render corre detrás de un proxy). Sin `GET /health` todavía (mejora anotada, no
-  bloqueante — Render usa el chequeo TCP del puerto).
+  `feedback`/`chat_logs` de forma idempotente (con columnas `status`/`error_type`).
+  `/chat` registra latencia y costo estimado (tokens × precio de `gpt-4o-mini`) en
+  `chat_logs` vía el helper `_log_chat()`, incluso si `graph.invoke()` falla (antes un
+  fallo del agente era invisible: no quedaba fila en `chat_logs`). `except
+  GraphRecursionError` propio (antes del `except Exception` genérico) con mensaje
+  claro al cliente en vez del traceback crudo. El insert es best-effort (no rompe la
+  respuesta si falla), pero ahora logueado. Rate limiting con `slowapi` (`/chat`
+  10/min, `/feedback` 20/min, `/stats` 30/min) por IP real (`get_ipaddr`, necesario
+  porque Render corre detrás de un proxy). Sin `GET /health` todavía (mejora anotada,
+  no bloqueante — Render usa el chequeo TCP del puerto).
 - **`schemas.py`** — `ChatRequest`/`ChatResponse`/`TicketInput`/`RAGResult`/
   `FeedbackInput` (Pydantic). `TicketInput.category` usa 4 categorías del dominio real
   (`field_instrument_failure`/`biological_process_anomaly`/`pump_maintenance`/
@@ -170,25 +201,48 @@ tests/
 ├── conftest.py
 ├── test_rules.py
 ├── test_evals.py
+├── test_graph.py
+├── test_tools.py
+├── test_evaluators.py
+├── test_logging_config.py
+├── test_abstention_threshold.py
+├── test_critical_eval_set.py
 └── reports/
 ```
 
 - **`conftest.py`** — fixtures compartidos (`agent_graph` compila `graph_builder` con
   `MemorySaver`, no depende de Postgres para correr).
-- **`test_rules.py`** — 7 tests deterministas; los 2 que llaman `rag_search()` de
+- **`test_rules.py`** — tests deterministas; los que llaman `rag_search()` de
   verdad se saltan solos (`pytest.skip`) si falta `OPENAI_API_KEY`/`DATABASE_URL`.
-- **`test_evals.py`** — LLM-as-judge reusando `evals/evaluators.py`.
+- **`test_evals.py`** — LLM-as-judge reusando `evals/evaluators.py`: relevancia (RAG
+  normal), tool routing (escalamiento) y abstención (pregunta fuera de dominio) —
+  mismos 3 casos que corre el job `smoke` de CI.
+- **`test_graph.py`** — config de `graph.py` sin invocar el LLM real (`MAX_RETRIES`,
+  `RECURSION_LIMIT`), `route_after_agent()` en aislamiento total, y regresión de las
+  reglas de abstención del prompt (`SYSTEM_PROMPT` contiene los substrings clave).
+- **`test_tools.py`** — retry de `_search_chunks()` mockeado (se recupera, agota
+  intentos, no reintenta errores no transitorios) — sin Postgres real.
+- **`test_evaluators.py`** — evaluadores code-based/puros de `evals/evaluators.py`
+  (`extract_score`, `tool_call_evaluator`, `convergence_evaluator`) — sin LLM.
+- **`test_logging_config.py`** — `JSONFormatter` de `src/logging_config.py`.
+- **`test_abstention_threshold.py`** — lógica pura de `evals/abstention_threshold.py`
+  (conteo de falsos positivos/negativos), sin OpenAI/Postgres.
+- **`test_critical_eval_set.py`** — estructura de `evals/critical_eval_set.json`
+  (categorías válidas, ids únicos, etc.).
 - **`reports/`** — reportes HTML de `pytest-html`, local y como artefacto de CI.
 
 ```
 evals/
 ├── golden_set.json
 ├── ground_truth_retrieval.json
+├── critical_eval_set.json
 ├── generate_ground_truth.py
 ├── generate_golden_set.py
 ├── retrieval_metrics.py
 ├── evaluators.py
 ├── run_evals.py
+├── abstention_threshold.py
+├── critical_set_agent_check.py
 ├── compare_prompts.py
 ├── compare_temperature.py
 ├── cost_report.py
@@ -207,17 +261,33 @@ evals/
 - **`generate_golden_set.py`** — samplea 48 de las 520 preguntas (12 por categoría) y
   genera `golden_set.json` con `expected_answer` grounded — mide generación, no
   retrieval (eso lo mide `ground_truth_retrieval.json`).
+- **`critical_eval_set.json`** — 28 casos curados a mano (15 answerable + 13
+  unanswerable, verificados contra los PDFs reales) para medir abstención: fuera de
+  dominio, relacionado pero ausente, producto no documentado, ambigua, mixta (una
+  parte real + una inventada). No es un muestreo aleatorio del golden set — diseño
+  propio, ver `EXPERIMENTS.md`.
 - **`retrieval_metrics.py`** — `hit_rate`/`mrr`/`evaluate()` para vector-only,
-  keyword-only e hybrid, más el barrido de `k` de RRF. Script manual.
+  keyword-only e hybrid, más el barrido de `k` de RRF. Script manual, corre en el job
+  `full_eval` de CI (manual).
 - **`evaluators.py`** — `relevance` (LLM-judge sin referencia), `accuracy` (LLM-judge
-  contra `expected_answer`), `citation`/`convergence` (code-based), `tool_call_evaluator`
-  (code-based, verifica si la tool esperada apareció en la traza — para los casos de
-  escalamiento). Todos instrumentados con `@traceable` para LangSmith.
-- **`run_evals.py`** — corre la suite de evals, guarda resultados por fecha/hora, manda
-  feedback a LangSmith. Es lo que corre el job `evals` de CI (`main()`, con
-  `MAX_EVAL_CASES=1`).
+  contra `expected_answer`), `abstention` (LLM-judge: ¿rechazó una pregunta fuera de
+  dominio en vez de responderla?), `citation`/`convergence` (code-based),
+  `tool_call_evaluator` (code-based, verifica si la tool esperada apareció en la
+  traza). Todos instrumentados con `@traceable` para LangSmith.
+- **`abstention_threshold.py`** — barrido de umbral (RRF y distancia coseno) contra
+  `critical_eval_set.json` — **descartado como solución**, ningún umbral separa
+  answerable de unanswerable con evidencia suficiente (ver `EXPERIMENTS.md`). La
+  abstención real quedó resuelta en el prompt (`graph.py`/`system_prompt_direct_answer.txt`),
+  no con un corte numérico en código.
+- **`critical_set_agent_check.py`** — corre el agente completo (no solo retrieval)
+  contra `critical_eval_set.json` para revisión manual de las respuestas unanswerable.
+- **`run_evals.py`** — corre el golden set completo (56 casos), guarda resultados por
+  fecha/hora, manda feedback a LangSmith. Corre en el job `full_eval` de CI (manual,
+  `workflow_dispatch`) — no en cada push.
 - **`compare_prompts.py` / `compare_temperature.py`** — scripts manuales para comparar
-  prompt×modelo y temperatura de forma aislada (una variable por vez). No corren en CI.
+  prompt×modelo y temperatura de forma aislada (una variable por vez). No corren en CI
+  (decisión: son experimentos puntuales ya cerrados y documentados en `EXPERIMENTS.md`,
+  no gates de regresión continuos).
 - **`cost_report.py`** — costo/tokens reales por variante, leyendo traces de LangSmith.
 - **`ragas_eval.py`** — 4 métricas de RAGAS (faithfulness, answer relevancy, context
   precision/recall) sobre los 48 casos con `expected_answer`, contra los chunks que el
@@ -231,10 +301,17 @@ evals/
 └── ci.yml
 ```
 
-- **`ci.yml`** — job `rules` en cada push (determinista, sin API); job `evals` solo en
-  `main` (`MAX_EVAL_CASES=1`), con `LANGCHAIN_API_KEY` como secret y un rol de Postgres
-  de solo lectura (`ci_readonly`, `SELECT` únicamente sobre `chunks`, con RLS scopeada)
-  para no exponer la credencial completa de producción en CI.
+- **`ci.yml`** — 3 niveles (ver `EXPERIMENTS.md` para el diseño):
+  - **`rules`** (Nivel 1) — todo push/PR, 0 llamadas a LLM/DB real, tests deterministas.
+  - **`smoke`** (Nivel 2) — solo push a `main`, 3 casos fijos contra el agente completo
+    (RAG normal, tool routing, abstención) — gate de humo antes de mergear, costo
+    mínimo. Reemplazó el `MAX_EVAL_CASES=1` (1 caso arbitrario) que corría antes.
+  - **`full_eval`** (Nivel 3) — solo manual (`workflow_dispatch`), golden set completo
+    (56 casos), RAGAS y retrieval (520 preguntas) — la evaluación sistemática completa,
+    nunca automática en cada push.
+  - Secrets: `OPENAI_API_KEY`/`DATABASE_URL` (rol de Postgres de solo lectura
+    `ci_readonly`, `SELECT` únicamente sobre `chunks`, con RLS scopeada, para no
+    exponer la credencial completa de producción en CI).
 
 ```
 Dockerfile / .dockerignore
